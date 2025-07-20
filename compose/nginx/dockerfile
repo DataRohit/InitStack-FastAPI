@@ -1,0 +1,5 @@
+# User Official Nginx Image
+FROM docker.io/nginx:1.29.0-alpine
+
+# Copy Nginx Configuration
+COPY ./compose/nginx/default.conf /etc/nginx/conf.d/default.conf

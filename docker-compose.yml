@@ -1,4 +1,7 @@
 volumes:
+    nginx-data:
+        name: nginx-data
+        driver: local
     dicebear-data:
         name: dicebear-data
         driver: local
@@ -16,6 +19,29 @@ volumes:
         driver: local
 
 services:
+    nginx-service:
+        build:
+            context: .
+            dockerfile: ./compose/nginx/dockerfile
+        image: nginx-service:latest
+        container_name: nginx-service
+        ports:
+            - "8080:8080"
+        volumes:
+            - nginx-data:/var/lib/nginx
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+        depends_on:
+            dicebear-service:
+                condition: service_healthy
+
     dicebear-service:
         build:
             context: .
