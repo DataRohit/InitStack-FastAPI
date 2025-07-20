@@ -69,8 +69,8 @@ def create_app() -> FastAPI:
         This Function Handles All Unhandled Exceptions.
 
         Args:
-            request: The Request That Caused the Exception.
-            exc: The Exception That Was Raised.
+            request (Request): The Request That Caused the Exception.
+            exc (Exception): The Exception That Was Raised.
 
         Returns:
             JSONResponse: Error response with status code and message.

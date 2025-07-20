@@ -23,10 +23,13 @@ class Settings(BaseSettings):
         VERSION (str): Project Version
 
         CORS_ORIGINS (str): List of CORS Origins
+        CORS_CREDENTIALS (bool): CORS Credentials Flag
         CORS_METHODS (str): List of CORS Methods
         CORS_HEADERS (str): List of CORS Headers
-        CORS_CREDENTIALS (bool): CORS Credentials
         CORS_MAX_AGE (int): CORS Max Age
+
+        CELERY_BROKER_URL (str): Celery Broker URL (RabbitMQ)
+        CELERY_RESULT_BACKEND (str): Celery Result Backend URL
 
     Configuration:
         env_file (str): Environment File
@@ -52,10 +55,14 @@ class Settings(BaseSettings):
 
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:8000,http://127.0.0.1:8000"
-    CORS_METHODS: str = "GET,POST,PUT,DELETE,OPTIONS"
-    CORS_HEADERS: str = "Content-Type,Authorization"
     CORS_CREDENTIALS: bool = True
-    CORS_MAX_AGE: int = 600  # 10 minutes
+    CORS_METHODS: str = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    CORS_HEADERS: str = "*"
+    CORS_MAX_AGE: int = 600
+
+    # Celery Configuration
+    CELERY_BROKER_URL: str = "amqp://NGeDFwAgoZwmMvP:ftT4tT0Qy2cQXGm@rabbitmq-service:5672//"
+    CELERY_RESULT_BACKEND: str = "db+postgresql://wIym6FbBxLhvf9p:Xm5XGvwnwSuJxtl@postgres-service:5432/celery_results"
 
     # Configuration
     class Config:

@@ -2,8 +2,20 @@ volumes:
     nginx-data:
         name: nginx-data
         driver: local
+    pgadmin-data:
+        name: pgadmin-data
+        driver: local
+    postgres-data:
+        name: postgres-data
+        driver: local
+    rabbitmq-data:
+        name: rabbitmq-data
+        driver: local
     mongodb-data:
         name: mongodb-data
+        driver: local
+    mongodb-config-data:
+        name: mongodb-config-data
         driver: local
     dicebear-data:
         name: dicebear-data
@@ -37,9 +49,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-            interval: 1m30s
-            timeout: 30s
-            retries: 5
+            interval: 30s
+            timeout: 10s
+            retries: 3
             start_period: 30s
         depends_on:
             dicebear-service:
@@ -65,10 +77,125 @@ services:
             retries: 3
             start_period: 30s
         depends_on:
+            postgres-service:
+                condition: service_healthy
             mongodb-service:
                 condition: service_healthy
             dicebear-service:
                 condition: service_healthy
+
+    flower-service:
+        build:
+            context: .
+            dockerfile: ./compose/flower/dockerfile
+        image: flower-service:latest
+        container_name: flower-service
+        command: /app/compose/flower/start
+        ports:
+            - "5555:5555"
+        env_file:
+            - ./.envs/backend/.env
+            - ./.envs/flower/.env
+        volumes:
+            - .:/app:z
+        networks:
+            - initstack
+        restart: unless-stopped
+        depends_on:
+            rabbitmq-service:
+                condition: service_healthy
+            postgres-service:
+                condition: service_healthy
+
+    celery-worker:
+        build:
+            context: .
+            dockerfile: ./compose/celery/dockerfile
+        image: celery-worker:latest
+        container_name: celery-worker
+        env_file:
+            - ./.envs/backend/.env
+        volumes:
+            - .:/app:z
+        networks:
+            - initstack
+        restart: unless-stopped
+        depends_on:
+            rabbitmq-service:
+                condition: service_healthy
+            postgres-service:
+                condition: service_healthy
+
+    celery-beat:
+        build:
+            context: .
+            dockerfile: ./compose/beat/dockerfile
+        image: celery-beat:latest
+        container_name: celery-beat
+        env_file:
+            - ./.envs/backend/.env
+        volumes:
+            - .:/app:z
+        networks:
+            - initstack
+        restart: unless-stopped
+        depends_on:
+            rabbitmq-service:
+                condition: service_healthy
+            postgres-service:
+                condition: service_healthy
+
+    pgadmin-service:
+        image: dpage/pgadmin4:latest
+        container_name: pgadmin-service
+        ports:
+            - "5050:80"
+        env_file:
+            - ./.envs/pgadmin/.env
+        volumes:
+            - pgadmin-data:/var/lib/pgadmin
+        networks:
+            - initstack
+        restart: unless-stopped
+        depends_on:
+            postgres-service:
+                condition: service_healthy
+
+    postgres-service:
+        image: postgres:16-alpine
+        container_name: postgres-service
+        env_file:
+            - ./.envs/postgres/.env
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    rabbitmq-service:
+        image: rabbitmq:management
+        container_name: rabbitmq-service
+        ports:
+            - "15672:15672"
+        env_file:
+            - ./.envs/rabbitmq/.env
+        volumes:
+            - rabbitmq-data:/var/lib/rabbitmq
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
 
     mongodb-service:
         image: mongo:latest
@@ -79,6 +206,7 @@ services:
             - ./.envs/mongodb/.env
         volumes:
             - mongodb-data:/data/db
+            - mongodb-config-data:/data/configdb
         networks:
             - initstack
         restart: unless-stopped
@@ -108,9 +236,9 @@ services:
                     "-f",
                     "http://localhost:3000/9.x/avataaars/svg?seed=John%20Doe&accessories[]&eyebrows=default,defaultNatural&eyes=default,happy,squint&mouth=default,smile",
                 ]
-            interval: 1m30s
-            timeout: 30s
-            retries: 5
+            interval: 30s
+            timeout: 10s
+            retries: 3
             start_period: 30s
 
     sonarqube-service:
@@ -130,9 +258,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:9000"]
-            interval: 1m30s
-            timeout: 30s
-            retries: 5
+            interval: 30s
+            timeout: 10s
+            retries: 3
             start_period: 30s
 
 networks:
