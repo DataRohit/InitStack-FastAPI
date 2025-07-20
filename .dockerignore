@@ -1,0 +1,37 @@
+# Development Files
+.editorconfig
+.gitattributes
+.github
+.gitignore
+.gitlab-ci.yml
+.idea
+.pre-commit-config.yaml
+.readthedocs.yml
+.travis.yml
+
+# Environment Files
+.venv
+venv
+.git
+.envs/
+*.env
+
+# Cache Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.ruff_cache/
+*.log
+*.pot
+*.sqlite3
+
+# Build Outputs
+build/
+dist/
+*.egg-info/
+
+# System Files
+.DS_Store
+Thumbs.db
