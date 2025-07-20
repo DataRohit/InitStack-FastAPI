@@ -1,0 +1,8 @@
+# Use Official DiceBear API Image
+FROM docker.io/dicebear/api:2
+
+# Install Required Dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y curl wget make
+
+# Clean Up
+RUN rm -rf /var/lib/apt/lists/*

@@ -1,4 +1,7 @@
 volumes:
+    dicebear-data:
+        name: dicebear-data
+        driver: local
     sonarqube_temp:
         name: sonarqube_temp
         driver: local
@@ -13,6 +16,30 @@ volumes:
         driver: local
 
 services:
+    dicebear-service:
+        build:
+            context: .
+            dockerfile: ./compose/dicebear/dockerfile
+        image: dicebear-service:latest
+        container_name: dicebear-service
+        volumes:
+            - dicebear-data:/var/lib/dicebear
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "curl",
+                    "-f",
+                    "http://localhost:3000/9.x/avataaars/svg?seed=John%20Doe&accessories[]&eyebrows=default,defaultNatural&eyes=default,happy,squint&mouth=default,smile",
+                ]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+
     sonarqube-service:
         image: sonarqube:latest
         container_name: sonarqube-service
