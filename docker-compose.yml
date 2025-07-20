@@ -1,0 +1,41 @@
+volumes:
+    sonarqube_temp:
+        name: sonarqube_temp
+        driver: local
+    sonarqube_data:
+        name: sonarqube_data
+        driver: local
+    sonarqube_logs:
+        name: sonarqube_logs
+        driver: local
+    sonarqube_extensions:
+        name: sonarqube_extensions
+        driver: local
+
+services:
+    sonarqube-service:
+        image: sonarqube:latest
+        container_name: sonarqube-service
+        ports:
+            - "9000:9000"
+        env_file:
+            - ./.envs/sonarqube/.env
+        volumes:
+            - sonarqube_temp:/opt/sonarqube/temp
+            - sonarqube_data:/opt/sonarqube/data
+            - sonarqube_logs:/opt/sonarqube/logs
+            - sonarqube_extensions:/opt/sonarqube/extensions
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+
+networks:
+    initstack:
+        name: initstack
+        driver: bridge

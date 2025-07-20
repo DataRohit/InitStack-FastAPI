@@ -98,3 +98,6 @@ tags
 # Environment Files
 .env
 *.env
+
+# SonarQube
+.scannerwork/
