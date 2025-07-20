@@ -2,6 +2,9 @@ volumes:
     nginx-data:
         name: nginx-data
         driver: local
+    mongodb-data:
+        name: mongodb-data
+        driver: local
     dicebear-data:
         name: dicebear-data
         driver: local
@@ -41,6 +44,25 @@ services:
         depends_on:
             dicebear-service:
                 condition: service_healthy
+
+    mongodb-service:
+        image: mongo:latest
+        container_name: mongodb-service
+        ports:
+            - "27017:27017"
+        env_file:
+            - ./.envs/mongodb/.env
+        volumes:
+            - mongodb-data:/data/db
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "mongosh", "--eval", "'db.hello().ok'"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
 
     dicebear-service:
         build:
