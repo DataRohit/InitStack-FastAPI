@@ -1,0 +1,32 @@
+# Use Official Python Image
+FROM python:3.13-slim-bookworm
+
+# Set Environment Variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100
+
+# Install System Dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential curl wget make git libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set Working Directory
+WORKDIR /
+
+# Copy Requirements First (For Better Layer Caching)
+COPY requirements.txt .
+
+# Install Dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Application Code
+COPY . /app
+
+# Add current directory to PYTHONPATH
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Command to Run the Application
+CMD ["python", "-m", "app"]

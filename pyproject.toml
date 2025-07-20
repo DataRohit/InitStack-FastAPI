@@ -1,3 +1,7 @@
+# Setuptools Configuration
+[tool.setuptools]
+packages = ["config"]
+
 # HTML/CSS/JS Linting
 [tool.djlint]
 blank_line_after_tag = "load,extends"
