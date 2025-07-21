@@ -15,7 +15,7 @@ from config.middlewares import (
     add_trusted_host_middleware,
 )
 from config.settings import settings
-from src.routes import health_router
+from src.routes import health_router, users_router
 
 
 # Initialize FastAPI Application
@@ -132,8 +132,9 @@ def create_app() -> FastAPI:
     # Add Logging Middleware
     add_logging_middleware(app)
 
-    # Mount Health Router
+    # Mount Routers
     app.include_router(health_router)
+    app.include_router(users_router)
 
     # Exception Handler
     @app.exception_handler(exc_class_or_status_code=Exception)
