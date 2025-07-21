@@ -1,12 +1,14 @@
 # Standard Library Imports
 import datetime
 import re
+from typing import Any, ClassVar
 
 # Third-Party Imports
 from argon2 import PasswordHasher
 from argon2.exceptions import HashingError, InvalidHashError, VerificationError, VerifyMismatchError
 from bson import ObjectId
 from pydantic import BaseModel, EmailStr, Field, field_validator
+from pymongo.asynchronous.database import AsyncDatabase
 
 # Initialize Password Hasher
 ph = PasswordHasher()
@@ -32,11 +34,26 @@ class User(BaseModel):
         date_joined (datetime): Account Creation Timestamp
         last_login (datetime): Last Login Timestamp
         updated_at (datetime): Last Update Timestamp
+
+    Config:
+        json_encoders (ClassVar[dict[type, Any]]): JSON Encoders
+        allow_population_by_field_name (ClassVar[bool]): Allow Population by Field Name
+
+    Methods:
+        set_password (str): Set User Password
+        verify_password (str): Verify User Password
+        create (AsyncDatabase, dict): Create User
+        get_by_id (AsyncDatabase, ObjectId): Get User by ID
+        get_by_username (AsyncDatabase, str): Get User by Username
+        get_by_email (AsyncDatabase, str): Get User by Email
+        update (AsyncDatabase, dict): Update User
+        delete (AsyncDatabase): Delete User
     """
 
     # User Identifier
     id: ObjectId = Field(
         default_factory=ObjectId,
+        alias="_id",
         example="507f1f77bcf86cd799439011",
         description="Unique User Identifier",
     )
@@ -95,7 +112,7 @@ class User(BaseModel):
 
     # Timestamps
     date_joined: datetime = Field(
-        default_factory=datetime.now(datetime.UTC),
+        default_factory=datetime.datetime.now,
         example="2025-07-21T08:56:30.123456",
         description="Account Creation Timestamp",
     )
@@ -105,10 +122,28 @@ class User(BaseModel):
         description="Last Login Timestamp",
     )
     updated_at: datetime = Field(
-        default_factory=datetime.now(datetime.UTC),
+        default_factory=datetime.datetime.now,
         example="2025-07-21T08:56:30.123456",
         description="Last Update Timestamp",
     )
+
+    # Model Configuration
+    class Config:
+        """
+        Pydantic Model Configuration
+
+        Handles Field Aliasing and Custom JSON Encoding
+
+        Attributes:
+            json_encoders (ClassVar[dict[type, Any]]): JSON Encoders
+            allow_population_by_field_name (ClassVar[bool]): Allow Population by Field Name
+        """
+
+        # JSON Encoders
+        json_encoders: ClassVar[dict[type, Any]] = {ObjectId: str}
+
+        # Allow Population by Field Name
+        allow_population_by_field_name: ClassVar[bool] = True
 
     # Password Management
     def _validate_password_complexity(self, password: str) -> list[str]:
@@ -307,6 +342,116 @@ class User(BaseModel):
 
         # Return Validated Name
         return value
+
+    # Create User
+    @classmethod
+    async def create(cls, db: AsyncDatabase, user_data: dict) -> "User":
+        """
+        Create New User
+
+        Args:
+            db (AsyncDatabase): MongoDB Database Instance
+            user_data (dict): User Data Dictionary
+
+        Returns:
+            User: Created User Instance
+
+        Raises:
+            ValueError: If Validation Fails
+            PyMongoError: If Database Operation Fails
+        """
+
+        # Validate and Create User Instance
+        user = cls(**user_data)
+
+        # Insert into Database
+        result = await db.users.insert_one(user.model_dump(by_alias=True))
+
+        # Set User ID
+        user.id = result.inserted_id
+
+        # Return User
+        return user
+
+    # Get User by ID
+    @classmethod
+    async def get_by_id(cls, db: AsyncDatabase, user_id: str) -> "User | None":
+        """
+        Get User by ID
+
+        Args:
+            db (AsyncDatabase): MongoDB Database Instance
+            user_id (str): User ID to Retrieve
+
+        Returns:
+            User | None: User Instance if Found, Else None
+        """
+
+        # Find User by ID
+        user_data = await db.users.find_one({"_id": user_id})
+
+        # Return User Instance if Found
+        return cls(**user_data) if user_data else None
+
+    # Get User by Identifier (Username or Email)
+    @classmethod
+    async def get_by_identifier(cls, db: AsyncDatabase, identifier: str) -> "User | None":
+        """
+        Get User by Username or Email
+
+        Args:
+            db (AsyncDatabase): MongoDB Database Instance
+            identifier (str): Username or Email to Search For
+
+        Returns:
+            User | None: User Instance if Found, Else None
+        """
+
+        # Find User by Username or Email
+        user_data = await db.users.find_one({"$or": [{"username": identifier}, {"email": identifier}]})
+
+        # Return User Instance if Found
+        return cls(**user_data) if user_data else None
+
+    # Update User
+    async def update(self, db: AsyncDatabase, update_data: dict) -> None:
+        """
+        Update User
+
+        Args:
+            db (AsyncDatabase): MongoDB Database Instance
+            update_data (dict): Data to Update
+
+        Raises:
+            ValueError: If Validation Fails
+            PyMongoError: If Database Operation Fails
+        """
+
+        # Traverse Update Data
+        for field, value in update_data.items():
+            # Set Attribute Value
+            setattr(self, field, value)
+
+        # Update Timestamp
+        self.updated_at = datetime.datetime.now(datetime.UTC)
+
+        # Update in Database
+        await db.users.update_one({"_id": self.id}, {"$set": self.model_dump(exclude_unset=True)})
+
+    # Delete User
+    async def delete(self, db: AsyncDatabase) -> None:
+        """
+        Delete User
+
+        Args:
+            db (AsyncDatabase): MongoDB Database Instance
+
+        Raises:
+            PyMongoError: If Database Operation Fails
+        """
+
+        # Delete from Database
+        await db.users.delete_one({"_id": self.id})
 
 
 # Exports
