@@ -24,7 +24,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         app: FastAPI,
         limit: int = 100,
         window: int = 60,
-        excluded_routes: list[str] | None = None,
+        exclude_routes: list[str] | None = None,
     ) -> None:
         """
         This Function Initializes the Rate Limit Middleware.
@@ -33,7 +33,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             app (FastAPI): The FastAPI Application Instance
             limit (int): Maximum Number of Requests Allowed in Window. Defaults to 100
             window (int): Time Window in Seconds. Defaults to 60
-            excluded_routes (list[str] | None): List of Route Paths to Exclude from Rate Limiting. Defaults to None
+            exclude_routes (list[str] | None): List of Route Paths to Exclude from Rate Limiting. Defaults to None
         """
 
         # Initialize Rate Limit Middleware
@@ -42,7 +42,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Initialize Rate Limit Configuration
         self.limit: int = limit
         self.window: int = window
-        self.excluded_routes: list[str] = excluded_routes or []
+        self.exclude_routes: list[str] = exclude_routes or []
 
         # Initialize Redis Client
         self.redis: redis.Redis = redis.Redis.from_url(
@@ -65,7 +65,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """
 
         # Check if Route is Excluded
-        if request.url.path in self.excluded_routes:
+        if request.url.path in self.exclude_routes:
             # Call Next Middleware or Route Handler
             return await call_next(request)
 
@@ -113,7 +113,6 @@ def add_rate_limit_middleware(app: FastAPI) -> None:
 
     Args:
         app (FastAPI): The FastAPI Application Instance
-        excluded_routes (list[str] | None): List of Route Paths to Exclude from Rate Limiting. Defaults to None
     """
 
     # Add Rate Limit Middleware
@@ -121,7 +120,7 @@ def add_rate_limit_middleware(app: FastAPI) -> None:
         middleware_class=RateLimitMiddleware,
         limit=settings.RATE_LIMIT,
         window=settings.RATE_LIMIT_WINDOW,
-        excluded_routes=[
+        exclude_routes=[
             "/api/docs",
             "/api/redoc",
             "/api/openapi.json",

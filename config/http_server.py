@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from config.middlewares import (
     add_cors_middleware,
     add_https_redirect_middleware,
+    add_logging_middleware,
     add_rate_limit_middleware,
     add_security_headers_middleware,
     add_trusted_host_middleware,
@@ -117,6 +118,9 @@ def create_app() -> FastAPI:
 
     # Add Rate Limit Middleware
     add_rate_limit_middleware(app)
+
+    # Add Logging Middleware
+    add_logging_middleware(app)
 
     # Mount Health Router
     app.include_router(health_router)
