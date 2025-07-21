@@ -45,6 +45,16 @@ class Settings(BaseSettings):
         RATE_LIMIT (int): Default Maximum Requests Per Window
         RATE_LIMIT_WINDOW (int): Default Rate Limit Window in Seconds
 
+        HTTP_MAX_CONNECTIONS (int): Maximum Number of HTTP Connections
+        HTTP_KEEPALIVE_CONNECTIONS (int): Maximum Number of Keep-Alive Connections
+        HTTP_KEEPALIVE_EXPIRY (int): Keep-Alive Expiry Time in Seconds
+        HTTP_TIMEOUT_CONNECT (float): HTTP Connection Timeout in Seconds
+        HTTP_TIMEOUT_READ (float): HTTP Read Timeout in Seconds
+        HTTP_TIMEOUT_WRITE (float): HTTP Write Timeout in Seconds
+        HTTP_TIMEOUT_POOL (float): HTTP Pool Timeout in Seconds
+        HTTP2_ENABLED (bool): Enable HTTP/2
+        SSL_VERIFY (bool): Verify SSL Certificates
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -92,6 +102,18 @@ class Settings(BaseSettings):
     # Rate Limit Configuration
     RATE_LIMIT: int = 60
     RATE_LIMIT_WINDOW: int = 60
+
+    # HTTP Connection Pool Settings
+    HTTP_MAX_CONNECTIONS: int = 100
+    HTTP_KEEPALIVE_CONNECTIONS: int = 20
+    HTTP_KEEPALIVE_EXPIRY: int = 60  # seconds
+    HTTP_TIMEOUT: float = 5.0
+    HTTP_TIMEOUT_CONNECT: float = 5.0
+    HTTP_TIMEOUT_READ: float = 30.0
+    HTTP_TIMEOUT_WRITE: float = 30.0
+    HTTP_TIMEOUT_POOL: float = 5.0
+    HTTP2_ENABLED: bool = True
+    SSL_VERIFY: bool = True
 
     # Configuration
     class Config:

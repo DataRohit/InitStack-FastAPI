@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from starlette.types import Message, Receive, Scope, Send
 
 # Configure Colored Logger
-handler = colorlog.StreamHandler()
+handler: colorlog.StreamHandler = colorlog.StreamHandler()
 handler.setFormatter(
     colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -23,7 +23,7 @@ handler.setFormatter(
         },
     ),
 )
-logger = colorlog.getLogger(__name__)
+logger: logging.Logger = colorlog.getLogger(__name__)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 logger.propagate = False
@@ -72,7 +72,7 @@ class LoggingMiddleware:
             return
 
         # Initialize Request
-        request = Request(scope, receive)
+        request: Request = Request(scope, receive)
 
         # Skip logging for excluded routes
         if any(request.url.path.startswith(route) for route in self.exclude_routes):
@@ -83,13 +83,13 @@ class LoggingMiddleware:
             return
 
         # Generate Request ID
-        request_id = str(uuid.uuid4())
+        request_id: str = str(uuid.uuid4())
 
         # Get Start Time
-        start_time = time.time()
+        start_time: float = time.time()
 
         # Initialize Request
-        request = Request(scope, receive)
+        request: Request = Request(scope, receive)
 
         # Log Request
         logger.info(
@@ -118,13 +118,13 @@ class LoggingMiddleware:
             # If The Message Type Is HTTP Response Start
             if message["type"] == "http.response.start":
                 # Initialize Response Headers
-                response_headers = dict(message["headers"])
+                response_headers: dict = dict(message["headers"])
 
                 # Initialize Response Size
-                response_size = int(response_headers.get(b"content-length", 0))
+                response_size: int = int(response_headers.get(b"content-length", 0))
 
                 # Calculate Process Time
-                process_time = time.time() - start_time
+                process_time: float = time.time() - start_time
 
                 # Log Response
                 logger.info(
@@ -153,7 +153,7 @@ class LoggingMiddleware:
 
         except Exception as exc:
             # Initialize Error Message
-            msg = f"Request Failed: {exc!s}"
+            msg: str = f"Request Failed: {exc!s}"
 
             # Log The Error
             logger.exception(

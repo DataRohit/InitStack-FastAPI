@@ -4,6 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 # Local Imports
+from config.connection_pool import lifespan
 from config.middlewares import (
     add_compression_middleware,
     add_cors_middleware,
@@ -23,7 +24,7 @@ def create_app() -> FastAPI:
     Create App Function
 
     This Function Initializes the FastAPI Application
-    with Required Metadata and Middleware.
+    with Required Metadata, Middleware and Lifespan.
 
     Returns:
         FastAPI: Configured FastAPI application instance.
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
+        lifespan=lifespan,
         contact={
             "name": settings.PROJECT_NAME,
             "url": settings.PROJECT_WEBSITE,

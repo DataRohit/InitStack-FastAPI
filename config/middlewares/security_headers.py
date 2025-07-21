@@ -57,10 +57,10 @@ class SecurityHeadersMiddleware:
             # If The Message Type Is HTTP Response Start
             if message["type"] == "http.response.start":
                 # Convert Headers To Dictionary
-                headers = dict(message.get("headers", []))
+                headers: dict = dict(message.get("headers", []))
 
                 # Security Headers
-                security_headers = {
+                security_headers: dict = {
                     b"x-content-type-options": b"nosniff",
                     b"x-frame-options": b"DENY",
                     b"x-xss-protection": b"1; mode=block",
@@ -77,7 +77,7 @@ class SecurityHeadersMiddleware:
                         headers[header] = value
 
                 # Convert Headers Back To List Of Tuples
-                message["headers"] = list(headers.items())
+                message["headers"]: list[tuple[bytes, bytes]] = list(headers.items())
 
             # Send The Message
             await send(message)
