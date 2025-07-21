@@ -1,5 +1,6 @@
 # Third-Party Imports
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 # Local Imports
@@ -48,7 +49,61 @@ def create_app() -> FastAPI:
         },
     )
 
-    # Add Security Middleware
+    # 404 Not Found Handler
+    @app.exception_handler(404)
+    async def not_found_exception_handler(request: Request, exc: HTTPException):
+        """
+        404 Not Found Handler
+
+        Returns standardized JSON response for 404 errors.
+
+        Returns:
+            JSONResponse: Formatted error response
+        """
+
+        # Return Error Response
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Not Found!"},
+        )
+
+    # 422 Validation Error Handler
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        """
+        422 Validation Error Handler
+
+        Returns detailed validation error information.
+
+        Returns:
+            JSONResponse: Formatted error response with validation details
+        """
+
+        # Return Error Response
+        return JSONResponse(
+            status_code=422,
+            content={"detail": exc.errors(), "body": exc.body},
+        )
+
+    # 500 Internal Server Error Handler
+    @app.exception_handler(500)
+    async def internal_exception_handler(request: Request, exc: Exception):
+        """
+        500 Internal Server Error Handler
+
+        Returns standardized response for server errors.
+
+        Returns:
+            JSONResponse: Formatted error response
+        """
+
+        # Return Error Response
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error!"},
+        )
+
+    # Add HTTPS Redirect Middleware
     add_https_redirect_middleware(app)
 
     # Add Trusted Host Middleware
