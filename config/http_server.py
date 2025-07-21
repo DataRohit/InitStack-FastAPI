@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 # Local Imports
 from config.middlewares import (
+    add_compression_middleware,
     add_cors_middleware,
     add_https_redirect_middleware,
     add_logging_middleware,
@@ -118,6 +119,9 @@ def create_app() -> FastAPI:
 
     # Add Rate Limit Middleware
     add_rate_limit_middleware(app)
+
+    # Add Compression Middleware
+    add_compression_middleware(app)
 
     # Add Logging Middleware
     add_logging_middleware(app)

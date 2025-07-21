@@ -21,12 +21,20 @@ class Settings(BaseSettings):
         PROJECT_SUMMARY (str): Project Summary
         PROJECT_DESCRIPTION (str): Project Description
         VERSION (str): Project Version
+        PROJECT_WEBSITE (str): Project Website
+        PROJECT_EMAIL (str): Project Email
+        LICENSE_URL (str): Project License URL
 
         CORS_ORIGINS (str): List of CORS Origins
         CORS_CREDENTIALS (bool): CORS Credentials Flag
         CORS_METHODS (str): List of CORS Methods
         CORS_HEADERS (str): List of CORS Headers
         CORS_MAX_AGE (int): CORS Max Age
+
+        ALLOWED_HOSTS (str): List of Allowed Hosts
+
+        COMPRESSION_MIN_SIZE (int): Minimum Response Size (bytes) to Compress
+        COMPRESSION_LEVEL (int): GZip Compression Level (1-9)
 
         CELERY_BROKER_URL (str): Celery Broker URL (RabbitMQ)
         CELERY_RESULT_BACKEND (str): Celery Result Backend URL
@@ -68,6 +76,10 @@ class Settings(BaseSettings):
 
     # Security Configuration
     ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+
+    # Compression Settings
+    COMPRESSION_MIN_SIZE: int = 1024
+    COMPRESSION_LEVEL: int = 6
 
     # Celery Configuration
     CELERY_BROKER_URL: str = "amqp://NGeDFwAgoZwmMvP:ftT4tT0Qy2cQXGm@rabbitmq-service:5672//"
