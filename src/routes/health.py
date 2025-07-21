@@ -1,9 +1,8 @@
 # Standard Library Imports
 from typing import Any
 
-import psutil
-
 # Third-Party Imports
+import psutil
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 

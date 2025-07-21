@@ -235,7 +235,7 @@ class HealthResponse(BaseModel):
         """
         Get Health Response
 
-        This Method Returns the Health Status of the API with system information.
+        This Method Returns the Health Status of the API with System Information.
 
         Returns:
             dict[str, Any]: Health Status and System Information
@@ -249,7 +249,7 @@ class HealthResponse(BaseModel):
             "disk": cls._get_disk_usage(),
         }
 
-        # Return Health Response with system information
+        # Return Health Response with System Information
         return {
             "status": "healthy",
             "app": settings.PROJECT_NAME,
