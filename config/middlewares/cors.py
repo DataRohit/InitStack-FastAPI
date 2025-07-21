@@ -29,3 +29,7 @@ def add_cors_middleware(app: FastAPI) -> None:
             allow_headers=[str(header).strip() for header in settings.CORS_HEADERS.split(",")],
             max_age=settings.CORS_MAX_AGE,
         )
+
+
+# Exports
+__all__: list[str] = ["add_cors_middleware"]

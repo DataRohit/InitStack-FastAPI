@@ -3,7 +3,12 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
-from config.middlewares import add_cors_middleware
+from config.middlewares import (
+    add_cors_middleware,
+    add_https_redirect_middleware,
+    add_security_headers_middleware,
+    add_trusted_host_middleware,
+)
 from config.settings import settings
 from src.routes import health_router
 
@@ -41,6 +46,15 @@ def create_app() -> FastAPI:
             "url": settings.LICENSE_URL,
         },
     )
+
+    # Add Security Middleware
+    add_https_redirect_middleware(app)
+
+    # Add Trusted Host Middleware
+    add_trusted_host_middleware(app)
+
+    # Add Security Headers Middleware
+    add_security_headers_middleware(app)
 
     # Add CORS Middleware
     add_cors_middleware(app)

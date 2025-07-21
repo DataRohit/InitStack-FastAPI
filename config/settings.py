@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     CORS_HEADERS: str = "*"
     CORS_MAX_AGE: int = 600
 
+    # Security Configuration
+    ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+
     # Celery Configuration
     CELERY_BROKER_URL: str = "amqp://NGeDFwAgoZwmMvP:ftT4tT0Qy2cQXGm@rabbitmq-service:5672//"
     CELERY_RESULT_BACKEND: str = "db+postgresql://wIym6FbBxLhvf9p:Xm5XGvwnwSuJxtl@postgres-service:5432/celery_results"
