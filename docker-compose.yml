@@ -2,6 +2,9 @@ volumes:
     nginx-data:
         name: nginx-data
         driver: local
+    redis-data:
+        name: redis-data
+        driver: local
     pgadmin-data:
         name: pgadmin-data
         driver: local
@@ -77,6 +80,8 @@ services:
             retries: 3
             start_period: 30s
         depends_on:
+            redis-service:
+                condition: service_healthy
             postgres-service:
                 condition: service_healthy
             mongodb-service:
@@ -144,6 +149,25 @@ services:
                 condition: service_healthy
             postgres-service:
                 condition: service_healthy
+
+    redis-service:
+        image: redis/redis-stack:latest
+        container_name: redis-service
+        ports:
+            - "8001:8001"
+        env_file:
+            - ./.envs/redis/.env
+        volumes:
+            - redis-data:/data
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
 
     pgadmin-service:
         image: dpage/pgadmin4:latest
