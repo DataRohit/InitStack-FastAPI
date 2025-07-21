@@ -77,10 +77,10 @@ def create_app() -> FastAPI:
         """
         422 Validation Error Handler
 
-        Returns detailed validation error information.
+        Returns Detailed Validation Error Information.
 
         Returns:
-            JSONResponse: Formatted error response with validation details
+            JSONResponse: Formatted Error Response with Validation Details
         """
 
         # Return Error Response
@@ -99,10 +99,10 @@ def create_app() -> FastAPI:
         """
         500 Internal Server Error Handler
 
-        Returns standardized response for server errors.
+        Returns Standardized Response for Server Errors.
 
         Returns:
-            JSONResponse: Formatted error response
+            JSONResponse: Formatted Error Response
         """
 
         # Return Error Response

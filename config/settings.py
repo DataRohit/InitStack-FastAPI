@@ -55,6 +55,9 @@ class Settings(BaseSettings):
         HTTP2_ENABLED (bool): Enable HTTP/2
         SSL_VERIFY (bool): Verify SSL Certificates
 
+        MONGODB_URI (str): MongoDB URI
+        MONGODB_DATABASE (str): MongoDB Database
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -114,6 +117,10 @@ class Settings(BaseSettings):
     HTTP_TIMEOUT_POOL: float = 5.0
     HTTP2_ENABLED: bool = True
     SSL_VERIFY: bool = True
+
+    # MongoDB Configuration
+    MONGODB_URI: str = "mongodb://KHOS1bTrd0RBv0b:OOaooAAuAzH5ewb@mongo-service:27017"
+    MONGODB_DATABASE: str = "initstack"
 
     # Configuration
     class Config:

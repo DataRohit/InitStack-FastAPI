@@ -7,6 +7,8 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI
 
+from config.mongodb import mongodb_manager
+
 # Local Imports
 from config.settings import settings
 
@@ -19,6 +21,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     This Function Manages the Application Lifespan by:
     - Creating Connection Pools
+    - Initializing MongoDB Adapter
     - Proper Timeout Configuration
     - Connection Limits
     - TLS Verification
@@ -27,6 +30,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     Args:
         app (FastAPI): FastAPI application instance
     """
+
+    # Initialize MongoDB Connection
+    await mongodb_manager.client.admin.command("ping")
 
     # Create SSL Context
     ssl_context: ssl.SSLContext = ssl.create_default_context()

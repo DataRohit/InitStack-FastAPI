@@ -80,5 +80,5 @@ select = [
     "PERF",
     "RUF",
 ]
-ignore = []
+ignore = ["TC002"]
 extend-unsafe-fixes = []
