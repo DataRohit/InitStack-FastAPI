@@ -64,7 +64,15 @@ class SecurityHeadersMiddleware:
                     b"x-content-type-options": b"nosniff",
                     b"x-frame-options": b"DENY",
                     b"x-xss-protection": b"1; mode=block",
-                    b"content-security-policy": b"default-src 'self'; img-src 'self' data: https://fastapi.tiangolo.com; style-src 'self' https://cdn.jsdelivr.net; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';",  # noqa: E501
+                    b"content-security-policy": (
+                        b"default-src 'self'; "
+                        b"img-src 'self' data: https://fastapi.tiangolo.com https://cdn.redoc.ly; "
+                        b"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+                        b"font-src 'self' https://fonts.gstatic.com; "
+                        b"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+                        b"worker-src 'self' blob:; "
+                        b"connect-src 'self' https://cdn.jsdelivr.net;"
+                    ),
                     b"referrer-policy": b"strict-origin-when-cross-origin",
                     b"permissions-policy": b"camera=(), microphone=(), geolocation=()",
                 }
