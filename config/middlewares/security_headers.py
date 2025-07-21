@@ -1,5 +1,6 @@
 # Third-Party Imports
-from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from fastapi import FastAPI
+from starlette.types import Message, Receive, Scope, Send
 
 
 # Security Headers Middleware
@@ -12,16 +13,16 @@ class SecurityHeadersMiddleware:
     """
 
     # Initialize Security Headers Middleware
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: FastAPI) -> None:
         """
         This Function Initializes The Security Headers Middleware.
 
         Args:
-            app (ASGIApp): The ASGI Application Instance.
+            app (FastAPI): The FastAPI Application Instance
         """
 
-        # Initialize ASGI Application
-        self.app: ASGIApp = app
+        # Initialize FastAPI Application
+        self.app: FastAPI = app
 
     # Process The Request And Add Security Headers To The Response
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -29,9 +30,9 @@ class SecurityHeadersMiddleware:
         This Function Processes The Request And Adds Security Headers To The Response.
 
         Args:
-            scope (Scope): The ASGI Scope.
-            receive (Receive): The ASGI Receive Callable.
-            send (Send): The ASGI Send Callable.
+            scope (Scope): The FastAPI Scope
+            receive (Receive): The FastAPI Receive Callable
+            send (Send): The FastAPI Send Callable
         """
 
         # If The Scope Is Not HTTP
@@ -50,7 +51,7 @@ class SecurityHeadersMiddleware:
             This Function Sends The Message With Security Headers.
 
             Args:
-                message (Message): The ASGI Message.
+                message (Message): The FastAPI Message
             """
 
             # If The Message Type Is HTTP Response Start
@@ -63,7 +64,7 @@ class SecurityHeadersMiddleware:
                     b"x-content-type-options": b"nosniff",
                     b"x-frame-options": b"DENY",
                     b"x-xss-protection": b"1; mode=block",
-                    b"content-security-policy": b"default-src 'self'",
+                    b"content-security-policy": b"default-src 'self'; img-src 'self' data: https://fastapi.tiangolo.com; style-src 'self' https://cdn.jsdelivr.net; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';",  # noqa: E501
                     b"referrer-policy": b"strict-origin-when-cross-origin",
                     b"permissions-policy": b"camera=(), microphone=(), geolocation=()",
                 }
@@ -86,15 +87,15 @@ class SecurityHeadersMiddleware:
 
 
 # Add Security Headers Middleware Function
-def add_security_headers_middleware(app: ASGIApp) -> None:
+def add_security_headers_middleware(app: FastAPI) -> None:
     """
     Add Security Headers Middleware Function
 
-    This Function Adds Security Headers Middleware To The Provided ASGI Application.
+    This Function Adds Security Headers Middleware To The Provided FastAPI Application.
 
     Args:
-        app (ASGIApp): The ASGI Application Instance.
+        app (FastAPI): The FastAPI Application Instance
     """
 
     # Add Security Headers Middleware
-    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(middleware_class=SecurityHeadersMiddleware)

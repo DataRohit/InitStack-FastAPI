@@ -22,7 +22,7 @@ def add_cors_middleware(app: FastAPI) -> None:
     if settings.CORS_ORIGINS:
         # Add CORS Middleware
         app.add_middleware(
-            CORSMiddleware,
+            middleware_class=CORSMiddleware,
             allow_origins=[str(origin).strip() for origin in settings.CORS_ORIGINS.split(",")],
             allow_credentials=settings.CORS_CREDENTIALS,
             allow_methods=[str(method).strip() for method in settings.CORS_METHODS.split(",")],

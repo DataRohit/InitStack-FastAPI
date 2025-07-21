@@ -43,6 +43,7 @@ python-dotenv==1.1.1
 python-multipart==0.0.20
 pytz==2025.2
 pyyaml==6.0.2
+redis==6.2.0
 rich==14.0.0
 rich-toolkit==0.14.8
 rignore==0.6.4

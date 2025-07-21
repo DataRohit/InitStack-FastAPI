@@ -29,4 +29,4 @@ COPY . /app
 ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Command to Run the Application
-CMD ["python", "-m", "app"]
+CMD ["python", "-m", "watchfiles", "python -m app"]

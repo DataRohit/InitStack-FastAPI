@@ -31,6 +31,12 @@ class Settings(BaseSettings):
         CELERY_BROKER_URL (str): Celery Broker URL (RabbitMQ)
         CELERY_RESULT_BACKEND (str): Celery Result Backend URL
 
+        REDIS_URL (str): Redis Server URL
+        REDIS_HTTP_RATE_LIMIT_DB (int): Redis Database Number for HTTP Rate Limiting
+
+        RATE_LIMIT (int): Default Maximum Requests Per Window
+        RATE_LIMIT_WINDOW (int): Default Rate Limit Window in Seconds
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -47,7 +53,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     PROJECT_NAME: str = "InitStack FastAPI Server"
     PROJECT_SUMMARY: str = "A FastAPI Server for the InitStack Project"
-    PROJECT_DESCRIPTION: str = "A FastAPI Server for the InitStack Project"
+    PROJECT_DESCRIPTION: str = "A Production-Ready Full-Stack Starter Kit With FastAPI Backend, Celery Task Queue, And Comprehensive DevOps Tooling"  # noqa: E501
     VERSION: str = "0.1.0"
     PROJECT_WEBSITE: str = "https://github.com/InitStack/InitStack"
     PROJECT_EMAIL: str = "initstack@protonmail.com"
@@ -66,6 +72,14 @@ class Settings(BaseSettings):
     # Celery Configuration
     CELERY_BROKER_URL: str = "amqp://NGeDFwAgoZwmMvP:ftT4tT0Qy2cQXGm@rabbitmq-service:5672//"
     CELERY_RESULT_BACKEND: str = "db+postgresql://wIym6FbBxLhvf9p:Xm5XGvwnwSuJxtl@postgres-service:5432/celery_results"
+
+    # Redis Configuration
+    REDIS_URL: str = "redis://:WFyzhcO3ByZIjdd@redis-service:6379/"
+    REDIS_HTTP_RATE_LIMIT_DB: int = 0
+
+    # Rate Limit Configuration
+    RATE_LIMIT: int = 60
+    RATE_LIMIT_WINDOW: int = 60
 
     # Configuration
     class Config:

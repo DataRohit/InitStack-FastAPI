@@ -22,7 +22,7 @@ def add_trusted_host_middleware(app: FastAPI) -> None:
     if not settings.DEBUG:
         # Add Trusted Host Middleware
         app.add_middleware(
-            TrustedHostMiddleware,
+            middleware_class=TrustedHostMiddleware,
             allowed_hosts=[host.strip() for host in settings.ALLOWED_HOSTS.split(",")],
         )
 

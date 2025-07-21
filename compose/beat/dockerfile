@@ -29,4 +29,4 @@ COPY . /app
 ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Run Celery beat scheduler
-CMD ["celery", "-A", "app.config.celery_app", "beat", "--loglevel=info"]
+CMD ["python", "-m", "watchfiles", "celery -A app.config.celery_app beat --loglevel=info"]

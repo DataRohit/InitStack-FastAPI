@@ -6,4 +6,4 @@ set -o errexit
 set -o nounset
 
 # Start Celery Flower With Authentication
-exec celery -A app.config.celery_app flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+exec python -m watchfiles "celery -A app.config.celery_app flower --loglevel=info --basic_auth=${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"

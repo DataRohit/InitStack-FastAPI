@@ -21,7 +21,7 @@ def add_https_redirect_middleware(app: FastAPI) -> None:
     # If DEBUG is False
     if not settings.DEBUG:
         # Add HTTPS Redirect Middleware
-        app.add_middleware(HTTPSRedirectMiddleware)
+        app.add_middleware(middleware_class=HTTPSRedirectMiddleware)
 
 
 # Exports
