@@ -1,9 +1,9 @@
 # Third-Party Imports
 from fastapi import FastAPI, Request, status
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Local Imports
+from config.middlewares import add_cors_middleware
 from config.settings import settings
 from src.routes import health_router
 
@@ -42,17 +42,8 @@ def create_app() -> FastAPI:
         },
     )
 
-    # If CORS Origins are Configured
-    if settings.CORS_ORIGINS:
-        # Add CORS Middleware
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=[str(origin).strip() for origin in settings.CORS_ORIGINS.split(",")],
-            allow_credentials=settings.CORS_CREDENTIALS,
-            allow_methods=[str(method).strip() for method in settings.CORS_METHODS.split(",")],
-            allow_headers=[str(header).strip() for header in settings.CORS_HEADERS.split(",")],
-            max_age=settings.CORS_MAX_AGE,
-        )
+    # Add CORS Middleware
+    add_cors_middleware(app)
 
     # Mount Health Router
     app.include_router(health_router)
