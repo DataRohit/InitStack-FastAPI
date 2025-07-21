@@ -86,7 +86,11 @@ def create_app() -> FastAPI:
         # Return Error Response
         return JSONResponse(
             status_code=422,
-            content={"detail": exc.errors(), "body": exc.body},
+            content={
+                "detail": "Validation Error!",
+                "errors": exc.errors(),
+                "body": exc.body,
+            },
         )
 
     # 500 Internal Server Error Handler
