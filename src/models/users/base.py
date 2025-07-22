@@ -9,6 +9,7 @@ from argon2.exceptions import HashingError, InvalidHashError, VerificationError,
 from bson import ObjectId
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.errors import PyMongoError
 from pymongo.results import InsertOneResult
 
 # Initialize Password Hasher
@@ -257,6 +258,48 @@ class User(BaseModel):
         # Return Validated Password
         return value
 
+    # Create Indexes
+    @classmethod
+    async def create_indexes(cls, collection: AsyncCollection) -> None:
+        """
+        Create Database Indexes
+
+        Creates indexes for:
+        - id (unique)
+        - username (unique)
+        - email (unique)
+        - is_active + is_staff + is_superuser
+        - date_joined
+        - last_login
+        - updated_at
+
+        Args:
+            collection (AsyncCollection): MongoDB Collection Instance
+
+        Raises:
+            PyMongoError: If Index Creation Fails
+        """
+
+        try:
+            # Create Single Field Indexes
+            await collection.create_index("username", unique=True)
+            await collection.create_index("email", unique=True)
+
+            # Create Status Compound Index
+            await collection.create_index([("is_active", 1), ("is_staff", 1), ("is_superuser", 1)])
+
+            # Create Date Indexes
+            await collection.create_index("date_joined")
+            await collection.create_index("last_login")
+            await collection.create_index("updated_at")
+
+        except PyMongoError as e:
+            # Raise PyMongoError
+            msg: str = f"Index Creation Failed: {e!s}"
+
+            # Raise PyMongoError
+            raise PyMongoError(msg) from e
+
     # Create User
     @classmethod
     async def create(cls, collection: AsyncCollection, user_data: dict) -> "User":
@@ -328,7 +371,8 @@ class User(BaseModel):
         return cls(**user_data) if user_data else None
 
     # Update User
-    async def update(self, collection: AsyncCollection, update_data: dict) -> None:
+    @classmethod
+    async def update(cls, collection: AsyncCollection, update_data: dict) -> None:
         """
         Update User
 
@@ -344,16 +388,17 @@ class User(BaseModel):
         # Traverse Update Data
         for field, value in update_data.items():
             # Set Attribute Value
-            setattr(self, field, value)
+            setattr(cls, field, value)
 
         # Update Timestamp
-        self.updated_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
+        cls.updated_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
 
         # Update in Database
-        await collection.update_one({"_id": self.id}, {"$set": self.model_dump(exclude_unset=True)})
+        await collection.update_one({"_id": cls.id}, {"$set": cls.model_dump(exclude_unset=True)})
 
-    # Delete User
-    async def delete(self, collection: AsyncCollection) -> None:
+    # Delete User by ID
+    @classmethod
+    async def delete_by_id(cls, collection: AsyncCollection, user_id: str) -> None:
         """
         Delete User
 
@@ -365,7 +410,44 @@ class User(BaseModel):
         """
 
         # Delete from Database
-        await collection.delete_one({"_id": self.id})
+        await collection.delete_one({"_id": user_id})
+
+    # Delete User by Identifier (Username or Email)
+    @classmethod
+    async def delete_by_identifier(cls, collection: AsyncCollection, identifier: str) -> None:
+        """
+        Delete User
+
+        Args:
+            collection (AsyncCollection): MongoDB Collection Instance
+
+        Raises:
+            PyMongoError: If Database Operation Fails
+        """
+
+        # Delete from Database
+        await collection.delete_one({"$or": [{"username": identifier}, {"email": identifier}]})
+
+    # Delete Inactive Users
+    @classmethod
+    async def delete_inactive_users(cls, collection: AsyncCollection) -> None:
+        """
+        Delete Inactive Users
+
+        Args:
+            collection (AsyncCollection): MongoDB Collection Instance
+
+        Raises:
+            PyMongoError: If Database Operation Fails
+        """
+
+        # Delete All Users where date_joined Older than 30 Minutes & is_active is False
+        await collection.delete_many(
+            {
+                "date_joined": {"$lt": datetime.datetime.now(datetime.UTC) - datetime.timedelta(seconds=1800)},
+                "is_active": False,
+            },
+        )
 
 
 # User Response Model

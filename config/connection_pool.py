@@ -7,10 +7,42 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI
 
-from config.mongodb import mongodb_manager
-
 # Local Imports
+from config.mongodb import get_mongodb, mongodb_manager
+from config.redis import redis_manager
 from config.settings import settings
+from src.models.users import User
+
+
+# Setup MongoDB Function
+async def setup_mongodb() -> None:
+    """
+    Setup MongoDB Function
+
+    This Function Initializes the MongoDB Connection and Creates Indexes.
+    """
+
+    # Ping MongoDB
+    await mongodb_manager.client.admin.command("ping")
+
+    # Get Database
+    async with get_mongodb() as db:
+        # Create Indexes
+        await User.create_indexes(collection=db.get_collection("users"))
+
+
+# Setup Redis Function
+async def setup_redis() -> None:
+    """
+    Setup Redis Function
+
+    This Function Initializes the Redis Connection.
+    """
+
+    # Get Redis Client
+    async with redis_manager.get_client(db=settings.REDIS_HTTP_RATE_LIMIT_DB):
+        # Pass
+        pass
 
 
 # Lifespan Function
@@ -21,7 +53,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     This Function Manages the Application Lifespan by:
     - Creating Connection Pools
-    - Initializing MongoDB Adapter
+    - Setting Up MongoDB
     - Proper Timeout Configuration
     - Connection Limits
     - TLS Verification
@@ -31,8 +63,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         app (FastAPI): FastAPI application instance
     """
 
-    # Initialize MongoDB Connection
-    await mongodb_manager.client.admin.command("ping")
+    # Setup MongoDB
+    await setup_mongodb()
+
+    # Setup Redis
+    await setup_redis()
 
     # Create SSL Context
     ssl_context: ssl.SSLContext = ssl.create_default_context()
