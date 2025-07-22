@@ -391,7 +391,7 @@ class User(BaseModel):
             setattr(cls, field, value)
 
         # Update Timestamp
-        cls.updated_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
+        cls.updated_at: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
 
         # Update in Database
         await collection.update_one({"_id": cls.id}, {"$set": cls.model_dump(exclude_unset=True)})
@@ -444,7 +444,7 @@ class User(BaseModel):
         # Delete All Users where date_joined Older than 30 Minutes & is_active is False
         await collection.delete_many(
             {
-                "date_joined": {"$lt": datetime.datetime.now(datetime.UTC) - datetime.timedelta(seconds=1800)},
+                "date_joined": {"$lt": datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(seconds=1800)},
                 "is_active": False,
             },
         )

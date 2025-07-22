@@ -22,6 +22,7 @@ class Settings(BaseSettings):
         PROJECT_DESCRIPTION (str): Project Description
         VERSION (str): Project Version
         PROJECT_WEBSITE (str): Project Website
+        PROJECT_DOMAIN (str): Project Domain
         PROJECT_EMAIL (str): Project Email
         LICENSE_URL (str): Project License URL
 
@@ -63,6 +64,15 @@ class Settings(BaseSettings):
         MONGODB_URI (str): MongoDB URI
         MONGODB_DATABASE (str): MongoDB Database
 
+        MAILER_HOST (str): Mailer Host
+        MAILER_PORT (int): Mailer Port
+        MAILER_USER (str): Mailer User
+        MAILER_PASS (str): Mailer Password
+        MAILER_FROM (str): Mailer From
+        MAILER_IS_SECURE (bool): Mailer Is Secure
+        MAILER_IS_TLS (bool): Mailer Is TLS
+        MAILER_IS_SSL (bool): Mailer Is SSL
+
         ACTIVATION_JWT_SECRET (str): JWT Secret Key
         ACTIVATION_JWT_ALGORITHM (str): JWT Algorithm
         ACTIVATION_JWT_EXPIRE (int): JWT Expiration Time in Seconds
@@ -86,6 +96,7 @@ class Settings(BaseSettings):
     PROJECT_DESCRIPTION: str = "A Production-Ready Full-Stack Starter Kit With FastAPI Backend, Celery Task Queue, And Comprehensive DevOps Tooling"  # noqa: E501
     VERSION: str = "0.1.0"
     PROJECT_WEBSITE: str = "https://github.com/InitStack/InitStack"
+    PROJECT_DOMAIN: str = "http://localhost:8080"
     PROJECT_EMAIL: str = "initstack@protonmail.com"
     LICENSE_URL: str = "https://github.com/InitStack/InitStack/blob/master/license"
 
@@ -135,6 +146,16 @@ class Settings(BaseSettings):
     # MongoDB Configuration
     MONGODB_URI: str = "mongodb://KHOS1bTrd0RBv0b:OOaooAAuAzH5ewb@mongodb-service:27017"
     MONGODB_DATABASE: str = "initstack"
+
+    # Mailer Configuration
+    MAILER_HOST: str = "mailpit-service"
+    MAILER_PORT: int = 1025
+    MAILER_USER: str = ""
+    MAILER_PASS: str = ""
+    MAILER_FROM: str = "initstack@protonmail.com"
+    MAILER_IS_SECURE: bool = False
+    MAILER_IS_TLS: bool = False
+    MAILER_IS_SSL: bool = False
 
     # JWT Activation Configuration
     ACTIVATION_JWT_SECRET: str = "7ff220d5c462c4f45d5766aef33333ed4c3ea21e50ebb725450f0c740cdc843e"  # noqa: S105

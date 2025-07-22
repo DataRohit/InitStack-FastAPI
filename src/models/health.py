@@ -254,7 +254,7 @@ class HealthResponse(BaseModel):
             "app": settings.PROJECT_NAME,
             "version": settings.VERSION,
             "environment": settings.APP_ENV,
-            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+            "timestamp": datetime.datetime.now(tz=datetime.UTC).isoformat(),
             "system": system_info,
         }
 

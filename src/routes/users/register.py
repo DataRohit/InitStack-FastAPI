@@ -1,6 +1,6 @@
 # Third-Party Imports
 import datetime
-import logging
+from pathlib import Path
 
 # Third-Party Imports
 import jwt
@@ -8,14 +8,78 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
 
+from config.mailer import render_template, send_email
+
 # Local Imports
 from config.mongodb import get_mongodb
 from config.redis import redis_manager
 from config.settings import settings
 from src.models.users import User, UserRegisterRequest, UserResponse
 
-# Create Logger
-logger = logging.getLogger(__name__)
+
+# Internal Function to Send Activation Email
+async def _send_activation_email(user: User) -> None:
+    """
+    Send Activation Email
+
+    Args:
+        user: User Instance
+    """
+
+    # Get Current Time
+    current_time: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+
+    # Calculate Expiry Time
+    expiry_time: datetime.datetime = current_time + datetime.timedelta(seconds=settings.ACTIVATION_JWT_EXPIRE)
+
+    # Generate Activation Token
+    activation_token: str = jwt.encode(
+        payload={
+            "sub": user.id,
+            "iss": settings.PROJECT_NAME,
+            "aud": settings.PROJECT_NAME,
+            "iat": current_time,
+            "exp": expiry_time,
+        },
+        key=settings.ACTIVATION_JWT_SECRET,
+        algorithm=settings.ACTIVATION_JWT_ALGORITHM,
+    )
+
+    # Set Activation Token in Redis
+    await redis_manager.set(
+        key=f"activation_token:{user.id}",
+        value=activation_token,
+        expire=settings.ACTIVATION_JWT_EXPIRE,
+        db=settings.REDIST_TOKEN_CACHE_DB,
+    )
+
+    # Create Activation Link
+    activation_link: str = f"{settings.PROJECT_DOMAIN}/api/activate?token={activation_token}"
+
+    # Prepare Email Context
+    email_context: dict = {
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "activation_link": activation_link,
+        "activation_link_expiry": expiry_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "current_year": datetime.datetime.now(tz=datetime.UTC).year,
+        "project_name": settings.PROJECT_NAME,
+    }
+
+    # Set Email Template Path
+    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "registered.html")
+
+    # Render Email Template
+    html_content: str = await render_template(template_path, email_context)
+
+    # Send Email
+    await send_email(
+        to_email=user.email,
+        subject=f"Activate Your {settings.PROJECT_NAME} Account",
+        html_content=html_content,
+    )
 
 
 # Register User
@@ -70,29 +134,8 @@ async def register_user_hander(request: UserRegisterRequest) -> JSONResponse:
     # Save to Database
     await user.create(collection=mongo_collection, user_data=user.model_dump(by_alias=True))
 
-    # Get Current Time
-    current_time: datetime.datetime = datetime.datetime.now(datetime.UTC)
-
-    # Generate Activation Token
-    activation_token: str = jwt.encode(
-        payload={
-            "sub": user.id,
-            "iss": settings.PROJECT_NAME,
-            "aud": settings.PROJECT_NAME,
-            "iat": current_time,
-            "exp": current_time + datetime.timedelta(seconds=settings.ACTIVATION_JWT_EXPIRE),
-        },
-        key=settings.ACTIVATION_JWT_SECRET,
-        algorithm=settings.ACTIVATION_JWT_ALGORITHM,
-    )
-
-    # Set Activation Token in Redis
-    await redis_manager.set(
-        key=f"activation_token:{user.id}",
-        value=activation_token,
-        expire=settings.ACTIVATION_JWT_EXPIRE,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Send Activation Email
+    await _send_activation_email(user=user)
 
     # Dump User Data
     user_dump: dict = user.model_dump()
