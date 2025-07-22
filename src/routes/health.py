@@ -1,5 +1,5 @@
-# Standard Library Imports
-from typing import Any
+# Third-Party Imports
+import logging
 
 # Third-Party Imports
 import psutil
@@ -12,14 +12,17 @@ from src.models.health import HealthResponse
 # Constants
 USAGE_THRESHOLD: int = 90
 
+# Initialize Logger
+logger = logging.getLogger(__name__)
+
 # Initialize Router
 router = APIRouter(
-    prefix="/health",
+    prefix="",
     tags=["Health Check"],
     responses={
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
-            "content": {"application/json": {"example": {"detail": "Internal Server Error!"}}},
+            "content": {"application/json": {"example": {"detail": "Internal Server Error"}}},
         },
     },
 )
@@ -27,7 +30,7 @@ router = APIRouter(
 
 # Health Check Endpoint
 @router.get(
-    path="/",
+    path="/health",
     status_code=status.HTTP_200_OK,
     summary="Health Check Endpoint",
     description="""
@@ -106,7 +109,7 @@ router = APIRouter(
         },
     },
 )
-async def health_check() -> dict[str, Any]:
+async def health_check() -> JSONResponse:
     """
     Health Check Endpoint
 
@@ -125,7 +128,7 @@ async def health_check() -> dict[str, Any]:
     - Timestamp of the Health Check
 
     Returns:
-        dict[str, Any]: Detailed Health Status and System Metrics
+        dict: Detailed Health Status and System Metrics
 
     Raises:
         HTTPException: If the Service is Unhealthy (503) or Encounters an Error (500)
@@ -150,18 +153,42 @@ async def health_check() -> dict[str, Any]:
                 content=health_data,
             )
 
-    except psutil.Error:
+    except psutil.Error as e:
+        # Set Error Message
+        msg = f"Health Check Failed - System Metrics Error: {e!s}"
+
+        # Log Error
+        logger.exception(
+            msg,
+            extra={
+                "error_type": "psutil",
+                "error": str(e),
+            },
+        )
+
         # Return a 500 Error if Error in System Metrics
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Error Collecting System Metrics!"},
+            content={"detail": "Error Collecting System Metrics"},
         )
 
-    except Exception:  # noqa: BLE001
+    except Exception as e:
+        # Set Error Message
+        msg = f"Health Check Failed - Unexpected Error: {e!s}"
+
+        # Log Error
+        logger.exception(
+            msg,
+            extra={
+                "error_type": "unexpected",
+                "error": str(e),
+            },
+        )
+
         # Return a 500 Error if Something Goes Wrong
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal Server Error!"},
+            content={"detail": "Internal Server Error"},
         )
 
     # Return the Health Data

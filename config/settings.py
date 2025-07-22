@@ -40,7 +40,12 @@ class Settings(BaseSettings):
         CELERY_RESULT_BACKEND (str): Celery Result Backend URL
 
         REDIS_URL (str): Redis Server URL
+        REDIS_HOST (str): Redis Host
+        REDIS_PORT (int): Redis Port
+        REDIS_USER (str): Redis User
+        REDIS_PASS (str): Redis Password
         REDIS_HTTP_RATE_LIMIT_DB (int): Redis Database Number for HTTP Rate Limiting
+        REDIST_TOKEN_CACHE_DB (int): Redis Database Number for Token Caching
 
         RATE_LIMIT (int): Default Maximum Requests Per Window
         RATE_LIMIT_WINDOW (int): Default Rate Limit Window in Seconds
@@ -57,6 +62,10 @@ class Settings(BaseSettings):
 
         MONGODB_URI (str): MongoDB URI
         MONGODB_DATABASE (str): MongoDB Database
+
+        ACTIVATION_JWT_SECRET (str): JWT Secret Key
+        ACTIVATION_JWT_ALGORITHM (str): JWT Algorithm
+        ACTIVATION_JWT_EXPIRE (int): JWT Expiration Time in Seconds
 
     Configuration:
         env_file (str): Environment File
@@ -100,7 +109,12 @@ class Settings(BaseSettings):
 
     # Redis Configuration
     REDIS_URL: str = "redis://:WFyzhcO3ByZIjdd@redis-service:6379/"
+    REDIS_HOST: str = "redis-service"
+    REDIS_PORT: int = 6379
+    REDIS_USER: str = ""
+    REDIS_PASS: str = "WFyzhcO3ByZIjdd"  # noqa: S105
     REDIS_HTTP_RATE_LIMIT_DB: int = 0
+    REDIST_TOKEN_CACHE_DB: int = 1
 
     # Rate Limit Configuration
     RATE_LIMIT: int = 60
@@ -119,8 +133,13 @@ class Settings(BaseSettings):
     SSL_VERIFY: bool = True
 
     # MongoDB Configuration
-    MONGODB_URI: str = "mongodb://KHOS1bTrd0RBv0b:OOaooAAuAzH5ewb@mongo-service:27017"
+    MONGODB_URI: str = "mongodb://KHOS1bTrd0RBv0b:OOaooAAuAzH5ewb@mongodb-service:27017"
     MONGODB_DATABASE: str = "initstack"
+
+    # JWT Activation Configuration
+    ACTIVATION_JWT_SECRET: str = "7ff220d5c462c4f45d5766aef33333ed4c3ea21e50ebb725450f0c740cdc843e"  # noqa: S105
+    ACTIVATION_JWT_ALGORITHM: str = "HS256"
+    ACTIVATION_JWT_EXPIRE: int = 1800
 
     # Configuration
     class Config:

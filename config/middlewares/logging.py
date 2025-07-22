@@ -12,7 +12,7 @@ from starlette.types import Message, Receive, Scope, Send
 handler: colorlog.StreamHandler = colorlog.StreamHandler()
 handler.setFormatter(
     colorlog.ColoredFormatter(
-        "%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        fmt="%(log_color)s%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] %(method)s %(path)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         log_colors={
             "DEBUG": "cyan",
@@ -23,9 +23,9 @@ handler.setFormatter(
         },
     ),
 )
-logger: logging.Logger = colorlog.getLogger(__name__)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+logger: logging.Logger = colorlog.getLogger(name=__name__)
+logger.addHandler(hdlr=handler)
+logger.setLevel(level=logging.INFO)
 logger.propagate = False
 
 
@@ -52,6 +52,186 @@ class LoggingMiddleware:
         self.app: FastAPI = app
         self.exclude_routes: list[str] = exclude_routes or []
 
+    # Check If Request Should Be Excluded
+    def _should_exclude_request(self, request: Request) -> bool:
+        """
+        Check If Request Should Be Excluded
+
+        Args:
+            request (Request): FastAPI Request Instance
+
+        Returns:
+            bool: True if request should be excluded, False otherwise
+        """
+
+        # Check If Any Exclude Route Matches
+        return any(request.url.path.startswith(route) for route in self.exclude_routes)
+
+    # Log Request Information
+    def _log_request_info(self, request: Request, request_id: str) -> None:
+        """
+        Log Request Information
+
+        Args:
+            request (Request): FastAPI Request Instance
+            request_id (str): Unique Request ID
+        """
+
+        # Log Request
+        logger.info(
+            "[%s] %s %s - Client: %s - Agent: %s - Params: %s",
+            request_id,
+            request.method,
+            request.url.path,
+            request.client.host if request.client else None,
+            request.headers.get("user-agent"),
+            dict(request.query_params),
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "query_params": dict(request.query_params),
+                "client": request.client.host if request.client else None,
+                "user_agent": request.headers.get("user-agent"),
+            },
+        )
+
+    # Determine Log Level Based On Status Code
+    def _get_log_level(self, status_code: int) -> int:
+        """
+        Determine Log Level Based On Status Code
+
+        Args:
+            status_code (int): HTTP Status Code
+
+        Returns:
+            int: Logging Level
+        """
+
+        # If Status Code Is 500 Or Higher
+        if status_code >= 500:  # noqa: PLR2004
+            # Return Error Level
+            return logging.ERROR
+
+        # If Status Code Is 400 Or Higher
+        if status_code >= 400:  # noqa: PLR2004
+            # Return Warning Level
+            return logging.WARNING
+
+        # Return Info Level
+        return logging.INFO
+
+    # Log Response Information
+    def _log_response_info(
+        self,
+        request: Request,
+        request_id: str,
+        status_code: int,
+        process_time: float,
+        response_size: int,
+    ) -> None:
+        """
+        Log Response Information
+
+        Args:
+            request (Request): FastAPI Request Instance
+            request_id (str): Unique Request ID
+            status_code (int): HTTP Status Code
+            process_time (float): Request Process Time
+            response_size (int): Response Size In Bytes
+        """
+
+        # Get Log Level
+        log_level: int = self._get_log_level(status_code)
+
+        # Log Response
+        logger.log(
+            log_level,
+            "[%s] %s %s - %d (%.3fs) %d bytes - Client: %s",
+            request_id,
+            request.method,
+            request.url.path,
+            status_code,
+            process_time,
+            response_size,
+            request.client.host if request.client else None,
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": status_code,
+                "process_time": process_time,
+                "response_size": response_size,
+                "client": request.client.host if request.client else None,
+            },
+        )
+
+    # Create Send Function With Logging
+    def _create_send_with_logging(self, request: Request, request_id: str, start_time: float, send: Send):
+        """
+        Create Send Function With Logging
+
+        Args:
+            request (Request): FastAPI Request Instance
+            request_id (str): Unique Request ID
+            start_time (float): Request Start Time
+            send (Send): Original Send Function
+
+        Returns:
+            Callable: Send Function With Logging
+        """
+
+        # Define Send With Logging
+        async def send_with_logging(message: Message) -> None:
+            """
+            Send Response With Logging
+
+            Args:
+                message (Message): FastAPI Message
+            """
+
+            # Handle HTTP Response Start
+            if message["type"] == "http.response.start":
+                # Get Response Details
+                response_headers: dict = dict(message["headers"])
+                response_size: int = int(response_headers.get(b"content-length", 0))
+                status_code: int = int(message["status"])
+                process_time: float = time.time() - start_time
+
+                # Log Response Information
+                self._log_response_info(request, request_id, status_code, process_time, response_size)
+
+            # Send Message
+            await send(message)
+
+        # Return Send With Logging Function
+        return send_with_logging
+
+    # Log Exception Information
+    def _log_exception_info(self, request: Request, request_id: str, exc: Exception) -> None:
+        """
+        Log Exception Information
+
+        Args:
+            request (Request): FastAPI Request Instance
+            request_id (str): Unique Request ID
+            exc (Exception): Exception Instance
+        """
+
+        # Initialize Error Message
+        msg: str = f"Request Failed: {exc!s}"
+
+        # Log The Error
+        logger.exception(
+            msg=msg,
+            extra={
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "error": str(exc),
+            },
+        )
+
     # Process Request And Log Details
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """
@@ -63,7 +243,7 @@ class LoggingMiddleware:
             send (Send): Send Callable
         """
 
-        # If The Scope Is Not HTTP
+        # Handle Non-HTTP Requests
         if scope["type"] != "http":
             # Call The Next Middleware
             await self.app(scope, receive, send)
@@ -74,97 +254,31 @@ class LoggingMiddleware:
         # Initialize Request
         request: Request = Request(scope, receive)
 
-        # Skip logging for excluded routes
-        if any(request.url.path.startswith(route) for route in self.exclude_routes):
+        # Handle Excluded Routes
+        if self._should_exclude_request(request):
             # Call The Next Middleware
             await self.app(scope, receive, send)
 
             # Return
             return
 
-        # Generate Request ID
+        # Setup Request Logging
         request_id: str = str(uuid.uuid4())
-
-        # Get Start Time
         start_time: float = time.time()
 
-        # Initialize Request
-        request: Request = Request(scope, receive)
+        # Log Request Information
+        self._log_request_info(request, request_id)
 
-        # Log Request
-        logger.info(
-            "Request: %s %s",
-            request.method,
-            request.url.path,
-            extra={
-                "request_id": request_id,
-                "method": request.method,
-                "path": request.url.path,
-                "query_params": dict(request.query_params),
-                "client": request.client.host if request.client else None,
-                "user_agent": request.headers.get("user-agent"),
-            },
-        )
-
-        # Process Request
-        async def send_with_logging(message: Message) -> None:
-            """
-            Send Response With Logging
-
-            Args:
-                message (Message): FastAPI Message
-            """
-
-            # If The Message Type Is HTTP Response Start
-            if message["type"] == "http.response.start":
-                # Initialize Response Headers
-                response_headers: dict = dict(message["headers"])
-
-                # Initialize Response Size
-                response_size: int = int(response_headers.get(b"content-length", 0))
-
-                # Calculate Process Time
-                process_time: float = time.time() - start_time
-
-                # Log Response
-                logger.info(
-                    "Response: %s %s - %s (%.3fs) %s bytes",
-                    request.method,
-                    request.url.path,
-                    message["status"],
-                    process_time,
-                    response_size,
-                    extra={
-                        "request_id": request_id,
-                        "method": request.method,
-                        "path": request.url.path,
-                        "status_code": message["status"],
-                        "process_time": process_time,
-                        "response_size": response_size,
-                    },
-                )
-
-            # Send Message
-            await send(message)
+        # Create Send Function With Logging
+        send_with_logging = self._create_send_with_logging(request, request_id, start_time, send)
 
         try:
             # Call The Next Middleware
             await self.app(scope, receive, send_with_logging)
 
         except Exception as exc:
-            # Initialize Error Message
-            msg: str = f"Request Failed: {exc!s}"
-
-            # Log The Error
-            logger.exception(
-                msg=msg,
-                extra={
-                    "request_id": request_id,
-                    "method": request.method,
-                    "path": request.url.path,
-                    "error": str(exc),
-                },
-            )
+            # Log Exception Information
+            self._log_exception_info(request, request_id, exc)
 
             # Raise The Exception
             raise
@@ -186,7 +300,7 @@ def add_logging_middleware(app: FastAPI) -> None:
             "/api/docs",
             "/api/redoc",
             "/api/openapi.json",
-            "/api/health/",
+            "/api/health",
         ],
     )
 

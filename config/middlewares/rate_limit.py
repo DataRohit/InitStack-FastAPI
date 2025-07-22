@@ -90,7 +90,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     # Return Rate Limit Exceeded Response
                     return JSONResponse(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        content={"detail": "Rate Limit Exceeded!"},
+                        content={"detail": "Rate Limit Exceeded"},
                     )
 
                 # Increment Count
@@ -124,7 +124,7 @@ def add_rate_limit_middleware(app: FastAPI) -> None:
             "/api/docs",
             "/api/redoc",
             "/api/openapi.json",
-            "/api/health/",
+            "/api/health",
         ],
     )
 

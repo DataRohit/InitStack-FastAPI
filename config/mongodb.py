@@ -82,7 +82,7 @@ mongodb_manager: MongoDBManager = MongoDBManager()
 
 # Get Database Helper
 @asynccontextmanager
-async def get_mongodb() -> AsyncGenerator:
+async def get_mongodb() -> AsyncDatabase:
     """
     Get MongoDB Database Helper
 

@@ -1,7 +1,6 @@
 # Standard Library Imports
 import datetime
 import socket
-from typing import Any
 
 # Third-Party Imports
 import psutil
@@ -184,14 +183,14 @@ class HealthResponse(BaseModel):
 
     # Get Memory Usage
     @classmethod
-    def _get_memory_usage(cls) -> dict[str, Any]:
+    def _get_memory_usage(cls) -> dict:
         """
         Get Current Memory Usage Information
 
         This Method Returns the Current Memory Usage Information.
 
         Returns:
-            dict[str, Any]: Memory Usage Information
+            dict: Memory Usage Information
         """
 
         # Get Memory Usage
@@ -208,14 +207,14 @@ class HealthResponse(BaseModel):
 
     # Get Disk Usage
     @classmethod
-    def _get_disk_usage(cls) -> dict[str, Any]:
+    def _get_disk_usage(cls) -> dict:
         """
         Get Current Disk Usage Information
 
         This Method Returns the Current Disk Usage Information.
 
         Returns:
-            dict[str, Any]: Disk Usage Information
+            dict: Disk Usage Information
         """
 
         # Get Disk Usage
@@ -231,18 +230,18 @@ class HealthResponse(BaseModel):
 
     # Get Health Response
     @classmethod
-    def get_health_response(cls) -> dict[str, Any]:
+    def get_health_response(cls) -> dict:
         """
         Get Health Response
 
         This Method Returns the Health Status of the API with System Information.
 
         Returns:
-            dict[str, Any]: Health Status and System Information
+            dict: Health Status and System Information
         """
 
         # Get System Information
-        system_info: dict[str, Any] = {
+        system_info: dict = {
             "hostname": socket.gethostname(),
             "cpu_percent": psutil.cpu_percent(),
             "memory": cls._get_memory_usage(),
