@@ -4,9 +4,6 @@ from typing import ClassVar
 # Third-Party Imports
 from pydantic import BaseModel, Field
 
-# Local Imports
-from src.models.users.base import UserResponse
-
 
 # User Register Request Model
 class UserRegisterRequest(BaseModel):
@@ -56,34 +53,5 @@ class UserRegisterRequest(BaseModel):
     )
 
 
-# User Register Response Model
-class UserRegisterResponse(BaseModel):
-    """
-    User Register Response Model
-
-    This Model Defines the Structure of User Registration Response Data.
-
-    Attributes:
-        user (UserResponse): Registered User Instance (without sensitive fields)
-        activation_token (str): Account Activation Token
-    """
-
-    # Model Configuration
-    model_config: ClassVar[dict] = {"arbitrary_types_allowed": True, "extra": "forbid"}
-
-    # User Data
-    user: UserResponse = Field(
-        ...,
-        description="Registered User Data (without sensitive fields)",
-    )
-
-    # Activation Token
-    activation_token: str = Field(
-        ...,
-        example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjVkY2Y4YzYwYjI0ZTAwMTFlYjQ4YjQ5IiwiaWF0IjoxNzE4ODQ1NjAwLCJleHAiOjE3MTg5MzIwMDB9.1q3X2Q4X5Y6Z7A8B9C0D1E2F3G4H5I6J7K8L9M0N1O2P3Q4R5S6T7U8V9W0",
-        description="JWT Token for Account Activation",
-    )
-
-
 # Exports
-__all__: list[str] = ["UserRegisterRequest", "UserRegisterResponse"]
+__all__: list[str] = ["UserRegisterRequest"]
