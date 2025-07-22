@@ -8,10 +8,10 @@ import httpx
 from fastapi import FastAPI
 
 # Local Imports
-from config.mongodb import get_mongodb, mongodb_manager
+from config.indexes.users import create_users_indexes
+from config.mongodb import mongodb_manager
 from config.redis import redis_manager
 from config.settings import settings
-from src.models.users import User
 
 
 # Setup MongoDB Function
@@ -25,10 +25,8 @@ async def setup_mongodb() -> None:
     # Ping MongoDB
     await mongodb_manager.client.admin.command("ping")
 
-    # Get Database
-    async with get_mongodb() as db:
-        # Create Indexes
-        await User.create_indexes(collection=db.get_collection("users"))
+    # Create Indexes
+    await create_users_indexes()
 
 
 # Setup Redis Function

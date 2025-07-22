@@ -8,9 +8,6 @@ from argon2 import PasswordHasher
 from argon2.exceptions import HashingError, InvalidHashError, VerificationError, VerifyMismatchError
 from bson import ObjectId
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from pymongo.asynchronous.collection import AsyncCollection
-from pymongo.errors import PyMongoError
-from pymongo.results import InsertOneResult
 
 # Initialize Password Hasher
 ph = PasswordHasher()
@@ -36,6 +33,13 @@ class User(BaseModel):
         date_joined (datetime.datetime): Account Creation Timestamp
         last_login (datetime.datetime | None): Last Login Timestamp
         updated_at (datetime.datetime): Last Update Timestamp
+
+    Methods:
+        set_password(password: str) -> None: Set User Password
+        verify_password(password: str) -> bool: Verify User Password
+        validate_username(value: str) -> str: Validate Username Format
+        validate_name(value: str) -> str: Validate Name Format
+        validate_password(value: str) -> str: Validate Password Complexity
     """
 
     # Model Configuration
@@ -257,197 +261,6 @@ class User(BaseModel):
 
         # Return Validated Password
         return value
-
-    # Create Indexes
-    @classmethod
-    async def create_indexes(cls, collection: AsyncCollection) -> None:
-        """
-        Create Database Indexes
-
-        Creates indexes for:
-        - id (unique)
-        - username (unique)
-        - email (unique)
-        - is_active + is_staff + is_superuser
-        - date_joined
-        - last_login
-        - updated_at
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-
-        Raises:
-            PyMongoError: If Index Creation Fails
-        """
-
-        try:
-            # Create Single Field Indexes
-            await collection.create_index("username", unique=True)
-            await collection.create_index("email", unique=True)
-
-            # Create Status Compound Index
-            await collection.create_index([("is_active", 1), ("is_staff", 1), ("is_superuser", 1)])
-
-            # Create Date Indexes
-            await collection.create_index("date_joined")
-            await collection.create_index("last_login")
-            await collection.create_index("updated_at")
-
-        except PyMongoError as e:
-            # Raise PyMongoError
-            msg: str = f"Index Creation Failed: {e!s}"
-
-            # Raise PyMongoError
-            raise PyMongoError(msg) from e
-
-    # Create User
-    @classmethod
-    async def create(cls, collection: AsyncCollection, user_data: dict) -> "User":
-        """
-        Create New User
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-            user_data (dict): User Data Dictionary
-
-        Returns:
-            User: Created User Instance
-
-        Raises:
-            ValueError: If Validation Fails
-            PyMongoError: If Database Operation Fails
-        """
-
-        # Validate and Create User Instance
-        user: User = cls(**user_data)
-
-        # Insert into Database
-        result: InsertOneResult = await collection.insert_one(user.model_dump(by_alias=True))
-
-        # Set User ID
-        user.id: ObjectId = result.inserted_id
-
-        # Return User
-        return user
-
-    # Get User by ID
-    @classmethod
-    async def get_by_id(cls, collection: AsyncCollection, user_id: str) -> "User | None":
-        """
-        Get User by ID
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-            user_id (str): User ID to Retrieve
-
-        Returns:
-            User | None: User Instance if Found, Else None
-        """
-
-        # Find User by ID
-        user_data: dict | None = await collection.find_one({"_id": user_id})
-
-        # Return User Instance if Found
-        return cls(**user_data) if user_data else None
-
-    # Get User by Identifier (Username or Email)
-    @classmethod
-    async def get_by_identifier(cls, collection: AsyncCollection, identifier: str) -> "User | None":
-        """
-        Get User by Username or Email
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-            identifier (str): Username or Email to Search For
-
-        Returns:
-            User | None: User Instance if Found, Else None
-        """
-
-        # Find User by Username or Email
-        user_data: dict | None = await collection.find_one({"$or": [{"username": identifier}, {"email": identifier}]})
-
-        # Return User Instance if Found
-        return cls(**user_data) if user_data else None
-
-    # Update User
-    @classmethod
-    async def update(cls, collection: AsyncCollection, update_data: dict) -> None:
-        """
-        Update User
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-            update_data (dict): Data to Update
-
-        Raises:
-            ValueError: If Validation Fails
-            PyMongoError: If Database Operation Fails
-        """
-
-        # Traverse Update Data
-        for field, value in update_data.items():
-            # Set Attribute Value
-            setattr(cls, field, value)
-
-        # Update Timestamp
-        cls.updated_at: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
-
-        # Update in Database
-        await collection.update_one({"_id": cls.id}, {"$set": cls.model_dump(exclude_unset=True)})
-
-    # Delete User by ID
-    @classmethod
-    async def delete_by_id(cls, collection: AsyncCollection, user_id: str) -> None:
-        """
-        Delete User
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-
-        Raises:
-            PyMongoError: If Database Operation Fails
-        """
-
-        # Delete from Database
-        await collection.delete_one({"_id": user_id})
-
-    # Delete User by Identifier (Username or Email)
-    @classmethod
-    async def delete_by_identifier(cls, collection: AsyncCollection, identifier: str) -> None:
-        """
-        Delete User
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-
-        Raises:
-            PyMongoError: If Database Operation Fails
-        """
-
-        # Delete from Database
-        await collection.delete_one({"$or": [{"username": identifier}, {"email": identifier}]})
-
-    # Delete Inactive Users
-    @classmethod
-    async def delete_inactive_users(cls, collection: AsyncCollection) -> None:
-        """
-        Delete Inactive Users
-
-        Args:
-            collection (AsyncCollection): MongoDB Collection Instance
-
-        Raises:
-            PyMongoError: If Database Operation Fails
-        """
-
-        # Delete All Users where date_joined Older than 30 Minutes & is_active is False
-        await collection.delete_many(
-            {
-                "date_joined": {"$lt": datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(seconds=1800)},
-                "is_active": False,
-            },
-        )
 
 
 # User Response Model

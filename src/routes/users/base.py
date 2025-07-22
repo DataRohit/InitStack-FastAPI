@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 
 # Local Imports
 from src.models.users import UserRegisterRequest, UserResponse
+from src.routes.users.activate import activate_user_hander
 from src.routes.users.register import register_user_hander
 
 # Initialize Router
@@ -106,6 +107,16 @@ router = APIRouter(
                 },
             },
         },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Failed to Register User",
+                    },
+                },
+            },
+        },
     },
 )
 async def register_user(request: UserRegisterRequest) -> JSONResponse:
@@ -113,7 +124,7 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
     Register a New User
 
     Args:
-        request: UserRegisterRequest Containing User Registration Data
+        request (UserRegisterRequest): UserRegisterRequest Containing User Registration Data
 
     Returns:
         JSONResponse: UserResponse with User Data
@@ -124,6 +135,107 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
 
     # Register User
     return await register_user_hander(request=request)
+
+
+# User Activate Endpoint
+@router.get(
+    path="/activate",
+    status_code=status.HTTP_200_OK,
+    summary="User Activation Endpoint",
+    description="""
+    Activate a User Account.
+
+    This Endpoint Allows a User to Activate Their Account by Providing:
+    - Activation Token (Query Parameter)
+    """,
+    name="User Activate",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Activated Successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "687ea9fa53bf34da640e4ef5",
+                        "username": "john_doe",
+                        "email": "john_doe@example.com",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "is_active": True,
+                        "is_staff": False,
+                        "is_superuser": False,
+                        "date_joined": "2025-07-21T20:58:34.273678+00:00",
+                        "last_login": "2025-07-21T21:58:34.273678+00:00",
+                        "updated_at": "2025-07-21T21:30:34.273678+00:00",
+                    },
+                },
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Validation Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Validation Error",
+                        "errors": [
+                            {
+                                "type": "missing",
+                                "loc": ["query", "token"],
+                                "msg": "Field Required",
+                                "input": None,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid Activation Token",
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "User Not Found",
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Failed to Activate User",
+                    },
+                },
+            },
+        },
+    },
+)
+async def activate_user(token: str) -> JSONResponse:
+    """
+    Activate User
+
+    Args:
+        token (str): Activation Token
+
+    Returns:
+        JSONResponse: UserResponse with User Data
+
+    Raises:
+        HTTPException: For Validation Errors or Conflicts
+    """
+
+    # Activate User
+    return await activate_user_hander(token=token)
 
 
 # Exports

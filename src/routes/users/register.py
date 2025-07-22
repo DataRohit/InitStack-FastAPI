@@ -7,6 +7,7 @@ import jwt
 from fastapi import status
 from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.results import InsertOneResult
 
 from config.mailer import render_template, send_email
 
@@ -23,7 +24,7 @@ async def _send_activation_email(user: User) -> None:
     Send Activation Email
 
     Args:
-        user: User Instance
+        user (User): User Instance
     """
 
     # Get Current Time
@@ -64,7 +65,7 @@ async def _send_activation_email(user: User) -> None:
         "last_name": user.last_name,
         "activation_link": activation_link,
         "activation_link_expiry": expiry_time.strftime("%Y-%m-%d %H:%M:%S"),
-        "current_year": datetime.datetime.now(tz=datetime.UTC).year,
+        "current_year": current_time.year,
         "project_name": settings.PROJECT_NAME,
     }
 
@@ -97,56 +98,59 @@ async def register_user_hander(request: UserRegisterRequest) -> JSONResponse:
         HTTPException: For Validation Errors or Conflicts
     """
 
-    # Get Database
+    # Get Database and Collection
     async with get_mongodb() as db:
         # Get Collection
         mongo_collection: AsyncCollection = db.get_collection("users")
 
-    # Check if user already exists
-    existing_user: User | None = await User.get_by_identifier(
-        collection=mongo_collection,
-        identifier=request.username,
-    ) or await User.get_by_identifier(
-        collection=mongo_collection,
-        identifier=request.email,
-    )
-
-    # If User Already Exists
-    if existing_user:
-        # Return Conflict Response
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={"detail": "User With This Username or Email Already Exists"},
+        # Check If User Already Exists
+        existing_user: dict | None = await mongo_collection.find_one(
+            filter={"$or": [{"username": request.username}, {"email": request.email}]},
         )
 
-    # Create and Validate User
-    user: User = User(
-        username=request.username,
-        email=request.email,
-        first_name=request.first_name,
-        last_name=request.last_name,
-        password=request.password,
-    )
+        # If User Already Exists
+        if existing_user:
+            # Return Conflict Response
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={"detail": "User With This Username or Email Already Exists"},
+            )
 
-    # This Will Validate Password Complexity and Hash It
-    user.set_password(password=request.password)
+        # Create and Validate User
+        user: User = User(
+            username=request.username,
+            email=request.email,
+            first_name=request.first_name,
+            last_name=request.last_name,
+            password=request.password,
+        )
 
-    # Save to Database
-    await user.create(collection=mongo_collection, user_data=user.model_dump(by_alias=True))
+        # This Will Validate Password Complexity and Hash It
+        user.set_password(password=request.password)
+
+        # Save to Database
+        result: InsertOneResult | None = await mongo_collection.insert_one(
+            document=user.model_dump(by_alias=True),
+        )
+
+        # If Insertion Failed
+        if not result:
+            # Return Internal Server Error
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": "Failed to Register User"},
+            )
 
     # Send Activation Email
     await _send_activation_email(user=user)
 
-    # Dump User Data
-    user_dump: dict = user.model_dump()
-
-    # Remove Password from User Data
-    user_dump.pop("password")
+    # Prepare Response Data
+    response_data: dict = {key: value for key, value in user.model_dump().items() if key != "password"}
 
     # Return Response with UserResponse Model
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content=UserResponse(**user_dump).model_dump(mode="json"),
+        content=UserResponse(**response_data).model_dump(mode="json"),
     )
 
 

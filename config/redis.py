@@ -30,13 +30,13 @@ class RedisManager:
         Get Redis Client Context Manager
 
         Args:
-            db (int): Redis database number (default: 0)
+            db (int): Redis Database Number (default: 0)
 
         Yields:
-            Redis: Configured Redis client instance
+            Redis: Configured Redis Client Instance
 
         Raises:
-            RedisError: If connection fails
+            RedisError: If Connection Fails
         """
 
         # Initialize Redis Client
@@ -72,11 +72,11 @@ class RedisManager:
         Get Value from Redis
 
         Args:
-            key (str): Key to retrieve
-            db (int): Redis database number (default: 0)
+            key (str): Key to Retrieve
+            db (int): Redis Database Number (default: 0)
 
         Returns:
-            Any | None: Retrieved value or None
+            Any | None: Retrieved Value or None
         """
 
         # With Client
@@ -90,10 +90,10 @@ class RedisManager:
         Set Value in Redis
 
         Args:
-            key (str): Key to set
-            value (Any): Value to store
-            expire (int | None): Expiration in seconds
-            db (int): Redis database number (default: 0)
+            key (str): Key to Set
+            value (Any): Value to Store
+            expire (int | None): Expiration in Seconds
+            db (int): Redis Database Number (default: 0)
 
         Returns:
             bool: True if successful
@@ -110,11 +110,11 @@ class RedisManager:
         Delete Key from Redis
 
         Args:
-            key (str): Key to delete
-            db (int): Redis database number (default: 0)
+            key (str): Key to Delete
+            db (int): Redis Database Number (default: 0)
 
         Returns:
-            bool: True if key was deleted
+            bool: True if Key was Deleted
         """
 
         # With Client

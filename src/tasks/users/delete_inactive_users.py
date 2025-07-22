@@ -1,10 +1,13 @@
+# Standard Library Imports
+import datetime
+
 # Third-Party Imports
 from asgiref.sync import async_to_sync
 from celery import shared_task
+from pymongo.asynchronous.collection import AsyncCollection
 
 # Local Imports
 from config.mongodb import get_mongodb
-from src.models.users import User
 
 
 # Delete Inactive Users Task
@@ -25,10 +28,15 @@ def delete_inactive_users_task(self) -> None:
         # Get MongoDB Connection
         async with get_mongodb() as db:
             # Get Users Collection
-            collection = db.get_collection("users")
+            collection: AsyncCollection = db.get_collection("users")
 
             # Delete Inactive Users
-            await User.delete_inactive_users(collection)
+            await collection.delete_many(
+                filter={
+                    "date_joined": {"$lt": datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(minutes=30)},
+                    "is_active": False,
+                },
+            )
 
     try:
         # Run the Async Logic in a Synchronous Context
