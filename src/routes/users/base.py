@@ -318,7 +318,7 @@ async def activate_user(token: str) -> JSONResponse:
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "User Is Not Active",
+                        "detail": "Invalid Password",
                     },
                 },
             },

@@ -101,3 +101,6 @@ tags
 
 # SonarQube
 .scannerwork/
+
+# Task Manager MCP
+tasks.json

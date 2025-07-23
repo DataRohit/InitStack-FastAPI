@@ -202,7 +202,7 @@ async def reset_password_handler(request: UserResetPasswordRequest) -> JSONRespo
     # Return Success Response
     return JSONResponse(
         status_code=status.HTTP_202_ACCEPTED,
-        content={"message": "User Reset Password Email Sent Successfully"},
+        content={"detail": "User Reset Password Email Sent Successfully"},
     )
 
 
