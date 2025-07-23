@@ -236,11 +236,19 @@ async def login_user_handler(request: UserLoginRequest) -> JSONResponse:
 
         # If User Is Not Active
         if not existing_user["is_active"]:
-            # Return Unauthorized Response
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "User Is Not Active"},
+            # Activate User
+            await mongo_collection.update_one(
+                filter={"_id": existing_user["_id"]},
+                update={
+                    "$set": {
+                        "is_active": True,
+                        "updated_at": datetime.datetime.now(tz=datetime.UTC),
+                    },
+                },
             )
+
+            # Update User
+            existing_user["is_active"] = True
 
         # Create and Validate User
         user: User = User(**existing_user)

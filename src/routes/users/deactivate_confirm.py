@@ -1,4 +1,4 @@
-# Third-Party Imports
+# Standard Library Imports
 import datetime
 from pathlib import Path
 
@@ -8,27 +8,26 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
 
-from config.mailer import render_template, send_email
-
 # Local Imports
+from config.mailer import render_template, send_email
 from config.mongodb import get_mongodb
 from config.redis import redis_manager
 from config.settings import settings
-from src.models.users import User, UserResponse
+from src.models.users import User
 
 
-# Internal Function to Send Activated Email
-async def _send_activated_email(user: User) -> None:
+# Internal Function to Send Deactivated Email
+async def _send_deactivated_email(user: User) -> None:
     """
-    Send Activated Email
+    Send Deactivated Email
 
     Args:
         user (User): User Instance
     """
 
-    # Remove Activation Token from Redis
+    # Remove Deactivation Token from Redis
     await redis_manager.delete(
-        key=f"activation_token:{user.id}",
+        key=f"deactivation_token:{user.id}",
         db=settings.REDIST_TOKEN_CACHE_DB,
     )
 
@@ -50,7 +49,7 @@ async def _send_activated_email(user: User) -> None:
     }
 
     # Set Email Template Path
-    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "activated.html")
+    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "deactivate_confirm.html")
 
     # Render Email Template
     html_content: str = await render_template(template_path, email_context)
@@ -58,18 +57,18 @@ async def _send_activated_email(user: User) -> None:
     # Send Email
     await send_email(
         to_email=user.email,
-        subject="Account Activated Successfully",
+        subject="Account Deactivated Successfully",
         html_content=html_content,
     )
 
 
-# Activate User
-async def activate_user_handler(token: str) -> JSONResponse:
+# Deactivate User
+async def deactivate_user_confirm_handler(token: str) -> JSONResponse:
     """
-    Activate User
+    Deactivate User
 
     Args:
-        token (str): Activation Token
+        token (str): Deactivation Token
 
     Returns:
         JSONResponse: UserResponse with User Data
@@ -79,8 +78,8 @@ async def activate_user_handler(token: str) -> JSONResponse:
         # Decode Token
         payload: dict = jwt.decode(
             jwt=token,
-            key=settings.ACTIVATION_JWT_SECRET,
-            algorithms=[settings.ACTIVATION_JWT_ALGORITHM],
+            key=settings.DEACTIVATE_JWT_SECRET,
+            algorithms=[settings.DEACTIVATE_JWT_ALGORITHM],
             verify=True,
             audience=settings.PROJECT_NAME,
             issuer=settings.PROJECT_NAME,
@@ -97,12 +96,12 @@ async def activate_user_handler(token: str) -> JSONResponse:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Activation Token"},
+            content={"detail": "Invalid Deactivation Token"},
         )
 
     # Get Token from Redis
     stored_token: str | None = await redis_manager.get(
-        key=f"activation_token:{payload['sub']}",
+        key=f"deactivation_token:{payload['sub']}",
         db=settings.REDIST_TOKEN_CACHE_DB,
     )
 
@@ -111,7 +110,7 @@ async def activate_user_handler(token: str) -> JSONResponse:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Activation Token"},
+            content={"detail": "Invalid Deactivation Token"},
         )
 
     # Get Database and Collection
@@ -134,12 +133,12 @@ async def activate_user_handler(token: str) -> JSONResponse:
                 content={"detail": "User Not Found"},
             )
 
-        # If User Already Activated
-        if existing_user["is_active"]:
+        # If User Already Deactivated
+        if not existing_user["is_active"]:
             # Return Conflict Response
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                content={"detail": "User Already Activated"},
+                content={"detail": "User Already Deactivated"},
             )
 
         # Calculated Updated At
@@ -152,39 +151,38 @@ async def activate_user_handler(token: str) -> JSONResponse:
             },
             update={
                 "$set": {
-                    "is_active": True,
+                    "is_active": False,
                     "updated_at": updated_at,
                 },
             },
         )
 
-        # If User Not Activated
+        # If User Not Deactivated
         if response.modified_count == 0:
             # Return Internal Server Error Response
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Activate User"},
+                content={"detail": "Failed to Deactivate User"},
             )
 
-        # Update existing_user with activated status
-        existing_user["is_active"] = True
+        # Update existing_user with deactivated status
+        existing_user["is_active"] = False
         existing_user["updated_at"] = updated_at
 
     # Create User instance
     user: User = User(**existing_user)
 
-    # Send Activated Email
-    await _send_activated_email(user=user)
-
-    # Prepare Response Data
-    response_data: dict = {key: value for key, value in user.model_dump().items() if key != "password"}
+    # Send Deactivated Email
+    await _send_deactivated_email(user=user)
 
     # Return Response with UserResponse Model
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content=UserResponse(**response_data).model_dump(mode="json"),
+        content={
+            "detail": "User Deactivated Successfully",
+        },
     )
 
 
 # Exports
-__all__: list[str] = ["activate_user_handler"]
+__all__: list[str] = ["deactivate_user_confirm_handler"]

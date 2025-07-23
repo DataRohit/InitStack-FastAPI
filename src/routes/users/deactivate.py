@@ -167,7 +167,7 @@ async def deactivate_user_handler(current_user: User) -> JSONResponse:
     # Return Success Response
     return JSONResponse(
         status_code=status.HTTP_202_ACCEPTED,
-        content={"detail": "Deactivation Email Sent Successfully"},
+        content={"detail": "User Deactivation Email Sent Successfully"},
     )
 
 

@@ -11,6 +11,7 @@ from src.models.users import User, UserRegisterRequest, UserResponse
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.routes.users.activate import activate_user_handler
 from src.routes.users.deactivate import deactivate_user_handler
+from src.routes.users.deactivate_confirm import deactivate_user_confirm_handler
 from src.routes.users.login import login_user_handler
 from src.routes.users.me import get_current_user_handler
 from src.routes.users.register import register_user_handler
@@ -204,9 +205,9 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
                         "errors": [
                             {
                                 "type": "missing",
-                                "loc": ["body", "password"],
+                                "loc": ["query", "token"],
                                 "msg": "Field Required",
-                                "input": {"identifier": "john_doe@example.com"},
+                                "input": None,
                             },
                         ],
                     },
@@ -488,6 +489,69 @@ async def deactivate_user_route(current_user: Annotated[User, Depends(get_curren
 
     # Deactivate User
     return await deactivate_user_handler(current_user=current_user)
+
+
+@router.get(
+    path="/deactivate_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="User Deactivate Confirm Endpoint",
+    description="""
+    Confirms User Deactivation Process.
+
+    This Endpoint Allows a User to Confirm the Deactivation Process by Providing:
+    - Deactivation Token (Query Parameter)
+    """,
+    name="User Deactivate Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Deactivated Successfully",
+            "content": {"application/json": {"example": {"detail": "User Deactivated Successfully"}}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {"application/json": {"example": {"detail": "Invalid Deactivation Token"}}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid Request",
+                        "errors": [
+                            {
+                                "type": "missing",
+                                "loc": ["query", "token"],
+                                "msg": "Field Required",
+                                "input": None,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {"application/json": {"example": {"detail": "Failed To Deactivate User"}}},
+        },
+    },
+)
+async def deactivate_user_confirm_route(token: str) -> JSONResponse:
+    """
+    Confirms User Deactivation Process.
+
+    Args:
+        token (str): Deactivation Token
+
+    Returns:
+        JSONResponse: Success Message With 200 Status
+    """
+
+    # Deactivate User
+    return await deactivate_user_confirm_handler(token=token)
 
 
 # Exports

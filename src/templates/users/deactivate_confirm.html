@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Account Deactivated</title>
+        <style>
+            body {
+                font-family: 'Courier New', monospace;
+                line-height: 1.5;
+                color: #222;
+                background: #fff;
+                margin: 0;
+                padding: 0;
+                text-align: center;
+            }
+
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .header {
+                padding-bottom: 1.5rem;
+                border-bottom: 1px solid #eee;
+            }
+
+            .content {
+                padding: 1.5rem 0;
+            }
+
+            .button {
+                display: inline-block;
+                background: #000;
+                color: #fff;
+                padding: 0.75rem 1.5rem;
+                text-decoration: none;
+                border-radius: 0;
+                margin: 1rem 0;
+                border: 1px solid #000;
+                font-family: inherit;
+            }
+
+            .footer {
+                margin-top: 2rem;
+                font-size: 0.8rem;
+                color: #777;
+                border-top: 1px solid #eee;
+                padding-top: 1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Account Deactivated</h1>
+            </div>
+            <div class="content">
+                <p>
+                    Hello <strong>{{ first_name }} {{ last_name }}</strong>,
+                </p>
+                <p>
+                    Your Account <strong>{{ username }}</strong> Has Been Successfully Deactivated.
+                </p>
+                <p>To Reactivate Your Account, Please Log In Again Using The Link Below.</p>
+                <p>
+                    <a href="{{ login_link }}" class="button">Login To Reactivate</a>
+                </p>
+                <p>If You Did Not Request This Deactivation, Please Contact Our Support Team Immediately.</p>
+            </div>
+            <div class="footer">
+                <p>{{ current_year }} {{ project_name }}. All Rights Reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>
