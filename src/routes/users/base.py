@@ -1,12 +1,17 @@
+# Standard Library Imports
+from typing import Annotated
+
 # Third-Party Imports
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
-from src.models.users import UserRegisterRequest, UserResponse
+from config.auth import get_current_user
+from src.models.users import User, UserRegisterRequest, UserResponse
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.routes.users.activate import activate_user_handler
 from src.routes.users.login import login_user_handler
+from src.routes.users.me import get_current_user_handler
 from src.routes.users.register import register_user_handler
 
 # Initialize Router
@@ -316,6 +321,16 @@ async def activate_user(token: str) -> JSONResponse:
                 },
             },
         },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "User Not Found",
+                    },
+                },
+            },
+        },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
             "description": "Invalid Request",
             "content": {
@@ -364,6 +379,68 @@ async def login_user(request: UserLoginRequest) -> JSONResponse:
 
     # Login User
     return await login_user_handler(request=request)
+
+
+# User Me Endpoint
+@router.get(
+    path="/me",
+    status_code=status.HTTP_200_OK,
+    summary="Get Current User",
+    description="""
+    Returns The Currently Authenticated User's Data.
+
+    Requires Valid JWT Authentication.
+    """,
+    name="Current User",
+    response_model=UserResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Data Retrieved Successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "687ea9fa53bf34da640e4ef5",
+                        "username": "john_doe",
+                        "email": "john_doe@example.com",
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "is_active": True,
+                        "is_staff": False,
+                        "is_superuser": False,
+                        "date_joined": "2025-07-21T20:58:34.273000+00:00",
+                        "last_login": "2025-07-21T21:58:34.273000+00:00",
+                        "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {"application/json": {"example": {"detail": "Failed To Get Current User"}}},
+        },
+    },
+)
+async def get_current_user_route(current_user: Annotated[User, Depends(get_current_user)]) -> JSONResponse:
+    """
+    Returns The Currently Authenticated User's Data.
+
+    Args:
+        current_user (User): The Authenticated User From Dependency
+
+    Returns:
+        JSONResponse: User Data With 200 Status
+    """
+
+    # Get Current User
+    return await get_current_user_handler(current_user=current_user)
 
 
 # Exports

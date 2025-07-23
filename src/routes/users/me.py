@@ -1,0 +1,34 @@
+# Third-Party Imports
+from fastapi import status
+from fastapi.responses import JSONResponse
+
+# Local Imports
+from src.models.users.base import User, UserResponse
+
+
+# Get Current User Route
+async def get_current_user_handler(current_user: User) -> JSONResponse:
+    """
+    Get Current User
+
+    Returns the currently authenticated user's data.
+
+    Args:
+        current_user (User): The authenticated user from dependency
+
+    Returns:
+        JSONResponse: User data with 200 status
+    """
+
+    # Prepare Response Data
+    response_data: dict = {key: value for key, value in current_user.model_dump().items() if key != "password"}
+
+    # Return User Data
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=UserResponse(**response_data).model_dump(mode="json"),
+    )
+
+
+# Exports
+__all__: list[str] = ["get_current_user_handler"]
