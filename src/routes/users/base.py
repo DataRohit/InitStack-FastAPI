@@ -9,6 +9,8 @@ from fastapi.responses import JSONResponse
 from config.auth import get_current_user
 from src.models.users import User, UserRegisterRequest, UserResponse
 from src.models.users.login import UserLoginRequest, UserLoginResponse
+from src.models.users.reset_password import UserResetPasswordRequest
+from src.models.users.reset_password_confirm import UserResetPasswordConfirmRequest
 from src.routes.users.activate import activate_user_handler
 from src.routes.users.deactivate import deactivate_user_handler
 from src.routes.users.deactivate_confirm import deactivate_user_confirm_handler
@@ -17,6 +19,8 @@ from src.routes.users.delete_confirm import delete_user_confirm_handler
 from src.routes.users.login import login_user_handler
 from src.routes.users.me import get_current_user_handler
 from src.routes.users.register import register_user_handler
+from src.routes.users.reset_password import reset_password_handler
+from src.routes.users.reset_password_confirm import reset_password_confirm_handler
 
 # Initialize Router
 router = APIRouter(
@@ -422,6 +426,10 @@ async def login_user(request: UserLoginRequest) -> JSONResponse:
             "description": "Not Found",
             "content": {"application/json": {"example": {"detail": "User Not Found"}}},
         },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+        },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
             "content": {"application/json": {"example": {"detail": "Failed To Get Current User"}}},
@@ -472,6 +480,10 @@ async def get_current_user_route(current_user: Annotated[User, Depends(get_curre
             "description": "Not Found",
             "content": {"application/json": {"example": {"detail": "User Not Found"}}},
         },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Already Deactivated"}}},
+        },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
             "content": {"application/json": {"example": {"detail": "Failed To Deactivate User"}}},
@@ -514,10 +526,6 @@ async def deactivate_user_route(current_user: Annotated[User, Depends(get_curren
             "description": "Unauthorized",
             "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
         },
-        status.HTTP_409_CONFLICT: {
-            "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
-        },
         status.HTTP_403_FORBIDDEN: {
             "description": "Forbidden",
             "content": {"application/json": {"example": {"detail": "Authentication Required"}}},
@@ -525,6 +533,10 @@ async def deactivate_user_route(current_user: Annotated[User, Depends(get_curren
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
             "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
@@ -547,6 +559,7 @@ async def delete_user_route(current_user: Annotated[User, Depends(get_current_us
     return await delete_user_handler(current_user=current_user)
 
 
+# User Deactivate Confirm Endpoint
 @router.get(
     path="/deactivate_confirm",
     status_code=status.HTTP_200_OK,
@@ -570,6 +583,10 @@ async def delete_user_route(current_user: Annotated[User, Depends(get_current_us
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
             "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Already Deactivated"}}},
         },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
             "description": "Unprocessable Entity",
@@ -635,6 +652,10 @@ async def deactivate_user_confirm_route(token: str) -> JSONResponse:
             "description": "User Not Found",
             "content": {"application/json": {"example": {"detail": "User Not Found"}}},
         },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+        },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Failed To Delete User",
             "content": {"application/json": {"example": {"detail": "Failed To Delete User"}}},
@@ -652,6 +673,110 @@ async def delete_user_confirm_route(token: str) -> JSONResponse:
         JSONResponse: Success Message With 200 Status
     """
     return await delete_user_confirm_handler(token=token)
+
+
+# User Reset Password Endpoint
+@router.post(
+    path="/reset_password",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Reset Password Endpoint",
+    description="""
+    Initiates User Reset Password Process.
+
+    This Endpoint Allows a User to Initiate the Reset Password Process by Providing:
+    - Requires User Identifier (Username or Email)
+
+    Returns:
+        JSONResponse: Success Message With 202 Status
+    """,
+    name="User Reset Password",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "User Reset Password Email Sent Successfully",
+            "content": {"application/json": {"example": {"detail": "User Reset Password Email Sent Successfully"}}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "User Not Found",
+            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Failed To Reset Password",
+            "content": {"application/json": {"example": {"detail": "Failed To Reset Password"}}},
+        },
+    },
+)
+async def reset_password_route(request: UserResetPasswordRequest) -> JSONResponse:
+    """
+    Resets User Password.
+
+    Args:
+        request (UserResetPasswordRequest): Reset Password Request
+
+    Returns:
+        JSONResponse: Success Message With 202 Status
+    """
+
+    # Reset Password
+    return await reset_password_handler(request=request)
+
+
+# User Reset Password Confirm Endpoint
+@router.post(
+    path="/reset_password_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="User Reset Password Confirm Endpoint",
+    description="""
+    Confirms User Reset Password Process.
+
+    This Endpoint Allows a User to Confirm the Reset Password Process by Providing:
+    - Reset Password Request (Password and Password Confirmation)
+    - Reset Password Token (Query Parameter)
+
+    Returns:
+        JSONResponse: Success Message With 200 Status
+    """,
+    name="User Reset Password Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Reset Password Confirmed Successfully",
+            "content": {"application/json": {"example": {"detail": "User Reset Password Confirmed Successfully"}}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {"application/json": {"example": {"detail": "Invalid Reset Password Token"}}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {"application/json": {"example": {"detail": "Failed To Reset Password"}}},
+        },
+    },
+)
+async def reset_password_confirm_route(request: UserResetPasswordConfirmRequest, token: str) -> JSONResponse:
+    """
+    Resets User Password.
+
+    Args:
+        request (UserResetPasswordConfirmRequest): Reset Password Confirm Request
+        token (str): Reset Password Token
+
+    Returns:
+        JSONResponse: Success Message With 200 Status
+    """
+
+    # Reset Password Confirm
+    return await reset_password_confirm_handler(request=request, token=token)
 
 
 # Exports

@@ -3,7 +3,7 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 
 # Local Imports
-from src.models.users.base import User, UserResponse
+from src.models.users import User, UserResponse
 
 
 # Get Current User Route
@@ -19,6 +19,14 @@ async def get_current_user_handler(current_user: User) -> JSONResponse:
     Returns:
         JSONResponse: User data with 200 status
     """
+
+    # If User Is Not Active
+    if not current_user.is_active:
+        # Return Conflict Response
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"detail": "User Is Not Active"},
+        )
 
     # Prepare Response Data
     response_data: dict = {key: value for key, value in current_user.model_dump().items() if key != "password"}

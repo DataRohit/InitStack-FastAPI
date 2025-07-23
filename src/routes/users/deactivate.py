@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from config.mailer import render_template, send_email
 from config.redis import redis_manager
 from config.settings import settings
-from src.models.users.base import User
+from src.models.users import User
 
 
 # Internal Function to Generate Deactivation Token
@@ -159,6 +159,14 @@ async def deactivate_user_handler(current_user: User) -> JSONResponse:
     Returns:
         JSONResponse: Success message with 202 status
     """
+
+    # If User Already Deactivated
+    if not current_user.is_active:
+        # Return Conflict Response
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"detail": "User Already Deactivated"},
+        )
 
     # Send Deactivation Email
     await _send_deactivation_email(user=current_user)

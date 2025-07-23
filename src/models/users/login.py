@@ -6,7 +6,7 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field
 
 # Local Imports
-from src.models.users.base import UserResponse
+from src.models.users import UserResponse
 
 
 # User Login Request Model

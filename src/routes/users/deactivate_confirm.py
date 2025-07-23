@@ -7,6 +7,7 @@ import jwt
 from fastapi import status
 from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.results import UpdateResult
 
 # Local Imports
 from config.mailer import render_template, send_email
@@ -144,7 +145,7 @@ async def deactivate_user_confirm_handler(token: str) -> JSONResponse:
         updated_at: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
 
         # Update User in Database
-        response = await mongo_collection.update_one(
+        response: UpdateResult = await mongo_collection.update_one(
             filter={
                 "_id": payload["sub"],
             },
@@ -168,7 +169,7 @@ async def deactivate_user_confirm_handler(token: str) -> JSONResponse:
         existing_user["is_active"] = False
         existing_user["updated_at"] = updated_at
 
-    # Create User instance
+    # Create User Instance
     user: User = User(**existing_user)
 
     # Send Deactivated Email

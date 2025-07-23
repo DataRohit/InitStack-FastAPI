@@ -7,30 +7,33 @@ import jwt
 from fastapi import status
 from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
-from pymongo.results import DeleteResult
+from pymongo.results import UpdateResult
 
 # Local Imports
 from config.mailer import render_template, send_email
 from config.mongodb import get_mongodb
 from config.redis import redis_manager
 from config.settings import settings
-from src.models.users import User
+from src.models.users import User, UserResetPasswordConfirmRequest
 
 
-# Internal Function to Send Deleted Email
-async def _send_deleted_email(user: User) -> None:
+# Internal Function to Send Reset Password Confirm Email
+async def _send_reset_password_confirm_email(user: User) -> None:
     """
-    Send Deleted Email
+    Send Reset Password Confirm Email
 
     Args:
         user (User): User Instance
     """
 
-    # Remove Deletion Token from Redis
+    # Remove Reset Password Token from Redis
     await redis_manager.delete(
-        key=f"deletion_token:{user.id}",
+        key=f"reset_password_token:{user.id}",
         db=settings.REDIST_TOKEN_CACHE_DB,
     )
+
+    # Create Login Link
+    login_link: str = f"{settings.PROJECT_DOMAIN}/api/login"
 
     # Get Current Time
     current_time: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
@@ -40,12 +43,15 @@ async def _send_deleted_email(user: User) -> None:
         "username": user.username,
         "first_name": user.first_name,
         "last_name": user.last_name,
+        "login_link": login_link,
         "current_year": current_time.year,
         "project_name": settings.PROJECT_NAME,
     }
 
     # Set Email Template Path
-    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "delete_confirm.html")
+    template_path: str = str(
+        Path(__file__).parent.parent.parent / "templates" / "users" / "reset_password_confirm.html",
+    )
 
     # Render Email Template
     html_content: str = await render_template(template_path, email_context)
@@ -53,18 +59,18 @@ async def _send_deleted_email(user: User) -> None:
     # Send Email
     await send_email(
         to_email=user.email,
-        subject="Account Deleted Successfully",
+        subject="Password Reset Successfully",
         html_content=html_content,
     )
 
 
-# Delete User
-async def delete_user_confirm_handler(token: str) -> JSONResponse:
+# Reset Password Confirm
+async def reset_password_confirm_handler(request: UserResetPasswordConfirmRequest, token: str) -> JSONResponse:
     """
-    Delete User
+    Reset Password Confirm
 
     Args:
-        token (str): Deletion Token
+        token (str): Reset Password Token
 
     Returns:
         JSONResponse: UserResponse with User Data
@@ -74,8 +80,8 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
         # Decode Token
         payload: dict = jwt.decode(
             jwt=token,
-            key=settings.DELETE_JWT_SECRET,
-            algorithms=[settings.DELETE_JWT_ALGORITHM],
+            key=settings.RESET_PASSWORD_JWT_SECRET,
+            algorithms=[settings.RESET_PASSWORD_JWT_ALGORITHM],
             verify=True,
             audience=settings.PROJECT_NAME,
             issuer=settings.PROJECT_NAME,
@@ -92,12 +98,12 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Deletion Token"},
+            content={"detail": "Invalid Reset Password Token"},
         )
 
     # Get Token from Redis
     stored_token: str | None = await redis_manager.get(
-        key=f"deletion_token:{payload['sub']}",
+        key=f"reset_password_token:{payload['sub']}",
         db=settings.REDIST_TOKEN_CACHE_DB,
     )
 
@@ -106,7 +112,7 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Deletion Token"},
+            content={"detail": "Invalid Reset Password Token"},
         )
 
     # Get Database and Collection
@@ -134,38 +140,49 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
             # Return Conflict Response
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                content={"message": "User Is Not Active"},
+                content={"detail": "User Is Not Active"},
             )
 
-        # Delete User from Database
-        response: DeleteResult = await mongo_collection.delete_one(
+        # Calculated Updated At
+        updated_at: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+
+        # Create User Instance
+        user: User = User(**existing_user)
+
+        # Set New Password
+        user.set_password(request.password)
+
+        # Set Updated At
+        user.updated_at = updated_at
+
+        # Update User in Database
+        response: UpdateResult = await mongo_collection.update_one(
             filter={
                 "_id": payload["sub"],
             },
+            update={
+                "$set": {
+                    "password": user.password,
+                    "updated_at": user.updated_at,
+                },
+            },
         )
 
-        # If User Not Deleted
-        if response.deleted_count == 0:
+        # If User Not Updated
+        if response.modified_count == 0:
             # Return Internal Server Error Response
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Delete User"},
+                content={"detail": "Failed to Reset Password"},
             )
 
-    # Create User Instance
-    user: User = User(**existing_user)
-
-    # Send Deleted Email
-    await _send_deleted_email(user=user)
+    # Send Reset Password Confirm Email
+    await _send_reset_password_confirm_email(user=user)
 
     # Return Response with UserResponse Model
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
-            "detail": "User Deleted Successfully",
+            "detail": "User Reset Password Confirmed Successfully",
         },
     )
-
-
-# Exports
-__all__: list[str] = ["delete_user_confirm_handler"]

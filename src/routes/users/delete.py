@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from config.mailer import render_template, send_email
 from config.redis import redis_manager
 from config.settings import settings
-from src.models.users.base import User
+from src.models.users import User
 
 
 # Internal Function to Generate Deletion Token
