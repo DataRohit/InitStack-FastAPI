@@ -4,8 +4,10 @@ from fastapi.responses import JSONResponse
 
 # Local Imports
 from src.models.users import UserRegisterRequest, UserResponse
-from src.routes.users.activate import activate_user_hander
-from src.routes.users.register import register_user_hander
+from src.models.users.login import UserLoginRequest, UserLoginResponse
+from src.routes.users.activate import activate_user_handler
+from src.routes.users.login import login_user_handler
+from src.routes.users.register import register_user_handler
 
 # Initialize Router
 router = APIRouter(
@@ -51,9 +53,9 @@ router = APIRouter(
                         "is_active": False,
                         "is_staff": False,
                         "is_superuser": False,
-                        "date_joined": "2025-07-21T20:58:34.273678+00:00",
-                        "last_login": "2025-07-21T21:58:34.273678+00:00",
-                        "updated_at": "2025-07-21T21:30:34.273678+00:00",
+                        "date_joined": "2025-07-21T20:58:34.273678Z",
+                        "last_login": "2025-07-21T21:58:34.273678Z",
+                        "updated_at": "2025-07-21T21:30:34.273678Z",
                     },
                 },
             },
@@ -134,7 +136,7 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
     """
 
     # Register User
-    return await register_user_hander(request=request)
+    return await register_user_handler(request=request)
 
 
 # User Activate Endpoint
@@ -163,27 +165,9 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
                         "is_active": True,
                         "is_staff": False,
                         "is_superuser": False,
-                        "date_joined": "2025-07-21T20:58:34.273678+00:00",
-                        "last_login": "2025-07-21T21:58:34.273678+00:00",
-                        "updated_at": "2025-07-21T21:30:34.273678+00:00",
-                    },
-                },
-            },
-        },
-        status.HTTP_400_BAD_REQUEST: {
-            "description": "Validation Error",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Validation Error",
-                        "errors": [
-                            {
-                                "type": "missing",
-                                "loc": ["query", "token"],
-                                "msg": "Field Required",
-                                "input": None,
-                            },
-                        ],
+                        "date_joined": "2025-07-21T20:58:34.273678Z",
+                        "last_login": "2025-07-21T21:58:34.273678Z",
+                        "updated_at": "2025-07-21T21:30:34.273678Z",
                     },
                 },
             },
@@ -204,6 +188,24 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
                 "application/json": {
                     "example": {
                         "detail": "User Not Found",
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid Request",
+                        "errors": [
+                            {
+                                "type": "missing",
+                                "loc": ["body", "password"],
+                                "msg": "Field Required",
+                                "input": {"identifier": "john_doe@example.com"},
+                            },
+                        ],
                     },
                 },
             },
@@ -235,7 +237,133 @@ async def activate_user(token: str) -> JSONResponse:
     """
 
     # Activate User
-    return await activate_user_hander(token=token)
+    return await activate_user_handler(token=token)
+
+
+# User Login Endpoint
+@router.post(
+    path="/login",
+    status_code=status.HTTP_200_OK,
+    summary="User Login Endpoint",
+    description="""
+    Login a User.
+
+    This Endpoint Allows a User to Login by Providing:
+    - Identifier (Email or Username)
+    - Password
+    """,
+    name="User Login",
+    response_model=UserLoginResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Logged In Successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "user": {
+                            "id": "687ea9fa53bf34da640e4ef5",
+                            "username": "john_doe",
+                            "email": "john_doe@example.com",
+                            "first_name": "John",
+                            "last_name": "Doe",
+                            "is_active": True,
+                            "is_staff": False,
+                            "is_superuser": False,
+                            "date_joined": "2025-07-21T20:58:34.273678Z",
+                            "last_login": "2025-07-21T21:58:34.273678Z",
+                            "updated_at": "2025-07-21T21:30:34.273678Z",
+                        },
+                        "access_token": {
+                            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
+                            "type": "bearer",
+                            "expires_in": 3600,
+                        },
+                        "refresh_token": {
+                            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
+                            "expires_in": 86400,
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Validation Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Validation Error",
+                        "errors": [
+                            {
+                                "type": "missing",
+                                "loc": ["body", "identifier"],
+                                "msg": "Field Required",
+                                "input": {
+                                    "password": "SecurePassword@123",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "User Is Not Active",
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Invalid Request",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid Request",
+                        "errors": [
+                            {
+                                "type": "missing",
+                                "loc": ["body", "identifier"],
+                                "msg": "Field Required",
+                                "input": {
+                                    "password": "SecurePassword@123",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Failed to Login User",
+                    },
+                },
+            },
+        },
+    },
+)
+async def login_user(request: UserLoginRequest) -> JSONResponse:
+    """
+    Login User
+
+    Args:
+        request (UserLoginRequest): UserLoginRequest Containing User Login Data
+
+    Returns:
+        JSONResponse: UserLoginResponse with User Data
+
+    Raises:
+        HTTPException: For Validation Errors or Conflicts
+    """
+
+    # Login User
+    return await login_user_handler(request=request)
 
 
 # Exports

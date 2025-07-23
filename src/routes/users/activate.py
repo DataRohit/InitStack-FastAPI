@@ -65,7 +65,7 @@ async def _send_activated_email(user: User, token: str) -> None:
 
 
 # Activate User
-async def activate_user_hander(token: str) -> JSONResponse:
+async def activate_user_handler(token: str) -> JSONResponse:
     """
     Activate User
 
@@ -97,13 +97,7 @@ async def activate_user_hander(token: str) -> JSONResponse:
             },
         )
 
-    except (
-        jwt.ExpiredSignatureError,
-        jwt.InvalidTokenError,
-        jwt.InvalidAudienceError,
-        jwt.InvalidIssuerError,
-        jwt.InvalidSignatureError,
-    ):
+    except jwt.InvalidTokenError:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -152,6 +146,9 @@ async def activate_user_hander(token: str) -> JSONResponse:
                 content={"detail": "User Already Activated"},
             )
 
+        # Calculated Updated At
+        updated_at: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+
         # Update User in Database
         response = await mongo_collection.update_one(
             filter={
@@ -160,6 +157,7 @@ async def activate_user_hander(token: str) -> JSONResponse:
             update={
                 "$set": {
                     "is_active": True,
+                    "updated_at": updated_at,
                 },
             },
         )
@@ -174,6 +172,7 @@ async def activate_user_hander(token: str) -> JSONResponse:
 
         # Update user_doc with activated status
         user_doc["is_active"] = True
+        user_doc["updated_at"] = updated_at
 
     # Create User instance
     user: User = User(**user_doc)
@@ -192,4 +191,4 @@ async def activate_user_hander(token: str) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["activate_user_hander"]
+__all__: list[str] = ["activate_user_handler"]

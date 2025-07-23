@@ -173,7 +173,7 @@ class HealthResponse(BaseModel):
     )
     timestamp: str = Field(
         ...,
-        example="2025-07-21T05:27:32.123456+00:00",
+        example="2025-07-21T05:27:32.123456Z",
         description="ISO Format Timestamp of the Health Check",
     )
     system: SystemInfo = Field(
@@ -254,7 +254,7 @@ class HealthResponse(BaseModel):
             "app": settings.PROJECT_NAME,
             "version": settings.VERSION,
             "environment": settings.APP_ENV,
-            "timestamp": datetime.datetime.now(tz=datetime.UTC).isoformat(),
+            "timestamp": datetime.datetime.now(tz=datetime.UTC),
             "system": system_info,
         }
 

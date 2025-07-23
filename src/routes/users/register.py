@@ -84,12 +84,12 @@ async def _send_activation_email(user: User) -> None:
 
 
 # Register User
-async def register_user_hander(request: UserRegisterRequest) -> JSONResponse:
+async def register_user_handler(request: UserRegisterRequest) -> JSONResponse:
     """
     Register a New User
 
     Args:
-        request: UserRegisterRequest Containing User Registration Data
+        request (UserRegisterRequest): UserRegisterRequest Containing User Registration Data
 
     Returns:
         JSONResponse: UserResponse with User Data
@@ -105,7 +105,12 @@ async def register_user_hander(request: UserRegisterRequest) -> JSONResponse:
 
         # Check If User Already Exists
         existing_user: dict | None = await mongo_collection.find_one(
-            filter={"$or": [{"username": request.username}, {"email": request.email}]},
+            filter={
+                "$or": [
+                    {"username": request.username},
+                    {"email": request.email},
+                ],
+            },
         )
 
         # If User Already Exists
@@ -155,4 +160,4 @@ async def register_user_hander(request: UserRegisterRequest) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["register_user_hander"]
+__all__: list[str] = ["register_user_handler"]

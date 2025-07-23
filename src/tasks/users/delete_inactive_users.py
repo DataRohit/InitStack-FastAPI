@@ -33,7 +33,9 @@ def delete_inactive_users_task(self) -> None:
             # Delete Inactive Users
             await collection.delete_many(
                 filter={
-                    "date_joined": {"$lt": datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(minutes=30)},
+                    "date_joined": {
+                        "$lt": (datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(minutes=30)),
+                    },
                     "is_active": False,
                 },
             )

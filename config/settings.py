@@ -77,6 +77,14 @@ class Settings(BaseSettings):
         ACTIVATION_JWT_ALGORITHM (str): JWT Algorithm
         ACTIVATION_JWT_EXPIRE (int): JWT Expiration Time in Seconds
 
+        ACCESS_JWT_SECRET (str): JWT Secret Key
+        ACCESS_JWT_ALGORITHM (str): JWT Algorithm
+        ACCESS_JWT_EXPIRE (int): JWT Expiration Time in Seconds
+
+        REFRESH_JWT_SECRET (str): JWT Secret Key
+        REFRESH_JWT_ALGORITHM (str): JWT Algorithm
+        REFRESH_JWT_EXPIRE (int): JWT Expiration Time in Seconds
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -161,6 +169,16 @@ class Settings(BaseSettings):
     ACTIVATION_JWT_SECRET: str = "7ff220d5c462c4f45d5766aef33333ed4c3ea21e50ebb725450f0c740cdc843e"  # noqa: S105
     ACTIVATION_JWT_ALGORITHM: str = "HS256"
     ACTIVATION_JWT_EXPIRE: int = 1800
+
+    # JWT Access Configuration
+    ACCESS_JWT_SECRET: str = "4225d46ff9dfbf537e3053f7899d07def9a12a858c1ca34453b6df1fdb826c64"  # noqa: S105
+    ACCESS_JWT_ALGORITHM: str = "HS256"
+    ACCESS_JWT_EXPIRE: int = 3600
+
+    # JWT Refresh Configuration
+    REFRESH_JWT_SECRET: str = "4e3a2f132c733c87df7f39b2bc55b45f047b358e59c95846e98e9cee6fed5647"  # noqa: S105
+    REFRESH_JWT_ALGORITHM: str = "HS256"
+    REFRESH_JWT_EXPIRE: int = 86400
 
     # Configuration
     class Config:

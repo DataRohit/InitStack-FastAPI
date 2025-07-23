@@ -105,18 +105,18 @@ class User(BaseModel):
 
     # Timestamps
     date_joined: datetime.datetime = Field(
-        default_factory=datetime.datetime.now,
-        example="2025-07-21T08:56:30.123456+00:00",
+        default_factory=lambda: datetime.datetime.now(tz=datetime.UTC),
+        example="2025-07-21T08:56:30.123456Z",
         description="Account Creation Timestamp",
     )
     last_login: datetime.datetime | None = Field(
         default=None,
-        example="2025-07-21T09:56:30.123456+00:00",
+        example="2025-07-21T09:56:30.123456Z",
         description="Last Login Timestamp",
     )
     updated_at: datetime.datetime = Field(
-        default_factory=datetime.datetime.now,
-        example="2025-07-21T09:30:30.123456+00:00",
+        default_factory=lambda: datetime.datetime.now(tz=datetime.UTC),
+        example="2025-07-21T09:30:30.123456Z",
         description="Last Update Timestamp",
     )
 
@@ -320,16 +320,16 @@ class UserResponse(BaseModel):
     # Timestamps
     date_joined: datetime.datetime = Field(
         ...,
-        example="2025-07-21T18:24:52.443934+00:00",
+        example="2025-07-21T18:24:52.443934Z",
         description="Account Creation Timestamp",
     )
     last_login: datetime.datetime | None = Field(
-        example="2025-07-21T08:56:30.123456+00:00",
+        example="2025-07-21T08:56:30.123456Z",
         description="Last Login Timestamp",
     )
     updated_at: datetime.datetime = Field(
         ...,
-        example="2025-07-21T18:24:52.443939+00:00",
+        example="2025-07-21T18:24:52.443939Z",
         description="Last Update Timestamp",
     )
 
