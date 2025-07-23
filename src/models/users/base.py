@@ -1,7 +1,7 @@
 # Standard Library Imports
 import datetime
 import re
-from typing import ClassVar
+from typing import Any, ClassVar
 
 # Third-Party Imports
 from argon2 import PasswordHasher
@@ -106,17 +106,17 @@ class User(BaseModel):
     # Timestamps
     date_joined: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(tz=datetime.UTC),
-        example="2025-07-21T08:56:30.123456Z",
+        example="2025-07-21T08:56:30.123000+00:00",
         description="Account Creation Timestamp",
     )
     last_login: datetime.datetime | None = Field(
         default=None,
-        example="2025-07-21T09:56:30.123456Z",
+        example="2025-07-21T09:56:30.123000+00:00",
         description="Last Login Timestamp",
     )
     updated_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(tz=datetime.UTC),
-        example="2025-07-21T09:30:30.123456Z",
+        example="2025-07-21T09:30:30.123000+00:00",
         description="Last Update Timestamp",
     )
 
@@ -320,18 +320,51 @@ class UserResponse(BaseModel):
     # Timestamps
     date_joined: datetime.datetime = Field(
         ...,
-        example="2025-07-21T18:24:52.443934Z",
+        example="2025-07-21T18:24:52.443000+00:00",
         description="Account Creation Timestamp",
     )
     last_login: datetime.datetime | None = Field(
-        example="2025-07-21T08:56:30.123456Z",
+        example="2025-07-21T08:56:30.123000+00:00",
         description="Last Login Timestamp",
     )
     updated_at: datetime.datetime = Field(
         ...,
-        example="2025-07-21T18:24:52.443939Z",
+        example="2025-07-21T18:24:52.443000+00:00",
         description="Last Update Timestamp",
     )
+
+    # Model Dump
+    def model_dump(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> dict:
+        """
+        Model Dump
+
+        This Method Overrides the Default Model Dump Method to Convert DateTime Objects to ISO Format
+
+        Args:
+            *args (tuple[Any, ...]): Positional Arguments
+            **kwargs (dict[str, Any]): Keyword Arguments
+
+        Returns:
+            dict: Model Dump Data
+        """
+
+        # Get Model Dump Data
+        data = super().model_dump(*args, **kwargs)
+
+        # Convert DateTime Objects to ISO Format
+        for field in ["date_joined", "last_login", "updated_at"]:
+            # Get Field Value
+            value = getattr(self, field)
+
+            # If Field Value is a DateTime Object
+            if isinstance(value, datetime.datetime):
+                # Convert to UTC and ISO Format
+                data[field] = (
+                    value.astimezone(datetime.UTC).replace(microsecond=(value.microsecond // 1000) * 1000).isoformat()
+                )
+
+        # Return Model Dump Data
+        return data
 
 
 # Exports

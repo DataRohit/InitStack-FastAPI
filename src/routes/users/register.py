@@ -55,7 +55,7 @@ async def _send_activation_email(user: User) -> None:
     )
 
     # Create Activation Link
-    activation_link: str = f"{settings.PROJECT_DOMAIN}/api/activate?token={activation_token}"
+    activation_link: str = f"{settings.PROJECT_DOMAIN}/api/users/activate?token={activation_token}"
 
     # Prepare Email Context
     email_context: dict = {

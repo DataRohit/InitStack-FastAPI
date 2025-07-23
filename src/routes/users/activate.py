@@ -124,14 +124,14 @@ async def activate_user_handler(token: str) -> JSONResponse:
         mongo_collection: AsyncCollection = db.get_collection("users")
 
         # Get User by ID
-        user_doc: dict | None = await mongo_collection.find_one(
+        existing_user: dict | None = await mongo_collection.find_one(
             filter={
                 "_id": payload["sub"],
             },
         )
 
         # If User Not Found
-        if not user_doc:
+        if not existing_user:
             # Return Not Found Response
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -139,7 +139,7 @@ async def activate_user_handler(token: str) -> JSONResponse:
             )
 
         # If User Already Activated
-        if user_doc["is_active"]:
+        if existing_user["is_active"]:
             # Return Conflict Response
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
@@ -170,12 +170,12 @@ async def activate_user_handler(token: str) -> JSONResponse:
                 content={"detail": "Failed to Activate User"},
             )
 
-        # Update user_doc with activated status
-        user_doc["is_active"] = True
-        user_doc["updated_at"] = updated_at
+        # Update existing_user with activated status
+        existing_user["is_active"] = True
+        existing_user["updated_at"] = updated_at
 
     # Create User instance
-    user: User = User(**user_doc)
+    user: User = User(**existing_user)
 
     # Send Activated Email
     await _send_activated_email(user=user, token=stored_token)

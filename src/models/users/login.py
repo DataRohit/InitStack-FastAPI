@@ -1,9 +1,11 @@
 # Standard Library Imports
-from typing import ClassVar
+import datetime
+from typing import Any, ClassVar
 
 # Third-Party Imports
 from pydantic import BaseModel, Field
 
+# Local Imports
 from src.models.users.base import UserResponse
 
 
@@ -126,3 +128,40 @@ class UserLoginResponse(BaseModel):
         ...,
         description="JWT Refresh Token",
     )
+
+    # Model Dump
+    def model_dump(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> dict:
+        """
+        Model Dump
+
+        This Method Overrides the Default Model Dump Method to Convert DateTime Objects to ISO Format
+
+        Args:
+            *args (tuple[Any, ...]): Positional Arguments
+            **kwargs (dict[str, Any]): Keyword Arguments
+
+        Returns:
+            dict: Model Dump Data
+        """
+
+        # Get Model Dump Data
+        data = super().model_dump(*args, **kwargs)
+
+        # Convert DateTime Objects to ISO Format
+        for field in ["date_joined", "last_login", "updated_at"]:
+            # Get Field Value
+            value = getattr(self.user, field)
+
+            # If Field Value is a DateTime Object
+            if isinstance(value, datetime.datetime):
+                # Convert to UTC and ISO Format
+                data["user"][field] = (
+                    value.astimezone(datetime.UTC).replace(microsecond=(value.microsecond // 1000) * 1000).isoformat()
+                )
+
+        # Return Model Dump Data
+        return data
+
+
+# Exports
+__all__: list[str] = ["UserLoginRequest", "UserLoginResponse"]

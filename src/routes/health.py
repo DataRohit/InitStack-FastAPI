@@ -54,7 +54,7 @@ router = APIRouter(
                         "app": "InitStack FastAPI Server",
                         "version": "0.1.0",
                         "environment": "production",
-                        "timestamp": "2025-07-21T05:30:00.000000Z",
+                        "timestamp": "2025-07-21T05:27:32.123456+00:00",
                         "system": {
                             "hostname": "a2f460aba47d",
                             "cpu_percent": 15.5,
@@ -85,7 +85,7 @@ router = APIRouter(
                         "app": "InitStack FastAPI Server",
                         "version": "0.1.0",
                         "environment": "production",
-                        "timestamp": "2025-07-21T05:30:00.000000Z",
+                        "timestamp": "2025-07-21T05:27:32.123456+00:00",
                         "system": {
                             "hostname": "a2f460aba47d",
                             "cpu_percent": 95.5,
