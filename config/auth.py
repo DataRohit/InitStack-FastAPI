@@ -10,7 +10,7 @@ from config.settings import settings
 from src.models.users.base import User
 
 # JWT Token Security Scheme
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 # Validate JWT Token Function
@@ -63,7 +63,7 @@ def _validate_jwt_token(credentials: HTTPAuthorizationCredentials) -> str:
 
 
 # Get Current User Function
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:  # noqa: B008
+async def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(security)) -> User:  # noqa: B008
     """
     Get Current User
 
@@ -77,8 +77,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         User: The User Data from the Validated Token
 
     Raises:
-        HTTPException: If Token is Invalid or User Not Found
+        HTTPException: If Token is Invalid, User Not Found, or No Authentication Provided
     """
+
+    # Check if Credentials are Provided
+    if credentials is None:
+        # Raise 403 Forbidden Error for Missing Authentication
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Authentication Required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     # Validate Token
     user_id: str = _validate_jwt_token(credentials)
@@ -96,7 +105,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         # Raise 404 Not Found Error
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            content={"detail": "User Not Found"},
+            detail="User Not Found",
         )
 
     # Return User

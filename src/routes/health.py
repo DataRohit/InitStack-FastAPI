@@ -132,9 +132,6 @@ async def health_check() -> JSONResponse:
 
     Returns:
         dict: Detailed Health Status and System Metrics
-
-    Raises:
-        HTTPException: If the Service is Unhealthy (503) or Encounters an Error (500)
     """
 
     try:

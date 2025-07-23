@@ -64,7 +64,7 @@ async def _send_activation_email(user: User) -> None:
         "first_name": user.first_name,
         "last_name": user.last_name,
         "activation_link": activation_link,
-        "activation_link_expiry": expiry_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "activation_link_expiry": expiry_time.isoformat(),
         "current_year": current_time.year,
         "project_name": settings.PROJECT_NAME,
     }
@@ -93,9 +93,6 @@ async def register_user_handler(request: UserRegisterRequest) -> JSONResponse:
 
     Returns:
         JSONResponse: UserResponse with User Data
-
-    Raises:
-        HTTPException: For Validation Errors or Conflicts
     """
 
     # Get Database and Collection

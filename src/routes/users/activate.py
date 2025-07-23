@@ -74,9 +74,6 @@ async def activate_user_handler(token: str) -> JSONResponse:
 
     Returns:
         JSONResponse: UserResponse with User Data
-
-    Raises:
-        HTTPException: For Validation Errors or Conflicts
     """
 
     try:

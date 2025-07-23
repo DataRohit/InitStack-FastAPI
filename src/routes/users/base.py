@@ -10,6 +10,7 @@ from config.auth import get_current_user
 from src.models.users import User, UserRegisterRequest, UserResponse
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.routes.users.activate import activate_user_handler
+from src.routes.users.deactivate import deactivate_user_handler
 from src.routes.users.login import login_user_handler
 from src.routes.users.me import get_current_user_handler
 from src.routes.users.register import register_user_handler
@@ -135,9 +136,6 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
 
     Returns:
         JSONResponse: UserResponse with User Data
-
-    Raises:
-        HTTPException: For Validation Errors or Conflicts
     """
 
     # Register User
@@ -236,9 +234,6 @@ async def activate_user(token: str) -> JSONResponse:
 
     Returns:
         JSONResponse: UserResponse with User Data
-
-    Raises:
-        HTTPException: For Validation Errors or Conflicts
     """
 
     # Activate User
@@ -372,9 +367,6 @@ async def login_user(request: UserLoginRequest) -> JSONResponse:
 
     Returns:
         JSONResponse: UserLoginResponse with User Data
-
-    Raises:
-        HTTPException: For Validation Errors or Conflicts
     """
 
     # Login User
@@ -389,7 +381,8 @@ async def login_user(request: UserLoginRequest) -> JSONResponse:
     description="""
     Returns The Currently Authenticated User's Data.
 
-    Requires Valid JWT Authentication.
+    This Endpoint Allows a User to Retrieve Their Own Data:
+    - Requires Valid JWT Authentication
     """,
     name="Current User",
     response_model=UserResponse,
@@ -418,6 +411,10 @@ async def login_user(request: UserLoginRequest) -> JSONResponse:
             "description": "Unauthorized",
             "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
         },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {"application/json": {"example": {"detail": "Authentication Required"}}},
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
             "content": {"application/json": {"example": {"detail": "User Not Found"}}},
@@ -441,6 +438,56 @@ async def get_current_user_route(current_user: Annotated[User, Depends(get_curre
 
     # Get Current User
     return await get_current_user_handler(current_user=current_user)
+
+
+# User Deactivate Endpoint
+@router.get(
+    path="/deactivate",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Deactivate Endpoint",
+    description="""
+    Initiates User Deactivation Process.
+
+    This Endpoint Allows a User to Initiate the Deactivation Process by Providing:
+    - Requires Valid JWT Authentication
+    """,
+    name="User Deactivate",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "User Deactivation Email Sent Successfully",
+            "content": {"application/json": {"example": {"detail": "User Deactivation Email Sent Successfully"}}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {"application/json": {"example": {"detail": "Authentication Required"}}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {"application/json": {"example": {"detail": "Failed To Deactivate User"}}},
+        },
+    },
+)
+async def deactivate_user_route(current_user: Annotated[User, Depends(get_current_user)]) -> JSONResponse:
+    """
+    Deactivates The Currently Authenticated User's Account.
+
+    Args:
+        current_user (User): The Authenticated User From Dependency
+
+    Returns:
+        JSONResponse: Success Message With 202 Status
+    """
+
+    # Deactivate User
+    return await deactivate_user_handler(current_user=current_user)
 
 
 # Exports

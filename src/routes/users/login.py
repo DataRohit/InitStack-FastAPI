@@ -209,9 +209,6 @@ async def login_user_handler(request: UserLoginRequest) -> JSONResponse:
 
     Returns:
         JSONResponse: UserResponse with User Data
-
-    Raises:
-        HTTPException: For Validation Errors or Conflicts
     """
 
     # Get Database and Collection
