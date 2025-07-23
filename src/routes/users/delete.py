@@ -14,14 +14,14 @@ from config.settings import settings
 from src.models.users.base import User
 
 
-# Internal Function to Generate Deactivation Token
-async def _generate_deactivation_token(
+# Internal Function to Generate Deletion Token
+async def _generate_deletion_token(
     user: User,
     current_time: datetime.datetime,
     expiry_time: datetime.timedelta,
 ) -> str:
     """
-    Generate Deactivation Token
+    Generate Deletion Token
 
     Args:
         user (User): User Instance
@@ -29,11 +29,11 @@ async def _generate_deactivation_token(
         expiry_time (datetime.timedelta): Expiry Time
 
     Returns:
-        str: Deactivation Token
+        str: Deletion Token
     """
 
-    # Generate Deactivation Token
-    deactivation_token: str = jwt.encode(
+    # Generate Deletion Token
+    deletion_token: str = jwt.encode(
         payload={
             "sub": user.id,
             "iss": settings.PROJECT_NAME,
@@ -41,26 +41,26 @@ async def _generate_deactivation_token(
             "iat": current_time,
             "exp": expiry_time,
         },
-        key=settings.DEACTIVATE_JWT_SECRET,
-        algorithm=settings.DEACTIVATE_JWT_ALGORITHM,
+        key=settings.DELETE_JWT_SECRET,
+        algorithm=settings.DELETE_JWT_ALGORITHM,
     )
 
-    # Set Deactivation Token in Redis
+    # Set Deletion Token in Redis
     await redis_manager.set(
-        key=f"deactivation_token:{user.id}",
-        value=deactivation_token,
-        expire=settings.DEACTIVATE_JWT_EXPIRE,
+        key=f"deletion_token:{user.id}",
+        value=deletion_token,
+        expire=settings.DELETE_JWT_EXPIRE,
         db=settings.REDIST_TOKEN_CACHE_DB,
     )
 
-    # Return Deactivation Token
-    return deactivation_token
+    # Return Deletion Token
+    return deletion_token
 
 
-# Internal Function to Send Deactivation Email
-async def _send_deactivation_email(user: User) -> None:
+# Internal Function to Send Deletion Email
+async def _send_deletion_email(user: User) -> None:
     """
-    Send Deactivation Email
+    Send Deletion Email
 
     Args:
         user (User): User Instance
@@ -70,18 +70,18 @@ async def _send_deactivation_email(user: User) -> None:
     current_time: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
 
     # Calculate Expiry Time
-    expiry_time: datetime.datetime = current_time + datetime.timedelta(seconds=settings.DEACTIVATE_JWT_EXPIRE)
+    expiry_time: datetime.datetime = current_time + datetime.timedelta(seconds=settings.DELETE_JWT_EXPIRE)
 
     # Get Token from Redis
     stored_token: str | None = await redis_manager.get(
-        key=f"deactivation_token:{user.id}",
+        key=f"deletion_token:{user.id}",
         db=settings.REDIST_TOKEN_CACHE_DB,
     )
 
     # If Token Not Found
     if not stored_token:
-        # Generate Deactivation Token
-        deactivation_token: str = await _generate_deactivation_token(
+        # Generate Deletion Token
+        deletion_token: str = await _generate_deletion_token(
             user=user,
             current_time=current_time,
             expiry_time=expiry_time,
@@ -92,8 +92,8 @@ async def _send_deactivation_email(user: User) -> None:
             # Decode Token
             jwt.decode(
                 jwt=stored_token,
-                key=settings.DEACTIVATE_JWT_SECRET,
-                algorithms=[settings.DEACTIVATE_JWT_ALGORITHM],
+                key=settings.DELETE_JWT_SECRET,
+                algorithms=[settings.DELETE_JWT_ALGORITHM],
                 verify=True,
                 audience=settings.PROJECT_NAME,
                 issuer=settings.PROJECT_NAME,
@@ -106,19 +106,19 @@ async def _send_deactivation_email(user: User) -> None:
                 },
             )
 
-            # Set Deactivation Token
-            deactivation_token: str = stored_token
+            # Set Deletion Token
+            deletion_token: str = stored_token
 
         except jwt.InvalidTokenError:
-            # Generate New Deactivation Token
-            deactivation_token: str = await _generate_deactivation_token(
+            # Generate New Deletion Token
+            deletion_token: str = await _generate_deletion_token(
                 user=user,
                 current_time=current_time,
                 expiry_time=expiry_time,
             )
 
-    # Create Deactivation Link
-    deactivation_link: str = f"{settings.PROJECT_DOMAIN}/api/users/deactivate_confirm?token={deactivation_token}"
+    # Create Deletion Link
+    deletion_link: str = f"{settings.PROJECT_DOMAIN}/api/users/delete_confirm?token={deletion_token}"
 
     # Prepare Email Context
     email_context: dict = {
@@ -126,14 +126,14 @@ async def _send_deactivation_email(user: User) -> None:
         "email": user.email,
         "first_name": user.first_name,
         "last_name": user.last_name,
-        "deactivation_link": deactivation_link,
-        "deactivation_link_expiry": expiry_time.isoformat(),
+        "deletion_link": deletion_link,
+        "deletion_link_expiry": expiry_time.isoformat(),
         "current_year": current_time.year,
         "project_name": settings.PROJECT_NAME,
     }
 
     # Set Email Template Path
-    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "deactivate.html")
+    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "delete.html")
 
     # Render Email Template
     html_content: str = await render_template(template_path, email_context)
@@ -141,17 +141,17 @@ async def _send_deactivation_email(user: User) -> None:
     # Send Email
     await send_email(
         to_email=user.email,
-        subject=f"Deactivate Your {settings.PROJECT_NAME} Account",
+        subject=f"Delete Your {settings.PROJECT_NAME} Account",
         html_content=html_content,
     )
 
 
-# Initiate User Deactivation
-async def deactivate_user_handler(current_user: User) -> JSONResponse:
+# Initiate User Deletion
+async def delete_user_handler(current_user: User) -> JSONResponse:
     """
-    Initiate User Deactivation
+    Initiate User Deletion
 
-    Generates a deactivation token and sends a confirmation email to the user.
+    Generates a deletion token and sends a confirmation email to the user.
 
     Args:
         current_user (User): The authenticated user from dependency
@@ -160,15 +160,23 @@ async def deactivate_user_handler(current_user: User) -> JSONResponse:
         JSONResponse: Success message with 202 status
     """
 
-    # Send Deactivation Email
-    await _send_deactivation_email(user=current_user)
+    # If User Is Not Active
+    if not current_user.is_active:
+        # Return Conflict Response
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"message": "User Is Not Active"},
+        )
+
+    # Send Deletion Email
+    await _send_deletion_email(user=current_user)
 
     # Return Success Response
     return JSONResponse(
         status_code=status.HTTP_202_ACCEPTED,
-        content={"detail": "User Deactivation Email Sent Successfully"},
+        content={"detail": "User Deletion Email Sent Successfully"},
     )
 
 
 # Exports
-__all__: list[str] = ["deactivate_user_handler"]
+__all__: list[str] = ["delete_user_handler"]

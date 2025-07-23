@@ -7,11 +7,10 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
 
+# Local Imports
 from config.mongodb import get_mongodb
 from config.redis import redis_manager
 from config.settings import settings
-
-# Local Imports
 from src.models.users.base import User
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 

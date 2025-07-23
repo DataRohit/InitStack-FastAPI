@@ -89,6 +89,10 @@ class Settings(BaseSettings):
         DEACTIVATE_JWT_ALGORITHM (str): JWT Algorithm
         DEACTIVATE_JWT_EXPIRE (int): JWT Expiration Time in Seconds
 
+        DELETE_JWT_SECRET (str): JWT Secret Key
+        DELETE_JWT_ALGORITHM (str): JWT Algorithm
+        DELETE_JWT_EXPIRE (int): JWT Expiration Time in Seconds
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -188,6 +192,11 @@ class Settings(BaseSettings):
     DEACTIVATE_JWT_SECRET: str = "30598412e6fb2d65c811698da21a5fc0776d69f9131ee14303cb4434ffaf186c"  # noqa: S105
     DEACTIVATE_JWT_ALGORITHM: str = "HS256"
     DEACTIVATE_JWT_EXPIRE: int = 86400
+
+    # Delete JWT Configuration
+    DELETE_JWT_SECRET: str = "e2be6bed27877f0b74fca944722fde0207d7f5d8d98bed6f025df5bb1bd49ccf"  # noqa: S105
+    DELETE_JWT_ALGORITHM: str = "HS256"
+    DELETE_JWT_EXPIRE: int = 86400
 
     # Configuration
     class Config:

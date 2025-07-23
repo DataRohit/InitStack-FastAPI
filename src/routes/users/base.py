@@ -12,6 +12,8 @@ from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.routes.users.activate import activate_user_handler
 from src.routes.users.deactivate import deactivate_user_handler
 from src.routes.users.deactivate_confirm import deactivate_user_confirm_handler
+from src.routes.users.delete import delete_user_handler
+from src.routes.users.delete_confirm import delete_user_confirm_handler
 from src.routes.users.login import login_user_handler
 from src.routes.users.me import get_current_user_handler
 from src.routes.users.register import register_user_handler
@@ -491,6 +493,60 @@ async def deactivate_user_route(current_user: Annotated[User, Depends(get_curren
     return await deactivate_user_handler(current_user=current_user)
 
 
+# User Delete Endpoint
+@router.get(
+    path="/delete",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Delete Endpoint",
+    description="""
+    Initiates User Delete Process.
+
+    This Endpoint Allows a User to Initiate the Delete Process by Providing:
+    - Requires Valid JWT Authentication
+    """,
+    name="User Delete",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "User Delete Email Sent Successfully",
+            "content": {"application/json": {"example": {"detail": "User Delete Email Sent Successfully"}}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {"application/json": {"example": {"detail": "Authentication Required"}}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {"application/json": {"example": {"detail": "Failed To Delete User"}}},
+        },
+    },
+)
+async def delete_user_route(current_user: Annotated[User, Depends(get_current_user)]) -> JSONResponse:
+    """
+    Deletes The Currently Authenticated User's Account.
+
+    Args:
+        current_user (User): The Authenticated User From Dependency
+
+    Returns:
+        JSONResponse: Success Message With 202 Status
+    """
+
+    # Delete User
+    return await delete_user_handler(current_user=current_user)
+
+
 @router.get(
     path="/deactivate_confirm",
     status_code=status.HTTP_200_OK,
@@ -552,6 +608,50 @@ async def deactivate_user_confirm_route(token: str) -> JSONResponse:
 
     # Deactivate User
     return await deactivate_user_confirm_handler(token=token)
+
+
+# User Delete Confirm Endpoint
+@router.get(
+    path="/delete_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="User Deletion Confirmation Endpoint",
+    description="""
+    Confirm User Deletion.
+
+    This Endpoint Confirms The User Deletion Process Using The Deletion Token.
+    """,
+    name="User Delete Confirm",
+    response_model=None,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Deleted Successfully",
+            "content": {"application/json": {"example": {"detail": "User Deleted Successfully"}}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Invalid Deletion Token",
+            "content": {"application/json": {"example": {"detail": "Invalid Deletion Token"}}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "User Not Found",
+            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Failed To Delete User",
+            "content": {"application/json": {"example": {"detail": "Failed To Delete User"}}},
+        },
+    },
+)
+async def delete_user_confirm_route(token: str) -> JSONResponse:
+    """
+    Confirms User Deletion Process.
+
+    Args:
+        token (str): Deletion Token
+
+    Returns:
+        JSONResponse: Success Message With 200 Status
+    """
+    return await delete_user_confirm_handler(token=token)
 
 
 # Exports

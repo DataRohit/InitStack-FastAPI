@@ -40,7 +40,6 @@ async def _send_deactivated_email(user: User) -> None:
     # Prepare Email Context
     email_context: dict = {
         "username": user.username,
-        "email": user.email,
         "first_name": user.first_name,
         "last_name": user.last_name,
         "login_link": login_link,

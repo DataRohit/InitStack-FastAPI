@@ -9,9 +9,8 @@ from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.results import InsertOneResult
 
-from config.mailer import render_template, send_email
-
 # Local Imports
+from config.mailer import render_template, send_email
 from config.mongodb import get_mongodb
 from config.redis import redis_manager
 from config.settings import settings

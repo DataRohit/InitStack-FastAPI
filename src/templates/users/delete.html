@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Confirm Account Deletion</title>
+        <style>
+            body {
+                background: #fff;
+                color: #222;
+                font-family: 'Courier New', monospace;
+                line-height: 1.5;
+                margin: 0;
+                padding: 0;
+                text-align: center;
+            }
+
+            .container {
+                margin: 0 auto;
+                max-width: 600px;
+                padding: 2rem;
+            }
+
+            .header {
+                border-bottom: 1px solid #eee;
+                padding-bottom: 1.5rem;
+            }
+
+            .content {
+                padding: 1.5rem 0;
+            }
+
+            .button {
+                background: #000;
+                border: 1px solid #000;
+                border-radius: 0;
+                color: #fff;
+                display: inline-block;
+                font-family: inherit;
+                margin: 1rem 0;
+                padding: 0.75rem 1.5rem;
+                text-decoration: none;
+            }
+
+            .footer {
+                border-top: 1px solid #eee;
+                color: #777;
+                font-size: 0.8rem;
+                margin-top: 2rem;
+                padding-top: 1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Confirm Account Deletion</h1>
+            </div>
+            <div class="content">
+                <p>
+                    Hello <strong>{{ first_name }} {{ last_name }}</strong>,
+                </p>
+                <p>
+                    We Received A Request To Permanently Delete Your Account With The Username: <strong>{{ username }}</strong> And Email: <strong>{{ email }}</strong>.
+                </p>
+                <p>If You Requested This Deletion, Please Click The Button Below To Confirm:</p>
+                <p>
+                    <a href="{{ deletion_link }}" class="button">Confirm Deletion</a>
+                </p>
+                <p>This Deletion Link Will Expire On: {{ deletion_link_expiry }}</p>
+                <p>If You Did Not Request This Deletion, Please Ignore This Email And Your Account Will Remain Active.</p>
+            </div>
+            <div class="footer">
+                <p>{{ current_year }} {{ project_name }}. All Rights Reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>
