@@ -1,13 +1,5 @@
-# Standard Library Imports
-import datetime
-import socket
-
 # Third-Party Imports
-import psutil
 from pydantic import BaseModel, Field
-
-# Local Imports
-from config.settings import settings
 
 
 # System Memory Information Model
@@ -180,83 +172,6 @@ class HealthResponse(BaseModel):
         ...,
         description="System Information and Metrics",
     )
-
-    # Get Memory Usage
-    @classmethod
-    def _get_memory_usage(cls) -> dict:
-        """
-        Get Current Memory Usage Information
-
-        This Method Returns the Current Memory Usage Information.
-
-        Returns:
-            dict: Memory Usage Information
-        """
-
-        # Get Memory Usage
-        memory: psutil.svmem = psutil.virtual_memory()
-
-        # Return Memory Usage Information
-        return {
-            "total": memory.total,
-            "available": memory.available,
-            "percent": memory.percent,
-            "used": memory.used,
-            "free": memory.free,
-        }
-
-    # Get Disk Usage
-    @classmethod
-    def _get_disk_usage(cls) -> dict:
-        """
-        Get Current Disk Usage Information
-
-        This Method Returns the Current Disk Usage Information.
-
-        Returns:
-            dict: Disk Usage Information
-        """
-
-        # Get Disk Usage
-        usage: psutil.sdiskusage = psutil.disk_usage("/")
-
-        # Return Disk Usage Information
-        return {
-            "total": usage.total,
-            "used": usage.used,
-            "free": usage.free,
-            "percent": usage.percent,
-        }
-
-    # Get Health Response
-    @classmethod
-    def get_health_response(cls) -> dict:
-        """
-        Get Health Response
-
-        This Method Returns the Health Status of the API with System Information.
-
-        Returns:
-            dict: Health Status and System Information
-        """
-
-        # Get System Information
-        system_info: dict = {
-            "hostname": socket.gethostname(),
-            "cpu_percent": psutil.cpu_percent(),
-            "memory": cls._get_memory_usage(),
-            "disk": cls._get_disk_usage(),
-        }
-
-        # Return Health Response with System Information
-        return {
-            "status": "healthy",
-            "app": settings.PROJECT_NAME,
-            "version": settings.VERSION,
-            "environment": settings.APP_ENV,
-            "timestamp": datetime.datetime.now(tz=datetime.UTC).isoformat(),
-            "system": system_info,
-        }
 
 
 # Exports

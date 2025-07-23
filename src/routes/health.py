@@ -1,5 +1,7 @@
 # Third-Party Imports
+import datetime
 import logging
+import socket
 
 # Third-Party Imports
 import psutil
@@ -7,7 +9,8 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
-from src.models.health import HealthResponse
+from config.settings import settings
+from src.models.health import HealthResponse, SystemDisk, SystemInfo, SystemMemory
 
 # Constants
 USAGE_THRESHOLD: int = 90
@@ -135,22 +138,56 @@ async def health_check() -> JSONResponse:
     """
 
     try:
-        # Get the Health Status
-        health_data = HealthResponse.get_health_response()
+        # Get System Memory Usage
+        memory_info: psutil.svmem = psutil.virtual_memory()
+        system_memory = SystemMemory(
+            total=memory_info.total,
+            available=memory_info.available,
+            percent=memory_info.percent,
+            used=memory_info.used,
+            free=memory_info.free,
+        )
+
+        # Get Disk Usage
+        disk_info: psutil.sdiskusage = psutil.disk_usage("/")
+        system_disk = SystemDisk(
+            total=disk_info.total,
+            used=disk_info.used,
+            free=disk_info.free,
+            percent=disk_info.percent,
+        )
+
+        # Prepare System Information
+        system_info = SystemInfo(
+            hostname=socket.gethostname(),
+            cpu_percent=psutil.cpu_percent(),
+            memory=system_memory,
+            disk=system_disk,
+        )
+
+        # Prepare Health Response
+        health_data = HealthResponse(
+            status="healthy",
+            app=settings.PROJECT_NAME,
+            version=settings.VERSION,
+            environment=settings.APP_ENV,
+            timestamp=datetime.datetime.now(tz=datetime.UTC).isoformat(),
+            system=system_info,
+        )
 
         # If Any System Metrics Exceed the Usage Threshold
         if (
-            health_data["system"]["memory"]["percent"] > USAGE_THRESHOLD
-            or health_data["system"]["disk"]["percent"] > USAGE_THRESHOLD
-            or health_data["system"]["cpu_percent"] > USAGE_THRESHOLD
+            health_data.system.memory.percent > USAGE_THRESHOLD
+            or health_data.system.disk.percent > USAGE_THRESHOLD
+            or health_data.system.cpu_percent > USAGE_THRESHOLD
         ):
             # Set the Status to Degraded
-            health_data["status"] = "degraded"
+            health_data.status = "degraded"
 
             # Return a 503 Error if the Service is Degraded
             return JSONResponse(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content=health_data,
+                content=health_data.model_dump(),
             )
 
     except psutil.Error as e:
@@ -194,7 +231,7 @@ async def health_check() -> JSONResponse:
     # Return the Health Data
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content=health_data,
+        content=health_data.model_dump(),
     )
 
 
