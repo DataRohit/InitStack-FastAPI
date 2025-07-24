@@ -49,7 +49,7 @@ pathspec==0.12.1
 prometheus-client==0.22.1
 prompt-toolkit==3.0.51
 psutil==7.0.0
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 pycparser==2.22
 pydantic==2.11.7
 pydantic-core==2.33.2
@@ -84,6 +84,7 @@ tzdata==2025.2
 ujson==5.10.0
 urllib3==2.5.0
 uvicorn==0.35.0
+uvloop==0.21.0
 vine==5.1.0
 watchfiles==1.1.0
 wcwidth==0.2.13

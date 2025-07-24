@@ -27,3 +27,6 @@ COPY . /app
 
 # Add current directory to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Set Start File to Executable
+RUN chmod +x /app/compose/flower/start

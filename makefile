@@ -36,6 +36,10 @@ help:
 	@printf "${GREEN}Code Analysis:${NC}\n"
 	@echo "  sonar-scan  - Run SonarQube Analysis For The Project"
 	@echo ""
+	@printf "${GREEN}Docker:${NC}\n"
+	@echo "  docker-up      - Build and start all Docker containers"
+	@echo "  docker-restart - Restart all containers and nginx-service"
+	@echo ""
 
 # Execute SonarQube Code Analysis
 sonar-scan:
@@ -44,8 +48,23 @@ sonar-scan:
 	sonar-scanner \
 		-Dsonar.host.url=http://localhost:9000 \
 		-Dsonar.projectKey=InitStack \
-		-Dsonar.login=sqp_576f052d2afb2ee6832d6d42b0524b755b8f75c1
+		-Dsonar.login=sqp_d25e7663eeb3b9843905eb6db6a8723caf6d6eee
 	@printf "${GREEN}SonarQube scan completed!${NC}\n"
 	@echo ""
 
-.PHONY: help sonar-scan
+# Docker Commands
+docker-up:
+	@echo ""
+	@printf "${YELLOW}Building and starting Docker containers...${NC}\n"
+	docker compose build && docker compose up -d
+	@printf "${GREEN}Docker containers started successfully!${NC}\n"
+	@echo ""
+
+docker-restart:
+	@echo ""
+	@printf "${YELLOW}Restarting Docker containers...${NC}\n"
+	docker compose restart && docker compose restart nginx-service
+	@printf "${GREEN}Docker containers restarted successfully!${NC}\n"
+	@echo ""
+
+.PHONY: help sonar-scan docker-up docker-restart
