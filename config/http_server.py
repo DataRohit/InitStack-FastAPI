@@ -1,5 +1,6 @@
 # Third-Party Imports
 import pydantic_core
+import sentry_sdk
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -30,6 +31,15 @@ def _create_fastapi_instance() -> FastAPI:
     Returns:
         FastAPI: Configured FastAPI application instance.
     """
+
+    # Initialize Sentry SDK
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.APP_ENV,
+        server_name=settings.PROJECT_NAME,
+        sample_rate=settings.SENTRY_SAMPLE_RATE,
+        send_default_pii=True,
+    )
 
     # Initialize FastAPI with Metadata
     app: FastAPI = FastAPI(

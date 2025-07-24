@@ -97,6 +97,9 @@ class Settings(BaseSettings):
         RESET_PASSWORD_JWT_ALGORITHM (str): JWT Algorithm
         RESET_PASSWORD_JWT_EXPIRE (int): JWT Expiration Time in Seconds
 
+        SENTRY_DSN (str): Sentry DSN
+        SENTRY_SAMPLE_RATE (float): Sentry Sample Rate
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -206,6 +209,10 @@ class Settings(BaseSettings):
     RESET_PASSWORD_JWT_SECRET: str = "2738c98c971b6e17637446b83baf5359a76802dbf91b20565c1e1cd65ae507a2"  # noqa: S105
     RESET_PASSWORD_JWT_ALGORITHM: str = "HS256"  # noqa: S105
     RESET_PASSWORD_JWT_EXPIRE: int = 86400
+
+    # Sentry Configuration
+    SENTRY_DSN: str = "https://4787ddf812f5e8325f109819dc6ac68a@o4507312074915840.ingest.us.sentry.io/4509722861502464"
+    SENTRY_SAMPLE_RATE: float = 1.0
 
     # Configuration
     class Config:
