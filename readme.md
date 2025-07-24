@@ -12,3 +12,6 @@ A Production-Ready Full-Stack Starter Kit With FastAPI Backend, Celery Task Queu
 - **pgAdmin**: Web Interface For PostgreSQL Management
 - **Redis**: High-Performance Caching Layer
 - **Nginx**: Reverse Proxy And Load Balancer
+- **Celery Worker**: Distributed task queue worker for asynchronous task processing
+- **Celery Beat**: Periodic task scheduler for recurring jobs
+- **Celery Flower**: Real-time monitoring and web interface for Celery
