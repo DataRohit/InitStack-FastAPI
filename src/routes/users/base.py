@@ -448,7 +448,7 @@ async def get_current_user_route(current_user: Annotated[User, Depends(get_curre
     """
 
     # Get Current User
-    return await get_current_user_handler(current_user=current_user)
+    return get_current_user_handler(current_user=current_user)
 
 
 # User Deactivate Endpoint

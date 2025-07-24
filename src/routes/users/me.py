@@ -7,7 +7,7 @@ from src.models.users import User, UserResponse
 
 
 # Get Current User Route
-async def get_current_user_handler(current_user: User) -> JSONResponse:
+def get_current_user_handler(current_user: User) -> JSONResponse:
     """
     Get Current User
 
