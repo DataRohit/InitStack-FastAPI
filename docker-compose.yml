@@ -55,9 +55,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
         depends_on:
             dicebear-service:
@@ -78,9 +78,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
         depends_on:
             mailpit-service:
@@ -117,12 +117,12 @@ services:
             postgres-service:
                 condition: service_healthy
 
-    celery-worker:
+    celery-worker-service:
         build:
             context: .
             dockerfile: ./compose/celery/dockerfile
-        image: celery-worker:latest
-        container_name: celery-worker
+        image: celery-worker-service:latest
+        container_name: celery-worker-service
         env_file:
             - ./.envs/backend/.env
         volumes:
@@ -136,12 +136,12 @@ services:
             postgres-service:
                 condition: service_healthy
 
-    celery-beat:
+    celery-beat-service:
         build:
             context: .
             dockerfile: ./compose/beat/dockerfile
-        image: celery-beat:latest
-        container_name: celery-beat
+        image: celery-beat-service:latest
+        container_name: celery-beat-service
         env_file:
             - ./.envs/backend/.env
         volumes:
@@ -154,6 +154,43 @@ services:
                 condition: service_healthy
             postgres-service:
                 condition: service_healthy
+
+    cassandra-schema-service:
+        build:
+            context: .
+            dockerfile: ./compose/cassandra-schema/dockerfile
+        image: cassandra-schema-service:latest
+        container_name: cassandra-schema-service
+        entrypoint: ["/wait-and-run.sh"]
+        env_file:
+            - ./.envs/cassandra-schema/.env
+        networks:
+            - initstack
+        restart: no
+        healthcheck:
+            test: ["CMD", "true"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+        depends_on:
+            cassandra-service:
+                condition: service_healthy
+
+    cassandra-service:
+        image: bitnami/cassandra:latest
+        container_name: cassandra-service
+        env_file:
+            - ./.envs/cassandra/.env
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "nodetool", "status"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
 
     mailpit-service:
         image: axllent/mailpit:latest
@@ -171,9 +208,9 @@ services:
                     "--spider",
                     "http://localhost:8025/api/v1/messages",
                 ]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
 
     redis-service:
@@ -190,9 +227,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "redis-cli", "ping"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
 
     pgadmin-service:
@@ -223,9 +260,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
 
     rabbitmq-service:
@@ -242,9 +279,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "rabbitmq-diagnostics", "check_running"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
 
     mongodb-service:
@@ -262,9 +299,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "mongosh", "--eval", "'db.hello().ok'"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
 
     dicebear-service:
@@ -286,9 +323,9 @@ services:
                     "-f",
                     "http://localhost:3000/9.x/avataaars/svg?seed=John%20Doe&accessories[]&eyebrows=default,defaultNatural&eyes=default,happy,squint&mouth=default,smile",
                 ]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
 
     sonarqube-service:
@@ -308,9 +345,9 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:9000"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
             start_period: 30s
 
 networks:

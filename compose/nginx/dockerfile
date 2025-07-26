@@ -1,4 +1,4 @@
-# User Official Nginx Image
+# Use Official Nginx Image
 FROM docker.io/nginx:1.29.0-alpine
 
 # Copy Nginx Configuration

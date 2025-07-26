@@ -1,0 +1,14 @@
+# Use Official Jaeger Cassandra Schema Image
+FROM jaegertracing/jaeger-cassandra-schema:latest
+
+# Switch to root User to Modify File Permissions
+USER root
+
+# Copy Wait And Run Script
+COPY ./compose/cassandra-schema/wait-and-run.sh /wait-and-run.sh
+
+# Set Script Permissions
+RUN chmod +x /wait-and-run.sh
+
+# Switch Back to the Non-root User Used in Base Image
+USER 65532:65532
