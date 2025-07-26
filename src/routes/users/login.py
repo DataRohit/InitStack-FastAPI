@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pymongo.asynchronous.collection import AsyncCollection
 
 # Local Imports
-from config.mongodb import get_mongodb
+from config.mongodb import get_async_mongodb
 from config.redis import redis_manager
 from config.settings import settings
 from src.models.users import User
@@ -211,7 +211,7 @@ async def login_user_handler(request: UserLoginRequest) -> JSONResponse:
     """
 
     # Get Database and Collection
-    async with get_mongodb() as db:
+    async with get_async_mongodb() as db:
         # Get Collection
         mongo_collection: AsyncCollection = db.get_collection("users")
 

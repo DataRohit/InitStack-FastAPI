@@ -54,6 +54,7 @@ opentelemetry-instrumentation==0.56b0
 opentelemetry-instrumentation-asgi==0.56b0
 opentelemetry-instrumentation-fastapi==0.56b0
 opentelemetry-instrumentation-logging==0.56b0
+opentelemetry-propagator-jaeger==1.35.0
 opentelemetry-proto==1.35.0
 opentelemetry-sdk==1.35.0
 opentelemetry-semantic-conventions==0.56b0

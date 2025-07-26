@@ -11,7 +11,7 @@ from pymongo.results import UpdateResult
 
 # Local Imports
 from config.mailer import render_template, send_email
-from config.mongodb import get_mongodb
+from config.mongodb import get_async_mongodb
 from config.redis import redis_manager
 from config.settings import settings
 from src.models.users import User, UserResetPasswordConfirmRequest
@@ -116,7 +116,7 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
         )
 
     # Get Database and Collection
-    async with get_mongodb() as db:
+    async with get_async_mongodb() as db:
         # Get Collection
         mongo_collection: AsyncCollection = db.get_collection("users")
 

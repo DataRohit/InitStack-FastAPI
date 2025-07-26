@@ -37,6 +37,9 @@ class Settings(BaseSettings):
         COMPRESSION_MIN_SIZE (int): Minimum Response Size (bytes) to Compress
         COMPRESSION_LEVEL (int): GZip Compression Level (1-9)
 
+        OTLP_HTTP_ENDPOINT (str): OpenTelemetry HTTP Endpoint
+        OTLP_SERVICE_ID (str): OpenTelemetry Service ID
+
         CELERY_BROKER_URL (str): Celery Broker URL (RabbitMQ)
         CELERY_RESULT_BACKEND (str): Celery Result Backend
 
@@ -142,6 +145,10 @@ class Settings(BaseSettings):
     # Compression Settings
     COMPRESSION_MIN_SIZE: int = 1024
     COMPRESSION_LEVEL: int = 6
+
+    # OpenTelemetry Configuration
+    OTLP_HTTP_ENDPOINT: str = "http://otel-collector-service:4318/v1/traces"
+    OTLP_SERVICE_ID: str = "c9fa747e-04ae-4c41-a9a7-5ebd3f706cee"
 
     # Celery Configuration
     CELERY_BROKER_URL: str = "amqp://NGeDFwAgoZwmMvP:ftT4tT0Qy2cQXGm@rabbitmq-service:5672//"

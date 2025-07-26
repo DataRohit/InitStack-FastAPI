@@ -3,12 +3,12 @@ from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.errors import PyMongoError
 
 # Local Imports
-from config.mongodb import get_mongodb
+from config.mongodb import get_async_mongodb
 
 
 async def create_users_indexes() -> None:
     # Get Database
-    async with get_mongodb() as db:
+    async with get_async_mongodb() as db:
         # Get users collection
         collection: AsyncCollection = db.get_collection("users")
 

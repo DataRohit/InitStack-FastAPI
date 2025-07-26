@@ -1,9 +1,19 @@
 # Third-Party Imports
 import pydantic_core
 import sentry_sdk
+import slugify
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as OTLPSpanExporterHTTP,
+)
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 # Local Imports
 from config.connection_pool import lifespan
@@ -18,6 +28,47 @@ from config.middlewares import (
 )
 from config.settings import settings
 from src.routes import health_router, users_router
+
+
+def _setup_open_telemetry(app: FastAPI) -> None:
+    """
+    Setup OpenTelemetry
+
+    This Function Configures OpenTelemetry for the FastAPI Application.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+    """
+
+    # Create Resource
+    resource = Resource(
+        attributes={
+            "service.name": slugify.slugify(settings.PROJECT_NAME),
+            "service.version": settings.VERSION,
+            "service.instance.id": settings.OTLP_SERVICE_ID,
+        },
+    )
+
+    # Initialize Tracer Provider
+    tracer = TracerProvider(resource=resource)
+
+    # Set Tracer Provider
+    trace.set_tracer_provider(tracer_provider=tracer)
+
+    # Add Span Processor
+    tracer.add_span_processor(
+        span_processor=BatchSpanProcessor(
+            span_exporter=OTLPSpanExporterHTTP(
+                endpoint=settings.OTLP_HTTP_ENDPOINT,
+            ),
+        ),
+    )
+
+    # Instrument Logging
+    LoggingInstrumentor().instrument(set_logging_format=True)
+
+    # Instrument FastAPI
+    FastAPIInstrumentor().instrument_app(app=app, tracer_provider=tracer)
 
 
 # Create FastAPI Instance Function
@@ -36,7 +87,7 @@ def _create_fastapi_instance() -> FastAPI:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         environment=settings.APP_ENV,
-        server_name=settings.PROJECT_NAME,
+        server_name=slugify.slugify(settings.PROJECT_NAME),
         sample_rate=settings.SENTRY_SAMPLE_RATE,
         send_default_pii=True,
     )
@@ -63,6 +114,9 @@ def _create_fastapi_instance() -> FastAPI:
             "url": settings.LICENSE_URL,
         },
     )
+
+    # Setup OpenTelemetry
+    _setup_open_telemetry(app=app)
 
     # Return Application Instance
     return app

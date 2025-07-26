@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pymongo.asynchronous.collection import AsyncCollection
 
 # Local Imports
-from config.mongodb import get_mongodb
+from config.mongodb import get_async_mongodb
 from config.settings import settings
 from src.models.users.base import User
 
@@ -93,7 +93,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials | None = De
     user_id: str = _validate_jwt_token(credentials)
 
     # Get User from Database
-    async with get_mongodb() as db:
+    async with get_async_mongodb() as db:
         # Get Collection
         mongo_collection: AsyncCollection = db.get_collection("users")
 
