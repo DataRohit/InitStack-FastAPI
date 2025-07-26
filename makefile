@@ -48,7 +48,7 @@ sonar-scan:
 	sonar-scanner \
 		-Dsonar.host.url=http://localhost:9000 \
 		-Dsonar.projectKey=InitStack \
-		-Dsonar.login=sqp_d25e7663eeb3b9843905eb6db6a8723caf6d6eee
+		-Dsonar.login=sqp_a046f1a745639c2e11ac52953bc478ef8afc7bc2
 	@printf "${GREEN}SonarQube scan completed!${NC}\n"
 	@echo ""
 
@@ -56,7 +56,7 @@ sonar-scan:
 docker-up:
 	@echo ""
 	@printf "${YELLOW}Building and starting Docker containers...${NC}\n"
-	docker compose build && docker compose up -d
+	docker compose build && docker compose up -d --remove-orphans
 	@printf "${GREEN}Docker containers started successfully!${NC}\n"
 	@echo ""
 
