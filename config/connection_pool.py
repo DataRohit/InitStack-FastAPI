@@ -23,7 +23,10 @@ async def setup_mongodb() -> None:
     """
 
     # Ping MongoDB
-    await mongodb_manager.client.admin.command("ping")
+    mongodb_manager.sync_client.admin.command("ping")
+
+    # Ping Async MongoDB
+    await mongodb_manager.async_client.admin.command("ping")
 
     # Create Indexes
     await create_users_indexes()
@@ -107,6 +110,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     finally:
         # Close HTTP Client
         await app.state.http_client.aclose()
+
+        # Close MongoDB
+        await mongodb_manager.close_all()
 
 
 # Get HTTP Client

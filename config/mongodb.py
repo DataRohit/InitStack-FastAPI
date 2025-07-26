@@ -1,11 +1,13 @@
 # Standard Library Imports
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Generator
+from contextlib import asynccontextmanager, contextmanager
 
 # Third-Party Imports
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
+from pymongo.database import Database
 from pymongo.errors import PyMongoError
+from pymongo.mongo_client import MongoClient
 
 # Local Imports
 from config.settings import settings
@@ -20,8 +22,10 @@ class MongoDBManager:
     Requires PyMongo 4.0+ with Async Support.
 
     Attributes:
-        client (AsyncMongoClient): Async MongoDB Client
-        db (AsyncDatabase): Database Instance
+        sync_client (MongoClient): Synchronous MongoDB Client
+        async_client (AsyncMongoClient): Async MongoDB Client
+        sync_db (Database): Synchronous Database Instance
+        async_db (AsyncDatabase): Async Database Instance
     """
 
     # Initialize MongoDB Manager
@@ -30,8 +34,18 @@ class MongoDBManager:
         Initialize MongoDB Manager with Connection Settings
         """
 
-        # Initialize MongoDB Client
-        self.client: AsyncMongoClient = AsyncMongoClient(
+        # Initialize MongoDB Sync Client
+        self.sync_client: MongoClient = MongoClient(
+            settings.MONGODB_URI,
+            connectTimeoutMS=5000,
+            socketTimeoutMS=30000,
+            serverSelectionTimeoutMS=5000,
+            maxPoolSize=100,
+            minPoolSize=10,
+        )
+
+        # Initialize MongoDB Async Client
+        self.async_client: AsyncMongoClient = AsyncMongoClient(
             settings.MONGODB_URI,
             connectTimeoutMS=5000,
             socketTimeoutMS=30000,
@@ -41,28 +55,27 @@ class MongoDBManager:
         )
 
         # Initialize Database
-        self.db: AsyncDatabase = self.client[settings.MONGODB_DATABASE]
+        self.sync_db: Database = self.sync_client[settings.MONGODB_DATABASE]
+        self.async_db: AsyncDatabase = self.async_client[settings.MONGODB_DATABASE]
 
-    @asynccontextmanager
-    async def get_db(self) -> AsyncGenerator:
+    # Get Synchronous Database Connection Context Manager
+    @contextmanager
+    def get_sync_db(self):
         """
-        Get Database Connection Context Manager
+        Get Synchronous Database Connection Context Manager
 
-        Provides Async Context Manager for MongoDB Database Access.
+        Provides Synchronous Context Manager for MongoDB Database Access.
 
         Yields:
-            AsyncDatabase: Configured Database Instance
+            Database: Configured Database Instance
 
         Raises:
             PyMongoError: If Connection Fails
         """
 
         try:
-            # Ping MongoDB to verify connection
-            await self.client.admin.command("ping")
-
             # Yield Database Instance
-            yield self.db
+            yield self.sync_db
 
         except PyMongoError as e:
             # Raise PyMongoError with Custom Message
@@ -75,16 +88,76 @@ class MongoDBManager:
             # Connection Pooling Handled by PyMongo
             pass
 
+    # Get Asynchronous Database Connection Context Manager
+    @asynccontextmanager
+    async def get_async_db(self):
+        """
+        Get Asynchronous Database Connection Context Manager
+
+        Provides Asynchronous Context Manager for MongoDB Database Access.
+
+        Yields:
+            AsyncDatabase: Configured Database Instance
+
+        Raises:
+            PyMongoError: If Connection Fails
+        """
+
+        try:
+            # Yield Database Instance
+            yield self.async_db
+
+        except PyMongoError as e:
+            # Raise PyMongoError with Custom Message
+            msg: str = f"MongoDB Operation Failed: {e!s}"
+
+            # Raise PyMongoError
+            raise PyMongoError(msg) from e
+
+        finally:
+            # Connection Pooling Handled by PyMongo
+            pass
+
+    # Close All Connections
+    async def close_all(self) -> None:
+        """
+        Close All MongoDB Connections
+        """
+
+        # Close Synchronous Client
+        self.sync_client.close()
+
+        # Close Asynchronous Client
+        await self.async_client.close()
+
 
 # Initialize MongoDB Manager
 mongodb_manager: MongoDBManager = MongoDBManager()
 
 
-# Get Database Helper
-@asynccontextmanager
-async def get_mongodb() -> AsyncDatabase:
+# Get Synchronous Database Helper
+@contextmanager
+def get_sync_mongodb() -> Generator:
     """
-    Get MongoDB Database Helper
+    Get Synchronous MongoDB Database Helper
+
+    Convenience Function for Accessing MongoDB Database.
+
+    Yields:
+        Database: Configured Database Instance
+    """
+
+    # Get Synchronous Database Connection
+    with mongodb_manager.get_sync_db() as db:
+        # Yield Database Instance
+        yield db
+
+
+# Get Asynchronous Database Helper
+@asynccontextmanager
+async def get_async_mongodb() -> AsyncGenerator:
+    """
+    Get Asynchronous MongoDB Database Helper
 
     Convenience Function for Accessing MongoDB Database.
 
@@ -92,11 +165,11 @@ async def get_mongodb() -> AsyncDatabase:
         AsyncDatabase: Configured Database Instance
     """
 
-    # Get Database Connection
-    async with mongodb_manager.get_db() as db:
+    # Get Asynchronous Database Connection
+    async with mongodb_manager.get_async_db() as db:
         # Yield Database Instance
         yield db
 
 
 # Exports
-__all__: list[str] = ["get_mongodb", "mongodb_manager"]
+__all__: list[str] = ["get_async_mongodb", "get_sync_mongodb", "mongodb_manager"]

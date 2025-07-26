@@ -2,17 +2,14 @@ volumes:
     nginx-data:
         name: nginx-data
         driver: local
+    cassandra-schema-data:
+        name: cassandra-schema-data
+        driver: local
     mailpit-data:
         name: mailpit-data
         driver: local
     redis-data:
         name: redis-data
-        driver: local
-    pgadmin-data:
-        name: pgadmin-data
-        driver: local
-    postgres-data:
-        name: postgres-data
         driver: local
     rabbitmq-data:
         name: rabbitmq-data
@@ -87,7 +84,7 @@ services:
                 condition: service_healthy
             redis-service:
                 condition: service_healthy
-            postgres-service:
+            cassandra-service:
                 condition: service_healthy
             mongodb-service:
                 condition: service_healthy
@@ -114,7 +111,7 @@ services:
         depends_on:
             rabbitmq-service:
                 condition: service_healthy
-            postgres-service:
+            cassandra-service:
                 condition: service_healthy
 
     celery-worker-service:
@@ -133,7 +130,7 @@ services:
         depends_on:
             rabbitmq-service:
                 condition: service_healthy
-            postgres-service:
+            cassandra-service:
                 condition: service_healthy
 
     celery-beat-service:
@@ -152,7 +149,7 @@ services:
         depends_on:
             rabbitmq-service:
                 condition: service_healthy
-            postgres-service:
+            cassandra-service:
                 condition: service_healthy
 
     cassandra-schema-service:
@@ -164,6 +161,8 @@ services:
         entrypoint: ["/wait-and-run.sh"]
         env_file:
             - ./.envs/cassandra-schema/.env
+        volumes:
+            - cassandra-schema-data:/var/lib/cassandra
         networks:
             - initstack
         restart: no
@@ -182,6 +181,8 @@ services:
         container_name: cassandra-service
         env_file:
             - ./.envs/cassandra/.env
+        volumes:
+            - ./compose/cassandra/init.cql:/docker-entrypoint-initdb.d/init.cql:ro
         networks:
             - initstack
         restart: unless-stopped
@@ -227,39 +228,6 @@ services:
         restart: unless-stopped
         healthcheck:
             test: ["CMD", "redis-cli", "ping"]
-            interval: 1m30s
-            timeout: 30s
-            retries: 5
-            start_period: 30s
-
-    pgadmin-service:
-        image: dpage/pgadmin4:latest
-        container_name: pgadmin-service
-        ports:
-            - "5050:80"
-        env_file:
-            - ./.envs/pgadmin/.env
-        volumes:
-            - pgadmin-data:/var/lib/pgadmin
-        networks:
-            - initstack
-        restart: unless-stopped
-        depends_on:
-            postgres-service:
-                condition: service_healthy
-
-    postgres-service:
-        image: postgres:16-alpine
-        container_name: postgres-service
-        env_file:
-            - ./.envs/postgres/.env
-        volumes:
-            - postgres-data:/var/lib/postgresql/data
-        networks:
-            - initstack
-        restart: unless-stopped
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
             interval: 1m30s
             timeout: 30s
             retries: 5

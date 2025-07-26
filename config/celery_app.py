@@ -35,6 +35,18 @@ def create_celery_app() -> Celery:
         timezone="UTC",
         enable_utc=True,
         broker_connection_retry_on_startup=True,
+        cassandra_servers=[f"{settings.CASSANDRA_HOST}"],
+        cassandra_port=settings.CASSANDRA_PORT,
+        cassandra_keyspace=settings.CASSANDRA_KEYSPACE,
+        cassandra_table="celery_taskmeta",
+        cassandra_read_consistency="LOCAL_QUORUM",
+        cassandra_write_consistency="LOCAL_QUORUM",
+        cassandra_entry_ttl=60 * 60 * 24,
+        cassandra_auth_provider="PlainTextAuthProvider",
+        cassandra_auth_kwargs={
+            "username": settings.CASSANDRA_USER,
+            "password": settings.CASSANDRA_PASS,
+        },
     )
 
     # Register Tasks

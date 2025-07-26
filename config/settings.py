@@ -38,7 +38,13 @@ class Settings(BaseSettings):
         COMPRESSION_LEVEL (int): GZip Compression Level (1-9)
 
         CELERY_BROKER_URL (str): Celery Broker URL (RabbitMQ)
-        CELERY_RESULT_BACKEND (str): Celery Result Backend URL
+        CELERY_RESULT_BACKEND (str): Celery Result Backend
+
+        CASSANDRA_HOST (str): Cassandra Host
+        CASSANDRA_PORT (int): Cassandra Port
+        CASSANDRA_USER (str): Cassandra User
+        CASSANDRA_PASS (str): Cassandra Password
+        CASSANDRA_KEYSPACE (str): Cassandra Keyspace
 
         REDIS_URL (str): Redis Server URL
         REDIS_HOST (str): Redis Host
@@ -139,7 +145,14 @@ class Settings(BaseSettings):
 
     # Celery Configuration
     CELERY_BROKER_URL: str = "amqp://NGeDFwAgoZwmMvP:ftT4tT0Qy2cQXGm@rabbitmq-service:5672//"
-    CELERY_RESULT_BACKEND: str = "db+postgresql://wIym6FbBxLhvf9p:Xm5XGvwnwSuJxtl@postgres-service:5432/celery_results"
+    CELERY_RESULT_BACKEND: str = "cassandra://"
+
+    # Cassandra Configuration
+    CASSANDRA_HOST: str = "cassandra-service"
+    CASSANDRA_PORT: int = 9042
+    CASSANDRA_USER: str = "cassandra"
+    CASSANDRA_PASS: str = "geF4eXLov37FTeg"  # noqa: S105
+    CASSANDRA_KEYSPACE: str = "celery_results"
 
     # Redis Configuration
     REDIS_URL: str = "redis://:WFyzhcO3ByZIjdd@redis-service:6379/"
