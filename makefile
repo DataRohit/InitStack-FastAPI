@@ -37,42 +37,42 @@ help:
 	@echo "  sonar-scan  - Run SonarQube Analysis For The Project"
 	@echo ""
 	@printf "${GREEN}Docker:${NC}\n"
-	@echo "  docker-build      - Build and start all Docker containers"
-	@echo "  docker-up         - Start all containers and nginx-service"
-	@echo "  docker-restart    - Restart all containers and nginx-service"
+	@echo "  docker-build      - Build And Start All Docker Containers"
+	@echo "  docker-up         - Start All Containers And Nginx-Service"
+	@echo "  docker-restart    - Restart All Containers And Nginx-Service"
 	@echo ""
 
 # Execute SonarQube Code Analysis
 sonar-scan:
 	@echo ""
-	@printf "${YELLOW}Starting SonarScanner...${NC}\n"
+	@printf "${YELLOW}Starting Sonarscanner...${NC}\n"
 	sonar-scanner \
 		-Dsonar.host.url=http://localhost:9000 \
 		-Dsonar.projectKey=InitStack \
 		-Dsonar.login=sqp_3ec9155b26578025ba805b2107edbcdafadc6976
-	@printf "${GREEN}SonarQube scan completed!${NC}\n"
+	@printf "${GREEN}SonarQube Scan Completed!${NC}\n"
 	@echo ""
 
 # Docker Commands
 docker-build:
 	@echo ""
-	@printf "${YELLOW}Building and starting Docker containers...${NC}\n"
+	@printf "${YELLOW}Building And Starting Docker Containers...${NC}\n"
 	docker compose build && docker compose up -d --remove-orphans
-	@printf "${GREEN}Docker containers started successfully!${NC}\n"
+	@printf "${GREEN}Docker Containers Started Successfully!${NC}\n"
 	@echo ""
 
 docker-up:
 	@echo ""
-	@printf "${YELLOW}Starting Docker containers...${NC}\n"
+	@printf "${YELLOW}Starting Docker Containers...${NC}\n"
 	docker compose up -d --remove-orphans
-	@printf "${GREEN}Docker containers started successfully!${NC}\n"
+	@printf "${GREEN}Docker Containers Started Successfully!${NC}\n"
 	@echo ""
 
 docker-restart:
 	@echo ""
-	@printf "${YELLOW}Restarting Docker containers...${NC}\n"
+	@printf "${YELLOW}Restarting Docker Containers...${NC}\n"
 	docker compose restart && docker compose restart nginx-service
-	@printf "${GREEN}Docker containers restarted successfully!${NC}\n"
+	@printf "${GREEN}Docker Containers Restarted Successfully!${NC}\n"
 	@echo ""
 
 .PHONY: help sonar-scan docker-build docker-up docker-restart
