@@ -63,7 +63,7 @@ celery_app: Celery = create_celery_app()
 celery_app.conf.beat_schedule = {
     "delete-inactive-users": {
         "task": "src.tasks.users.delete_inactive_users.delete_inactive_users_task",
-        "schedule": crontab(minute="*/15"),
+        "schedule": crontab(minute="*/5"),
         "options": {"expires": 60 * 10},
     },
 }

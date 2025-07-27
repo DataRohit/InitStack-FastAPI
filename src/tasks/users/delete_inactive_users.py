@@ -19,7 +19,7 @@ def delete_inactive_users_task(self) -> None:
     - Registered More Than 30 Minutes Ago
     - Never Activated Their Account
 
-    Runs Every 15 Minutes via Celery Beat
+    Runs Every 5 Minutes via Celery Beat
     """
 
     try:

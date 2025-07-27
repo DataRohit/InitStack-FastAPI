@@ -28,5 +28,8 @@ COPY . /app
 # Add current directory to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
-# Run Celery beat scheduler
-CMD ["python", "-m", "watchfiles", "celery -A app.config.celery_app beat --loglevel=info"]
+# Set Start File to Executable
+RUN chmod +x /app/compose/beat/start
+
+# Command to Run the Application
+CMD ["/app/compose/beat/start"]

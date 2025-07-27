@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Exit On Error
 set -o errexit
@@ -9,6 +9,5 @@ set -o nounset
 echo "Waiting For Dependencies To Be Ready..."
 sleep 120
 
-# Start Backend Application
-echo "Starting Backend Application..."
-exec python -m watchfiles "python -m app"
+# Start Celery Flower With Authentication
+exec python -m watchfiles "celery -A app.config.celery_app worker --loglevel=info"

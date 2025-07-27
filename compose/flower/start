@@ -5,5 +5,9 @@ set -o errexit
 # Fail On Undefined Variables
 set -o nounset
 
+# Wait For Dependencies To Be Ready
+echo "Waiting For Dependencies To Be Ready..."
+sleep 120
+
 # Start Celery Flower With Authentication
 exec python -m watchfiles "celery -A app.config.celery_app flower --loglevel=info --basic_auth=${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
