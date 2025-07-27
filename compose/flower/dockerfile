@@ -28,6 +28,9 @@ COPY . /app
 # Add current directory to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
+# Fix Line Endings
+RUN sed -i 's/\r$//g' /app/compose/flower/start
+
 # Set Start File to Executable
 RUN chmod +x /app/compose/flower/start
 

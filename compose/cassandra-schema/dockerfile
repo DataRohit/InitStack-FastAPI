@@ -5,13 +5,16 @@ FROM jaegertracing/jaeger-cassandra-schema:latest
 USER root
 
 # Copy Wait And Run Script
-COPY ./compose/cassandra-schema/wait-and-run.sh /wait-and-run.sh
+COPY ./compose/cassandra-schema/start /start
+
+# Fix Line Endings
+RUN sed -i 's/\r$//g' /start
 
 # Set Script Permissions
-RUN chmod +x /wait-and-run.sh
+RUN chmod +x /start
 
 # Switch Back to the Non-root User Used in Base Image
 USER 65532:65532
 
 # Command to Run the Application
-CMD ["/wait-and-run.sh"]
+CMD ["/start"]

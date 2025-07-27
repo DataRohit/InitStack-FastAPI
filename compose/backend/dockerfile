@@ -28,8 +28,11 @@ COPY . /app
 # Add Current Directory to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
+# Fix Line Endings
+RUN sed -i 's/\r$//g' /app/compose/backend/start
+
 # Update File Permissions
-RUN chmod +x /app/compose/backend/wait-and-run.sh
+RUN chmod +x /app/compose/backend/start
 
 # Command to Run the Application
-CMD ["/app/compose/backend/wait-and-run.sh"]
+CMD ["/app/compose/backend/start"]
