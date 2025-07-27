@@ -1,4 +1,6 @@
 # Third-Party Imports
+from cassandra.cluster import EXEC_PROFILE_DEFAULT, ExecutionProfile
+from cassandra.policies import DCAwareRoundRobinPolicy
 from celery import Celery
 from celery.schedules import crontab
 
@@ -7,6 +9,13 @@ from config.settings import settings
 
 # Imports Tasks
 from src.tasks.users import delete_inactive_users_task  # noqa: F401
+
+# Execution Profile
+my_e_profile = ExecutionProfile(
+    load_balancing_policy=DCAwareRoundRobinPolicy(
+        local_dc=settings.CASSANDRA_DC,
+    ),
+)
 
 
 # Initialize Celery Application
@@ -46,6 +55,11 @@ def create_celery_app() -> Celery:
         cassandra_auth_kwargs={
             "username": settings.CASSANDRA_USER,
             "password": settings.CASSANDRA_PASS,
+        },
+        cassandra_options={
+            "cql_version": settings.CASSANDRA_CQL_VERSION,
+            "protocol_version": settings.CASSANDRA_PROTOCOL_VERSION,
+            "execution_profiles": {EXEC_PROFILE_DEFAULT: my_e_profile},
         },
     )
 
