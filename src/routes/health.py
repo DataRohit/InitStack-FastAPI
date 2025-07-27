@@ -52,27 +52,59 @@ router = APIRouter(
             "description": "Successful Health Check",
             "content": {
                 "application/json": {
-                    "example": {
-                        "status": "healthy",
-                        "app": "InitStack FastAPI Server",
-                        "version": "0.1.0",
-                        "environment": "production",
-                        "timestamp": "2025-07-21T05:27:32.123456+00:00",
-                        "system": {
-                            "hostname": "a2f460aba47d",
-                            "cpu_percent": 15.5,
-                            "memory": {
-                                "total": 17179869184,
-                                "available": 12884901888,
-                                "percent": 25.0,
-                                "used": 4294967296,
-                                "free": 12884901888,
+                    "examples": {
+                        "healthy": {
+                            "summary": "System In Healthy State",
+                            "value": {
+                                "status": "healthy",
+                                "app": "InitStack FastAPI Server",
+                                "version": "0.1.0",
+                                "environment": "production",
+                                "timestamp": "2025-07-21T05:27:32.123456+00:00",
+                                "system": {
+                                    "hostname": "a2f460aba47d",
+                                    "cpu_percent": 15.5,
+                                    "memory": {
+                                        "total": 17179869184,
+                                        "available": 12884901888,
+                                        "percent": 25.0,
+                                        "used": 4294967296,
+                                        "free": 12884901888,
+                                    },
+                                    "disk": {
+                                        "total": 107374182400,
+                                        "used": 53687091200,
+                                        "free": 53687091200,
+                                        "percent": 50.0,
+                                    },
+                                },
                             },
-                            "disk": {
-                                "total": 107374182400,
-                                "used": 53687091200,
-                                "free": 53687091200,
-                                "percent": 50.0,
+                        },
+                        "degraded": {
+                            "summary": "System In Degraded State",
+                            "value": {
+                                "status": "degraded",
+                                "app": "InitStack FastAPI Server",
+                                "version": "0.1.0",
+                                "environment": "production",
+                                "timestamp": "2025-07-21T05:27:32.123456+00:00",
+                                "system": {
+                                    "hostname": "a2f460aba47d",
+                                    "cpu_percent": 85.5,
+                                    "memory": {
+                                        "total": 17179869184,
+                                        "available": 4294967296,
+                                        "percent": 75.0,
+                                        "used": 12884901888,
+                                        "free": 4294967296,
+                                    },
+                                    "disk": {
+                                        "total": 107374182400,
+                                        "used": 91268055040,
+                                        "free": 16106127360,
+                                        "percent": 85.0,
+                                    },
+                                },
                             },
                         },
                     },
@@ -83,27 +115,80 @@ router = APIRouter(
             "description": "Service Unavailable",
             "content": {
                 "application/json": {
-                    "example": {
-                        "status": "unhealthy",
-                        "app": "InitStack FastAPI Server",
-                        "version": "0.1.0",
-                        "environment": "production",
-                        "timestamp": "2025-07-21T05:27:32.123456+00:00",
-                        "system": {
-                            "hostname": "a2f460aba47d",
-                            "cpu_percent": 95.5,
-                            "memory": {
-                                "total": 17179869184,
-                                "available": 1073741824,
-                                "percent": 93.8,
-                                "used": 16106127360,
-                                "free": 1073741824,
+                    "examples": {
+                        "cpu_overload": {
+                            "summary": "CPU Usage Exceeds Threshold",
+                            "value": {
+                                "status": "unhealthy",
+                                "app": "InitStack FastAPI Server",
+                                "version": "0.1.0",
+                                "environment": "production",
+                                "timestamp": "2025-07-21T05:27:32.123456+00:00",
+                                "system": {
+                                    "hostname": "a2f460aba47d",
+                                    "cpu_percent": 95.5,
+                                    "memory": {
+                                        "total": 17179869184,
+                                        "available": 1073741824,
+                                        "percent": 93.8,
+                                        "used": 16106127360,
+                                        "free": 1073741824,
+                                    },
+                                    "disk": {
+                                        "total": 107374182400,
+                                        "used": 105656195072,
+                                        "free": 1717987328,
+                                        "percent": 98.4,
+                                    },
+                                },
                             },
-                            "disk": {
-                                "total": 107374182400,
-                                "used": 105656195072,
-                                "free": 1717987328,
-                                "percent": 98.4,
+                        },
+                        "memory_overload": {
+                            "summary": "Memory Usage Exceeds Threshold",
+                            "value": {
+                                "status": "unhealthy",
+                                "app": "InitStack FastAPI Server",
+                                "version": "0.1.0",
+                                "environment": "production",
+                                "timestamp": "2025-07-21T05:27:32.123456+00:00",
+                                "system": {
+                                    "hostname": "a2f460aba47d",
+                                    "cpu_percent": 65.5,
+                                    "memory": {
+                                        "total": 17179869184,
+                                        "available": 1073741824,
+                                        "percent": 93.8,
+                                        "used": 16106127360,
+                                        "free": 1073741824,
+                                    },
+                                    "disk": {
+                                        "total": 107374182400,
+                                        "used": 53687091200,
+                                        "free": 53687091200,
+                                        "percent": 50.0,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "metrics_error": {
+                            "summary": "Error Collecting System Metrics",
+                            "value": {
+                                "detail": "Error Collecting System Metrics",
+                            },
+                        },
+                        "unexpected_error": {
+                            "summary": "Unexpected Server Error",
+                            "value": {
+                                "detail": "Internal Server Error",
                             },
                         },
                     },

@@ -57,18 +57,23 @@ router = APIRouter(
             "description": "User Registered Successfully",
             "content": {
                 "application/json": {
-                    "example": {
-                        "id": "687ea9fa53bf34da640e4ef5",
-                        "username": "john_doe",
-                        "email": "john_doe@example.com",
-                        "first_name": "John",
-                        "last_name": "Doe",
-                        "is_active": False,
-                        "is_staff": False,
-                        "is_superuser": False,
-                        "date_joined": "2025-07-21T20:58:34.273000+00:00",
-                        "last_login": "2025-07-21T21:58:34.273000+00:00",
-                        "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                    "examples": {
+                        "New User": {
+                            "summary": "New User",
+                            "value": {
+                                "id": "687ea9fa53bf34da640e4ef5",
+                                "username": "john_doe",
+                                "email": "john_doe@example.com",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                                "is_active": False,
+                                "is_staff": False,
+                                "is_superuser": False,
+                                "date_joined": "2025-07-21T20:58:34.273000+00:00",
+                                "last_login": "2025-07-21T21:58:34.273000+00:00",
+                                "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                            },
+                        },
                     },
                 },
             },
@@ -77,14 +82,31 @@ router = APIRouter(
             "description": "Validation Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Validation Error",
-                        "errors": [
-                            {
-                                "field": "password",
-                                "reason": "Password Must Contain At Least 1 Uppercase Letter, 1 Lowercase Letter, 1 Number & 1 Special Character",  # noqa: E501
+                    "examples": {
+                        "Invalid Password": {
+                            "summary": "Invalid Password",
+                            "value": {
+                                "detail": "Validation Error",
+                                "errors": [
+                                    {
+                                        "field": "password",
+                                        "reason": "Password Must Contain At Least 1 Uppercase Letter, 1 Lowercase Letter, 1 Number & 1 Special Character",  # noqa: E501
+                                    },
+                                ],
                             },
-                        ],
+                        },
+                        "Invalid Email": {
+                            "summary": "Invalid Email",
+                            "value": {
+                                "detail": "Validation Error",
+                                "errors": [
+                                    {
+                                        "field": "email",
+                                        "reason": "Invalid Email Format",
+                                    },
+                                ],
+                            },
+                        },
                     },
                 },
             },
@@ -93,8 +115,13 @@ router = APIRouter(
             "description": "Conflict",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "User With This Username or Email Already Exists",
+                    "examples": {
+                        "Duplicate User": {
+                            "summary": "Duplicate User",
+                            "value": {
+                                "detail": "User With This Username or Email Already Exists",
+                            },
+                        },
                     },
                 },
             },
@@ -103,21 +130,26 @@ router = APIRouter(
             "description": "Invalid Request",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Invalid Request",
-                        "errors": [
-                            {
-                                "type": "missing",
-                                "loc": ["body", "first_name"],
-                                "msg": "Field Required",
-                                "input": {
-                                    "username": "john_doe",
-                                    "email": "john_doe@example.com",
-                                    "password": "SecurePassword@123",
-                                    "last_name": "Doe",
-                                },
+                    "examples": {
+                        "Missing First Name": {
+                            "summary": "Missing First Name",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "type": "missing",
+                                        "loc": ["body", "first_name"],
+                                        "msg": "Field Required",
+                                        "input": {
+                                            "username": "john_doe",
+                                            "email": "john_doe@example.com",
+                                            "password": "SecurePassword@123",
+                                            "last_name": "Doe",
+                                        },
+                                    },
+                                ],
                             },
-                        ],
+                        },
                     },
                 },
             },
@@ -126,8 +158,13 @@ router = APIRouter(
             "description": "Internal Server Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Failed to Register User",
+                    "examples": {
+                        "Registration Failed": {
+                            "summary": "Registration Failed",
+                            "value": {
+                                "detail": "Failed to Register User",
+                            },
+                        },
                     },
                 },
             },
@@ -166,18 +203,23 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
             "description": "User Activated Successfully",
             "content": {
                 "application/json": {
-                    "example": {
-                        "id": "687ea9fa53bf34da640e4ef5",
-                        "username": "john_doe",
-                        "email": "john_doe@example.com",
-                        "first_name": "John",
-                        "last_name": "Doe",
-                        "is_active": True,
-                        "is_staff": False,
-                        "is_superuser": False,
-                        "date_joined": "2025-07-21T20:58:34.273000+00:00",
-                        "last_login": "2025-07-21T21:58:34.273000+00:00",
-                        "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                    "examples": {
+                        "Successful Activation": {
+                            "summary": "Successful Activation",
+                            "value": {
+                                "id": "687ea9fa53bf34da640e4ef5",
+                                "username": "john_doe",
+                                "email": "john_doe@example.com",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                                "is_active": True,
+                                "is_staff": False,
+                                "is_superuser": False,
+                                "date_joined": "2025-07-21T20:58:34.273000+00:00",
+                                "last_login": "2025-07-21T21:58:34.273000+00:00",
+                                "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                            },
+                        },
                     },
                 },
             },
@@ -186,8 +228,19 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
             "description": "Unauthorized",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Invalid Activation Token",
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Activation Token",
+                            },
+                        },
+                        "Token Not Found": {
+                            "summary": "Token Not Found",
+                            "value": {
+                                "detail": "Invalid Activation Token",
+                            },
+                        },
                     },
                 },
             },
@@ -196,8 +249,28 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
             "description": "Not Found",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "User Not Found",
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Already Activated": {
+                            "summary": "Already Activated",
+                            "value": {
+                                "detail": "User Already Activated",
+                            },
+                        },
                     },
                 },
             },
@@ -206,16 +279,21 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
             "description": "Unprocessable Entity",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Invalid Request",
-                        "errors": [
-                            {
-                                "type": "missing",
-                                "loc": ["query", "token"],
-                                "msg": "Field Required",
-                                "input": None,
+                    "examples": {
+                        "Missing Token": {
+                            "summary": "Missing Token",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "type": "missing",
+                                        "loc": ["query", "token"],
+                                        "msg": "Field Required",
+                                        "input": None,
+                                    },
+                                ],
                             },
-                        ],
+                        },
                     },
                 },
             },
@@ -224,8 +302,13 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
             "description": "Internal Server Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Failed to Activate User",
+                    "examples": {
+                        "Activation Failed": {
+                            "summary": "Activation Failed",
+                            "value": {
+                                "detail": "Failed to Activate User",
+                            },
+                        },
                     },
                 },
             },
@@ -266,28 +349,33 @@ async def activate_user(token: str) -> JSONResponse:
             "description": "User Logged In Successfully",
             "content": {
                 "application/json": {
-                    "example": {
-                        "user": {
-                            "id": "687ea9fa53bf34da640e4ef5",
-                            "username": "john_doe",
-                            "email": "john_doe@example.com",
-                            "first_name": "John",
-                            "last_name": "Doe",
-                            "is_active": True,
-                            "is_staff": False,
-                            "is_superuser": False,
-                            "date_joined": "2025-07-21T20:58:34.273000+00:00",
-                            "last_login": "2025-07-21T21:58:34.273000+00:00",
-                            "updated_at": "2025-07-21T21:30:34.273000+00:00",
-                        },
-                        "access_token": {
-                            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
-                            "type": "bearer",
-                            "expires_in": 3600,
-                        },
-                        "refresh_token": {
-                            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
-                            "expires_in": 86400,
+                    "examples": {
+                        "Successful Login": {
+                            "summary": "Successful Login",
+                            "value": {
+                                "user": {
+                                    "id": "687ea9fa53bf34da640e4ef5",
+                                    "username": "john_doe",
+                                    "email": "john_doe@example.com",
+                                    "first_name": "John",
+                                    "last_name": "Doe",
+                                    "is_active": True,
+                                    "is_staff": False,
+                                    "is_superuser": False,
+                                    "date_joined": "2025-07-21T20:58:34.273000+00:00",
+                                    "last_login": "2025-07-21T21:58:34.273000+00:00",
+                                    "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                                },
+                                "access_token": {
+                                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
+                                    "type": "bearer",
+                                    "expires_in": 3600,
+                                },
+                                "refresh_token": {
+                                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
+                                    "expires_in": 86400,
+                                },
+                            },
                         },
                     },
                 },
@@ -297,18 +385,35 @@ async def activate_user(token: str) -> JSONResponse:
             "description": "Validation Error",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Validation Error",
-                        "errors": [
-                            {
-                                "type": "missing",
-                                "loc": ["body", "identifier"],
-                                "msg": "Field Required",
-                                "input": {
-                                    "password": "SecurePassword@123",
-                                },
+                    "examples": {
+                        "Missing Identifier": {
+                            "summary": "Missing Identifier",
+                            "value": {
+                                "detail": "Validation Error",
+                                "errors": [
+                                    {
+                                        "type": "missing",
+                                        "loc": ["body", "identifier"],
+                                        "msg": "Field Required",
+                                        "input": None,
+                                    },
+                                ],
                             },
-                        ],
+                        },
+                        "Missing Password": {
+                            "summary": "Missing Password",
+                            "value": {
+                                "detail": "Validation Error",
+                                "errors": [
+                                    {
+                                        "type": "missing",
+                                        "loc": ["body", "password"],
+                                        "msg": "Field Required",
+                                        "input": None,
+                                    },
+                                ],
+                            },
+                        },
                     },
                 },
             },
@@ -317,8 +422,19 @@ async def activate_user(token: str) -> JSONResponse:
             "description": "Unauthorized",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Invalid Password",
+                    "examples": {
+                        "Invalid Password": {
+                            "summary": "Invalid Password",
+                            "value": {
+                                "detail": "Invalid Password",
+                            },
+                        },
+                        "Account Not Activated": {
+                            "summary": "Account Not Activated",
+                            "value": {
+                                "detail": "User Account Has Not Been Activated",
+                            },
+                        },
                     },
                 },
             },
@@ -327,38 +443,13 @@ async def activate_user(token: str) -> JSONResponse:
             "description": "Not Found",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "User Not Found",
-                    },
-                },
-            },
-        },
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "description": "Invalid Request",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Invalid Request",
-                        "errors": [
-                            {
-                                "type": "missing",
-                                "loc": ["body", "identifier"],
-                                "msg": "Field Required",
-                                "input": {
-                                    "password": "SecurePassword@123",
-                                },
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
                             },
-                        ],
-                    },
-                },
-            },
-        },
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "description": "Internal Server Error",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Failed to Login User",
+                        },
                     },
                 },
             },
@@ -398,41 +489,101 @@ async def login_user(request: UserLoginRequest) -> JSONResponse:
             "description": "User Data Retrieved Successfully",
             "content": {
                 "application/json": {
-                    "example": {
-                        "id": "687ea9fa53bf34da640e4ef5",
-                        "username": "john_doe",
-                        "email": "john_doe@example.com",
-                        "first_name": "John",
-                        "last_name": "Doe",
-                        "is_active": True,
-                        "is_staff": False,
-                        "is_superuser": False,
-                        "date_joined": "2025-07-21T20:58:34.273000+00:00",
-                        "last_login": "2025-07-21T21:58:34.273000+00:00",
-                        "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                    "examples": {
+                        "Active User": {
+                            "summary": "Active User",
+                            "value": {
+                                "id": "687ea9fa53bf34da640e4ef5",
+                                "username": "john_doe",
+                                "email": "john_doe@example.com",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                                "is_active": True,
+                                "is_staff": False,
+                                "is_superuser": False,
+                                "date_joined": "2025-07-21T20:58:34.273000+00:00",
+                                "last_login": "2025-07-21T21:58:34.273000+00:00",
+                                "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                            },
+                        },
                     },
                 },
             },
         },
         status.HTTP_401_UNAUTHORIZED: {
             "description": "Unauthorized",
-            "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_403_FORBIDDEN: {
             "description": "Forbidden",
-            "content": {"application/json": {"example": {"detail": "Authentication Required"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
-            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_409_CONFLICT: {
             "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Inactive User": {
+                            "summary": "Inactive User",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
-            "content": {"application/json": {"example": {"detail": "Failed To Get Current User"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Retrieval Failed": {
+                            "summary": "Retrieval Failed",
+                            "value": {
+                                "detail": "Failed To Get Current User",
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
 )
@@ -466,27 +617,93 @@ async def get_current_user_route(current_user: Annotated[User, Depends(get_curre
     responses={
         status.HTTP_202_ACCEPTED: {
             "description": "User Deactivation Email Sent Successfully",
-            "content": {"application/json": {"example": {"detail": "User Deactivation Email Sent Successfully"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Deactivation Email Sent": {
+                            "summary": "Deactivation Email Sent",
+                            "value": {
+                                "detail": "User Deactivation Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_401_UNAUTHORIZED: {
             "description": "Unauthorized",
-            "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_403_FORBIDDEN: {
             "description": "Forbidden",
-            "content": {"application/json": {"example": {"detail": "Authentication Required"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
-            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_409_CONFLICT: {
             "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Already Deactivated"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Already Deactivated": {
+                            "summary": "Already Deactivated",
+                            "value": {
+                                "detail": "User Already Deactivated",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
-            "content": {"application/json": {"example": {"detail": "Failed To Deactivate User"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Deactivation Failed": {
+                            "summary": "Deactivation Failed",
+                            "value": {
+                                "detail": "Failed To Deactivate User",
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
 )
@@ -520,27 +737,93 @@ async def deactivate_user_route(current_user: Annotated[User, Depends(get_curren
     responses={
         status.HTTP_202_ACCEPTED: {
             "description": "User Delete Email Sent Successfully",
-            "content": {"application/json": {"example": {"detail": "User Delete Email Sent Successfully"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Delete Email Sent": {
+                            "summary": "Delete Email Sent",
+                            "value": {
+                                "detail": "User Delete Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_401_UNAUTHORIZED: {
             "description": "Unauthorized",
-            "content": {"application/json": {"example": {"detail": "Invalid Authentication Credentials"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_403_FORBIDDEN: {
             "description": "Forbidden",
-            "content": {"application/json": {"example": {"detail": "Authentication Required"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
-            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_409_CONFLICT: {
             "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Active": {
+                            "summary": "User Not Active",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
-            "content": {"application/json": {"example": {"detail": "Failed To Delete User"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Delete Failed": {
+                            "summary": "Delete Failed",
+                            "value": {
+                                "detail": "Failed To Delete User",
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
 )
@@ -574,41 +857,107 @@ async def delete_user_route(current_user: Annotated[User, Depends(get_current_us
     responses={
         status.HTTP_200_OK: {
             "description": "User Deactivated Successfully",
-            "content": {"application/json": {"example": {"detail": "User Deactivated Successfully"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Successful Deactivation": {
+                            "summary": "Successful Deactivation",
+                            "value": {
+                                "detail": "User Deactivated Successfully",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_401_UNAUTHORIZED: {
             "description": "Unauthorized",
-            "content": {"application/json": {"example": {"detail": "Invalid Deactivation Token"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Deactivation Token",
+                            },
+                        },
+                        "Token Not Found": {
+                            "summary": "Token Not Found",
+                            "value": {
+                                "detail": "Invalid Deactivation Token",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
-            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_409_CONFLICT: {
             "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Already Deactivated"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Already Deactivated": {
+                            "summary": "Already Deactivated",
+                            "value": {
+                                "detail": "User Already Deactivated",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
             "description": "Unprocessable Entity",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Invalid Request",
-                        "errors": [
-                            {
-                                "type": "missing",
-                                "loc": ["query", "token"],
-                                "msg": "Field Required",
-                                "input": None,
+                    "examples": {
+                        "Missing Token": {
+                            "summary": "Missing Token",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "type": "missing",
+                                        "loc": ["query", "token"],
+                                        "msg": "Field Required",
+                                        "input": None,
+                                    },
+                                ],
                             },
-                        ],
+                        },
                     },
                 },
             },
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
-            "content": {"application/json": {"example": {"detail": "Failed To Deactivate User"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Deactivation Failed": {
+                            "summary": "Deactivation Failed",
+                            "value": {
+                                "detail": "Failed To Deactivate User",
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
 )
@@ -631,34 +980,95 @@ async def deactivate_user_confirm_route(token: str) -> JSONResponse:
 @router.get(
     path="/delete_confirm",
     status_code=status.HTTP_200_OK,
-    summary="User Deletion Confirmation Endpoint",
+    summary="User Delete Confirm Endpoint",
     description="""
-    Confirm User Deletion.
+    Confirms User Deletion Process.
 
-    This Endpoint Confirms The User Deletion Process Using The Deletion Token.
+    This Endpoint Allows a User to Confirm Account Deletion by Providing:
+    - Valid Deletion Token
     """,
     name="User Delete Confirm",
-    response_model=None,
     responses={
         status.HTTP_200_OK: {
             "description": "User Deleted Successfully",
-            "content": {"application/json": {"example": {"detail": "User Deleted Successfully"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Successfully Deleted": {
+                            "summary": "Successfully Deleted",
+                            "value": {
+                                "detail": "User Deleted Successfully",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_401_UNAUTHORIZED: {
-            "description": "Invalid Deletion Token",
-            "content": {"application/json": {"example": {"detail": "Invalid Deletion Token"}}},
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Deletion Token",
+                            },
+                        },
+                        "Token Not Found": {
+                            "summary": "Token Not Found",
+                            "value": {
+                                "detail": "Invalid Deletion Token",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_404_NOT_FOUND: {
-            "description": "User Not Found",
-            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_409_CONFLICT: {
             "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Active": {
+                            "summary": "User Not Active",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "description": "Failed To Delete User",
-            "content": {"application/json": {"example": {"detail": "Failed To Delete User"}}},
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Deletion Failed": {
+                            "summary": "Deletion Failed",
+                            "value": {
+                                "detail": "Failed To Delete User",
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
 )
@@ -681,10 +1091,10 @@ async def delete_user_confirm_route(token: str) -> JSONResponse:
     status_code=status.HTTP_202_ACCEPTED,
     summary="User Reset Password Endpoint",
     description="""
-    Initiates User Reset Password Process.
+    Initiate User Reset Password Process.
 
     This Endpoint Allows a User to Initiate the Reset Password Process by Providing:
-    - Requires User Identifier (Username or Email)
+    - Identifier (Username or Email)
 
     Returns:
         JSONResponse: Success Message With 202 Status
@@ -692,26 +1102,55 @@ async def delete_user_confirm_route(token: str) -> JSONResponse:
     name="User Reset Password",
     responses={
         status.HTTP_202_ACCEPTED: {
-            "description": "User Reset Password Email Sent Successfully",
-            "content": {"application/json": {"example": {"detail": "User Reset Password Email Sent Successfully"}}},
+            "description": "Reset Password Email Sent Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Sent": {
+                            "summary": "Email Sent",
+                            "value": {
+                                "detail": "User Reset Password Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_404_NOT_FOUND: {
-            "description": "User Not Found",
-            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_409_CONFLICT: {
             "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
-        },
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "description": "Failed To Reset Password",
-            "content": {"application/json": {"example": {"detail": "Failed To Reset Password"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Inactive User": {
+                            "summary": "Inactive User",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
 )
 async def reset_password_route(request: UserResetPasswordRequest) -> JSONResponse:
     """
-    Resets User Password.
+    Initiate Reset Password Process.
 
     Args:
         request (UserResetPasswordRequest): Reset Password Request
@@ -743,23 +1182,84 @@ async def reset_password_route(request: UserResetPasswordRequest) -> JSONRespons
     responses={
         status.HTTP_200_OK: {
             "description": "User Reset Password Confirmed Successfully",
-            "content": {"application/json": {"example": {"detail": "User Reset Password Confirmed Successfully"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Password Reset Confirmed": {
+                            "summary": "Password Reset Confirmed",
+                            "value": {
+                                "detail": "User Reset Password Confirmed Successfully",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_401_UNAUTHORIZED: {
             "description": "Unauthorized",
-            "content": {"application/json": {"example": {"detail": "Invalid Reset Password Token"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Reset Password Token",
+                            },
+                        },
+                        "Token Not Found": {
+                            "summary": "Token Not Found",
+                            "value": {
+                                "detail": "Invalid Reset Password Token",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Not Found",
-            "content": {"application/json": {"example": {"detail": "User Not Found"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_409_CONFLICT: {
             "description": "Conflict",
-            "content": {"application/json": {"example": {"detail": "User Is Not Active"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Inactive User": {
+                            "summary": "Inactive User",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error",
-            "content": {"application/json": {"example": {"detail": "Failed To Reset Password"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Reset Failed": {
+                            "summary": "Reset Failed",
+                            "value": {
+                                "detail": "Failed To Reset Password",
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
 )

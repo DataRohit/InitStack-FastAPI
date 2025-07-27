@@ -233,21 +233,33 @@ async def login_user_handler(request: UserLoginRequest) -> JSONResponse:
                 content={"detail": "User Not Found"},
             )
 
+        # If User Date Joined & Updated At Are Same
+        if existing_user["date_joined"] == existing_user["updated_at"]:
+            # Return Conflict Response
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"detail": "User Account Has Not Been Activated"},
+            )
+
         # If User Is Not Active
         if not existing_user["is_active"]:
+            # Calculated Updated At
+            updated_at: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+
             # Activate User
             await mongo_collection.update_one(
                 filter={"_id": existing_user["_id"]},
                 update={
                     "$set": {
                         "is_active": True,
-                        "updated_at": datetime.datetime.now(tz=datetime.UTC),
+                        "updated_at": updated_at,
                     },
                 },
             )
 
             # Update User
             existing_user["is_active"] = True
+            existing_user["updated_at"] = updated_at
 
         # Create and Validate User
         user: User = User(**existing_user)
