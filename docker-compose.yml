@@ -2,6 +2,9 @@ volumes:
     nginx-data:
         name: nginx-data
         driver: local
+    prometheus-data:
+        name: prometheus-data
+        driver: local
     cassandra-schema-data:
         name: cassandra-schema-data
         driver: local
@@ -97,7 +100,6 @@ services:
             dockerfile: ./compose/flower/dockerfile
         image: flower-service:latest
         container_name: flower-service
-        command: /app/compose/flower/start
         ports:
             - "5555:5555"
         env_file:
@@ -220,6 +222,7 @@ services:
         ports:
             - "9090:9090"
         volumes:
+            - prometheus-data:/prometheus
             - ./compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
         networks:
             - initstack
@@ -237,7 +240,6 @@ services:
             dockerfile: ./compose/cassandra-schema/dockerfile
         image: cassandra-schema-service:latest
         container_name: cassandra-schema-service
-        entrypoint: ["/wait-and-run.sh"]
         env_file:
             - ./.envs/cassandra-schema/.env
         volumes:
@@ -331,11 +333,26 @@ services:
             retries: 5
             start_period: 30s
 
+    mongo-express-service:
+        image: mongo-express:latest
+        container_name: mongo-express-service
+        ports:
+            - "8081:8081"
+        env_file:
+            - ./.envs/mongo-express/.env
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "wget", "--spider", -"q", "http://localhost:8081"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+
     mongodb-service:
         image: mongo:latest
         container_name: mongodb-service
-        ports:
-            - "27017:27017"
         env_file:
             - ./.envs/mongodb/.env
         volumes:

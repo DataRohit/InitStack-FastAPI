@@ -1,17 +1,34 @@
-# InitStack
+# Initstack Project
 
-A Production-Ready Full-Stack Starter Kit With FastAPI Backend, Celery Task Queue, And Comprehensive DevOps Tooling
+## Services Overview
 
-## Project Components
+This Project Uses Docker Compose To Manage Multiple Services. Below Is The List Of Services And Their Details:
 
-- **SonarQube**: Static Code Analysis And Quality Monitoring
-- **DiceBear**: Automated User Avatar Generation  
-- **MongoDB**: Primary Application Database
-- **RabbitMQ**: Message Broker For Celery Tasks
-- **PostgreSQL**: Backend Storage For Celery Results
-- **pgAdmin**: Web Interface For PostgreSQL Management
-- **Redis**: High-Performance Caching Layer
-- **Nginx**: Reverse Proxy And Load Balancer
-- **Celery Worker**: Distributed task queue worker for asynchronous task processing
-- **Celery Beat**: Periodic task scheduler for recurring jobs
-- **Celery Flower**: Real-time monitoring and web interface for Celery
+### Core Services
+
+- **Nginx Service**: Web Server/Reverse Proxy (Port: 8080)
+- **Backend Service**: Main Application Backend
+- **Flower Service**: Celery Monitoring (Port: 5555)
+- **Celery Worker Service**: Background Task Processing
+- **Celery Beat Service**: Scheduled Task Processing
+
+### Database Services
+
+- **Cassandra Service**: Distributed NoSQL Database
+- **MongoDB Service**: Document Database
+- **Redis Service**: In-Memory Data Store (Port: 8001)
+- **RabbitMQ Service**: Message Broker (Port: 15672)
+
+### Monitoring & Observability
+
+- **Prometheus Service**: Metrics Collection (Port: 9090)
+- **Jaeger Query Service**: Distributed Tracing UI (Port: 16686)
+- **Jaeger Collector Service**: Trace Collection
+- **OTel Collector Service**: OpenTelemetry Data Collection
+
+### Additional Services
+
+- **Mailpit Service**: Email Testing (Port: 8025)
+- **Mongo Express Service**: MongoDB Admin UI (Port: 8081)
+- **Dicebear Service**: Avatar Generation
+- **SonarQube Service**: Code Quality (Port: 9000)

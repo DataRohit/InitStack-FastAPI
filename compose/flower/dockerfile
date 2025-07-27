@@ -30,3 +30,6 @@ ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Set Start File to Executable
 RUN chmod +x /app/compose/flower/start
+
+# Command to Run the Application
+CMD ["/app/compose/flower/start"]

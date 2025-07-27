@@ -12,3 +12,6 @@ RUN chmod +x /wait-and-run.sh
 
 # Switch Back to the Non-root User Used in Base Image
 USER 65532:65532
+
+# Command to Run the Application
+CMD ["/wait-and-run.sh"]

@@ -25,8 +25,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy Application Code
 COPY . /app
 
-# Add current directory to PYTHONPATH
+# Add Current Directory to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
+# Update File Permissions
+RUN chmod +x /app/compose/backend/wait-and-run.sh
+
 # Command to Run the Application
-CMD ["python", "-m", "watchfiles", "python -m app"]
+CMD ["/app/compose/backend/wait-and-run.sh"]

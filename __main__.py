@@ -38,6 +38,7 @@ def main() -> None:
         log_config=LOGGING_CONFIG,
         reload=settings.DEBUG,
         workers=1 if settings.DEBUG else os.cpu_count(),
+        reload_dirs=["/app"],
     )
 
 
