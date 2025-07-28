@@ -8,6 +8,7 @@ import httpx
 from fastapi import FastAPI
 
 # Local Imports
+from config.indexes.profiles import create_profiles_indexes
 from config.indexes.users import create_users_indexes
 from config.mongodb import mongodb_manager
 from config.redis import redis_manager
@@ -30,6 +31,7 @@ async def setup_mongodb() -> None:
 
     # Create Indexes
     await create_users_indexes()
+    await create_profiles_indexes()
 
 
 # Setup Redis Function
