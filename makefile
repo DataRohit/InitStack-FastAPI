@@ -37,15 +37,15 @@ help:
 	@echo "  sonar-scan  - Run SonarQube Analysis For The Project"
 	@echo ""
 	@printf "${GREEN}Podman:${NC}\n"
-	@echo "  podman-compose-build    - Build All Services"
-	@echo "  podman-compose-up       - Build And Start All Services"
-	@echo "  podman-compose-restart  - Restart All Services"
+	@echo "  podman-build    - Build All Services"
+	@echo "  podman-up       - Build And Start All Services"
+	@echo "  podman-restart  - Restart All Services"
 	@echo "  podman-clean            - Clean Unused Podman Resources"
 	@echo ""
 	@printf "${GREEN}Docker:${NC}\n"
-	@echo "  docker-compose-build    - Build All Services"
-	@echo "  docker-compose-up       - Build And Start All Services"
-	@echo "  docker-compose-restart  - Restart All Services"
+	@echo "  docker-build    - Build All Services"
+	@echo "  docker-up       - Build And Start All Services"
+	@echo "  docker-restart  - Restart All Services"
 	@echo "  docker-clean            - Clean Unused Docker Resources"
 	@echo ""
 	@printf "${GREEN}Cleaning:${NC}\n"
@@ -64,7 +64,7 @@ sonar-scan:
 	@echo ""
 
 # Build All Services
-podman-compose-build:
+podman-build:
 	@echo ""
 	@printf "${YELLOW}Building All Services...${NC}\n"
 	podman compose build --detach
@@ -72,7 +72,7 @@ podman-compose-build:
 	@echo ""
 
 # Build And Start All Services
-podman-compose-up:
+podman-up:
 	@echo ""
 	@printf "${YELLOW}Building And Starting Services...${NC}\n"
 	podman compose up -d --build --detach
@@ -80,7 +80,7 @@ podman-compose-up:
 	@echo ""
 
 # Restart All Services
-podman-compose-restart:
+podman-restart:
 	@echo ""
 	@printf "${YELLOW}Restarting Services...${NC}\n"
 	podman compose restart
@@ -97,21 +97,21 @@ podman-clean:
 	@echo ""
 
 # Docker Commands
-docker-compose-build:
+docker-build:
 	@echo ""
 	@printf "${YELLOW}Building All Services With Docker...${NC}\n"
 	docker compose build
 	@printf "${GREEN}Services Built Successfully With Docker!${NC}\n"
 	@echo ""
 
-docker-compose-up:
+docker-up:
 	@echo ""
 	@printf "${YELLOW}Building And Starting Services With Docker...${NC}\n"
 	docker compose up -d --build
 	@printf "${GREEN}Services Built And Started Successfully With Docker!${NC}\n"
 	@echo ""
 
-docker-compose-restart:
+docker-restart:
 	@echo ""
 	@printf "${YELLOW}Restarting Services With Docker...${NC}\n"
 	docker compose restart
@@ -135,5 +135,5 @@ clean-all:
 	@echo ""
 
 .PHONY: help sonar-scan clean-all \
-	podman-compose-build podman-compose-up podman-compose-restart podman-clean \
-	docker-compose-build docker-compose-up docker-compose-restart docker-clean
+	podman-build podman-up podman-restart podman-clean \
+	docker-build docker-up docker-restart docker-clean

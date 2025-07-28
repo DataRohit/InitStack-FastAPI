@@ -15,6 +15,7 @@ from config.mongodb import get_async_mongodb
 from config.redis import redis_manager
 from config.settings import settings
 from src.models.users import User
+from src.tasks.profiles import delete_profile_task
 
 
 # Internal Function to Send Deleted Email
@@ -151,6 +152,9 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"detail": "Failed to Delete User"},
             )
+
+        # Delete User Profile
+        delete_profile_task.delay(user_id=payload["sub"])
 
     # Create User Instance
     user: User = User(**existing_user)

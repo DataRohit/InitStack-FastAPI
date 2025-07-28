@@ -6,8 +6,7 @@ from celery.schedules import crontab
 
 # Local Imports
 from config.settings import settings
-
-# Imports Tasks
+from src.tasks.profiles import delete_profile_task  # noqa: F401
 from src.tasks.users import delete_inactive_users_task  # noqa: F401
 
 # Execution Profile

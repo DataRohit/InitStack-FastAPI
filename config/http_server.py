@@ -27,7 +27,7 @@ from config.middlewares import (
     add_trusted_host_middleware,
 )
 from config.settings import settings
-from src.routes import health_router, users_router
+from src.routes import health_router, profiles_router, users_router
 
 
 def _setup_open_telemetry(app: FastAPI) -> None:
@@ -407,6 +407,7 @@ def _setup_routers(app: FastAPI) -> None:
     # Mount Routers
     app.include_router(health_router)
     app.include_router(users_router)
+    app.include_router(profiles_router)
 
 
 # Initialize FastAPI Application
