@@ -112,6 +112,8 @@ class Settings(BaseSettings):
         SENTRY_DSN (str): Sentry DSN
         SENTRY_SAMPLE_RATE (float): Sentry Sample Rate
 
+        DICEBEAR_URL (str): Dicebear URL
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -239,6 +241,9 @@ class Settings(BaseSettings):
     # Sentry Configuration
     SENTRY_DSN: str = "https://4787ddf812f5e8325f109819dc6ac68a@o4507312074915840.ingest.us.sentry.io/4509722861502464"
     SENTRY_SAMPLE_RATE: float = 1.0
+
+    # Dicebear Configuration
+    DICEBEAR_URL: str = "http://localhost:8080/dicebear/9.x/avataaars/png"
 
     # Configuration
     class Config:
