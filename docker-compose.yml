@@ -173,7 +173,6 @@ services:
         command:
             - "--es.password=${JAEGER_ES_PASSWORD}"
             - "--es.server-urls=${JAEGER_ES_SERVER_URLS}"
-            - "--es.create-index-templates=false"
             - "--metrics-backend=${METRICS_STORAGE_TYPE}"
             - "--prometheus.server-url=${PROMETHEUS_SERVER_URL}"
             - "--prometheus.query.normalize-duration=true"
@@ -201,7 +200,6 @@ services:
         command:
             - "--es.password=${JAEGER_ES_PASSWORD}"
             - "--es.server-urls=${JAEGER_ES_SERVER_URLS}"
-            - "--es.create-index-templates=false"
             - "--metrics-backend=${METRICS_STORAGE_TYPE}"
             - "--collector.otlp.enabled=true"
         env_file:
@@ -234,7 +232,7 @@ services:
             start_period: 30s
 
     elasticsearch-service:
-        image: bitnami/elasticsearch:latest
+        image: bitnami/elasticsearch:7.17.26
         container_name: elasticsearch-service
         env_file:
             - ./.envs/elasticsearch/.env

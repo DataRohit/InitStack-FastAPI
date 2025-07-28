@@ -28,5 +28,11 @@ COPY . /app
 # Add current directory to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
+# Fix Line Endings
+RUN sed -i 's/\r$//g' /app/compose/flower/start
+
+# Set Start File to Executable
+RUN chmod +x /app/compose/flower/start
+
 # Command to Run the Application
-CMD ["python", "-m", "watchfiles", "celery -A app.config.celery_app flower --loglevel=info --basic_auth=${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"]
+CMD ["/app/compose/flower/start"]
