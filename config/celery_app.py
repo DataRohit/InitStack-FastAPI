@@ -1,20 +1,21 @@
+# Standard Library Imports
+import asyncio
+import contextlib
+from typing import Any
+
 # Third-Party Imports
-from cassandra.cluster import EXEC_PROFILE_DEFAULT, ExecutionProfile
-from cassandra.policies import DCAwareRoundRobinPolicy
 from celery import Celery
 from celery.schedules import crontab
+from celery.signals import worker_process_init, worker_process_shutdown
 
 # Local Imports
+from config.mongodb import get_mongodb_manager
 from config.settings import settings
 from src.tasks.profiles import delete_profile_task  # noqa: F401
 from src.tasks.users import delete_inactive_users_task  # noqa: F401
 
-# Execution Profile
-my_e_profile = ExecutionProfile(
-    load_balancing_policy=DCAwareRoundRobinPolicy(
-        local_dc=settings.CASSANDRA_DC,
-    ),
-)
+# Get MongoDB Manager Instance
+mongodb_manager = get_mongodb_manager()
 
 
 # Initialize Celery Application
@@ -43,23 +44,6 @@ def create_celery_app() -> Celery:
         timezone="UTC",
         enable_utc=True,
         broker_connection_retry_on_startup=True,
-        cassandra_servers=[f"{settings.CASSANDRA_HOST}"],
-        cassandra_port=settings.CASSANDRA_PORT,
-        cassandra_keyspace=settings.CASSANDRA_KEYSPACE,
-        cassandra_table="celery_taskmeta",
-        cassandra_read_consistency="LOCAL_QUORUM",
-        cassandra_write_consistency="LOCAL_QUORUM",
-        cassandra_entry_ttl=60 * 60 * 24,
-        cassandra_auth_provider="PlainTextAuthProvider",
-        cassandra_auth_kwargs={
-            "username": settings.CASSANDRA_USER,
-            "password": settings.CASSANDRA_PASS,
-        },
-        cassandra_options={
-            "cql_version": settings.CASSANDRA_CQL_VERSION,
-            "protocol_version": settings.CASSANDRA_PROTOCOL_VERSION,
-            "execution_profiles": {EXEC_PROFILE_DEFAULT: my_e_profile},
-        },
     )
 
     # Register Tasks
@@ -80,6 +64,33 @@ celery_app.conf.beat_schedule = {
         "options": {"expires": 60 * 10},
     },
 }
+
+
+# Initialize MongoDB Manager in Worker Process
+@worker_process_init.connect
+def init_worker(**kwargs: dict[str, Any]) -> None:
+    """Initialize Worker Process with Fresh MongoDB Connections"""
+
+    with contextlib.suppress(Exception):
+        # Get MongoDB Manager Instance
+        mongodb_manager.reset_connections()
+
+
+# Clean up MongoDB Connections when Worker Shuts Down
+@worker_process_shutdown.connect
+def shutdown_worker(**kwargs: dict[str, Any]) -> None:
+    """Clean up MongoDB Connections when Worker Shuts Down"""
+
+    with contextlib.suppress(Exception):
+        # If Event Loop is Running
+        if asyncio.get_event_loop().is_running():
+            # Create Task to Close MongoDB Connections
+            asyncio.create_task(mongodb_manager.close_all())  # noqa: RUF006
+
+        else:
+            # Run MongoDB Connection Closure
+            asyncio.run(mongodb_manager.close_all())
+
 
 # Exports
 __all__: list[str] = ["celery_app"]

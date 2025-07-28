@@ -43,15 +43,6 @@ class Settings(BaseSettings):
         CELERY_BROKER_URL (str): Celery Broker URL (RabbitMQ)
         CELERY_RESULT_BACKEND (str): Celery Result Backend
 
-        CASSANDRA_HOST (str): Cassandra Host
-        CASSANDRA_PORT (int): Cassandra Port
-        CASSANDRA_USER (str): Cassandra User
-        CASSANDRA_PASS (str): Cassandra Password
-        CASSANDRA_KEYSPACE (str): Cassandra Keyspace
-        CASSANDRA_DC (str): Cassandra Datacenter
-        CASSANDRA_CQL_VERSION (str): Cassandra CQL Version
-        CASSANDRA_PROTOCOL_VERSION (int): Cassandra Protocol Version
-
         REDIS_URL (str): Redis Server URL
         REDIS_HOST (str): Redis Host
         REDIS_PORT (int): Redis Port
@@ -157,17 +148,9 @@ class Settings(BaseSettings):
 
     # Celery Configuration
     CELERY_BROKER_URL: str = "amqp://NGeDFwAgoZwmMvP:ftT4tT0Qy2cQXGm@rabbitmq-service:5672//"
-    CELERY_RESULT_BACKEND: str = "cassandra://"
-
-    # Cassandra Configuration
-    CASSANDRA_HOST: str = "cassandra-service"
-    CASSANDRA_PORT: int = 9042
-    CASSANDRA_USER: str = "cassandra"
-    CASSANDRA_PASS: str = "geF4eXLov37FTeg"  # noqa: S105
-    CASSANDRA_KEYSPACE: str = "celery_results"
-    CASSANDRA_DC: str = "dc1"
-    CASSANDRA_CQL_VERSION: str = "3.4.7"
-    CASSANDRA_PROTOCOL_VERSION: int = 5
+    CELERY_RESULT_BACKEND: str = (
+        "elasticsearch://elastic:KBReYFzIVHVGiHk@elasticsearch-service:9200/celery_results/_doc"
+    )
 
     # Redis Configuration
     REDIS_URL: str = "redis://:WFyzhcO3ByZIjdd@redis-service:6379/"

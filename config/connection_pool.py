@@ -10,9 +10,12 @@ from fastapi import FastAPI
 # Local Imports
 from config.indexes.profiles import create_profiles_indexes
 from config.indexes.users import create_users_indexes
-from config.mongodb import mongodb_manager
+from config.mongodb import get_mongodb_manager
 from config.redis import redis_manager
 from config.settings import settings
+
+# Get MongoDB Manager Instance
+mongodb_manager = get_mongodb_manager()
 
 
 # Setup MongoDB Function
@@ -24,10 +27,10 @@ async def setup_mongodb() -> None:
     """
 
     # Ping MongoDB
-    mongodb_manager.sync_client.admin.command("ping")
+    mongodb_manager.sync_health_check()
 
     # Ping Async MongoDB
-    await mongodb_manager.async_client.admin.command("ping")
+    await mongodb_manager.async_health_check()
 
     # Create Indexes
     await create_users_indexes()

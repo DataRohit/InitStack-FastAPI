@@ -7,7 +7,7 @@ set -o nounset
 
 # Wait For Dependencies To Be Ready
 echo "Waiting For Dependencies To Be Ready..."
-sleep 60
+sleep 15
 
 # Start Celery Flower With Authentication
 exec python -m watchfiles "celery -A app.config.celery_app worker --loglevel=info"

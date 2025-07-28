@@ -10,7 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Install System Dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl wget make git libpq-dev libev-dev && \
+    build-essential curl wget make git libpq-dev libev-dev iputils-ping netcat-traditional && \
     rm -rf /var/lib/apt/lists/*
 
 # Set Working Directory

@@ -14,7 +14,7 @@ This Project Uses Docker Compose To Manage Multiple Services. Below Is The List 
 
 ### Database Services
 
-- **Cassandra Service**: Distributed NoSQL Database
+- **Elasticsearch Service**: Distributed Search & Analytics Engine
 - **MongoDB Service**: Document Database
 - **Redis Service**: In-Memory Data Store (Port: 8001)
 - **RabbitMQ Service**: Message Broker (Port: 15672)

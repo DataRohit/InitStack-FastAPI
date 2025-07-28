@@ -5,9 +5,6 @@ volumes:
     prometheus-data:
         name: prometheus-data
         driver: local
-    cassandra-schema-data:
-        name: cassandra-schema-data
-        driver: local
     mailpit-data:
         name: mailpit-data
         driver: local
@@ -89,7 +86,7 @@ services:
                 condition: service_healthy
             redis-service:
                 condition: service_healthy
-            cassandra-service:
+            elasticsearch-service:
                 condition: service_healthy
             mongodb-service:
                 condition: service_healthy
@@ -115,7 +112,7 @@ services:
         depends_on:
             rabbitmq-service:
                 condition: service_healthy
-            cassandra-service:
+            elasticsearch-service:
                 condition: service_healthy
 
     celery-worker-service:
@@ -134,7 +131,7 @@ services:
         depends_on:
             rabbitmq-service:
                 condition: service_healthy
-            cassandra-service:
+            elasticsearch-service:
                 condition: service_healthy
 
     celery-beat-service:
@@ -153,7 +150,7 @@ services:
         depends_on:
             rabbitmq-service:
                 condition: service_healthy
-            cassandra-service:
+            elasticsearch-service:
                 condition: service_healthy
 
     otel-collector-service:
@@ -174,16 +171,15 @@ services:
         image: jaegertracing/jaeger-query:latest
         container_name: jaeger-query-service
         command:
-            - "--cassandra.keyspace=${JAEGER_CASSANDRA_KEYSPACE}"
-            - "--cassandra.servers=${JAEGER_CASSANDRA_SERVERS}"
-            - "--cassandra.username=${JAEGER_CASSANDRA_USERNAME}"
-            - "--cassandra.password=${JAEGER_CASSANDRA_PASSWORD}"
-            - "--cassandra.basic.allowed-authenticators=org.apache.cassandra.auth.PasswordAuthenticator,"
+            - "--es.password=${JAEGER_ES_PASSWORD}"
+            - "--es.server-urls=${JAEGER_ES_SERVER_URLS}"
+            - "--es.create-index-templates=false"
+            - "--metrics-backend=${METRICS_STORAGE_TYPE}"
             - "--prometheus.server-url=${PROMETHEUS_SERVER_URL}"
             - "--prometheus.query.normalize-duration=true"
             - "--prometheus.query.normalize-calls=true"
         env_file:
-            - ./.envs/jaeger-query/.env
+            - ./.envs/jaeger/.env
         ports:
             - "16686:16686"
         networks:
@@ -203,20 +199,21 @@ services:
         image: jaegertracing/jaeger-collector:latest
         container_name: jaeger-collector-service
         command:
-            - "--cassandra.keyspace=${JAEGER_CASSANDRA_KEYSPACE}"
-            - "--cassandra.servers=${JAEGER_CASSANDRA_SERVERS}"
-            - "--cassandra.username=${JAEGER_CASSANDRA_USERNAME}"
-            - "--cassandra.password=${JAEGER_CASSANDRA_PASSWORD}"
-            - "--cassandra.basic.allowed-authenticators=org.apache.cassandra.auth.PasswordAuthenticator,"
+            - "--es.password=${JAEGER_ES_PASSWORD}"
+            - "--es.server-urls=${JAEGER_ES_SERVER_URLS}"
+            - "--es.create-index-templates=false"
+            - "--metrics-backend=${METRICS_STORAGE_TYPE}"
             - "--collector.otlp.enabled=true"
+        env_file:
+            - ./.envs/jaeger/.env
         networks:
             - initstack
         restart: unless-stopped
         depends_on:
             prometheus-service:
                 condition: service_healthy
-            cassandra-schema-service:
-                condition: service_completed_successfully
+            elasticsearch-service:
+                condition: service_healthy
 
     prometheus-service:
         image: prom/prometheus:latest
@@ -236,41 +233,16 @@ services:
             retries: 5
             start_period: 30s
 
-    cassandra-schema-service:
-        build:
-            context: .
-            dockerfile: ./compose/cassandra-schema/dockerfile
-        image: cassandra-schema-service:latest
-        container_name: cassandra-schema-service
+    elasticsearch-service:
+        image: bitnami/elasticsearch:latest
+        container_name: elasticsearch-service
         env_file:
-            - ./.envs/cassandra-schema/.env
-        volumes:
-            - cassandra-schema-data:/var/lib/cassandra
-        networks:
-            - initstack
-        restart: no
-        healthcheck:
-            test: ["CMD", "true"]
-            interval: 1m30s
-            timeout: 30s
-            retries: 5
-            start_period: 30s
-        depends_on:
-            cassandra-service:
-                condition: service_healthy
-
-    cassandra-service:
-        image: bitnami/cassandra:latest
-        container_name: cassandra-service
-        env_file:
-            - ./.envs/cassandra/.env
-        volumes:
-            - ./compose/cassandra/init.cql:/docker-entrypoint-initdb.d/init.cql:ro
+            - ./.envs/elasticsearch/.env
         networks:
             - initstack
         restart: unless-stopped
         healthcheck:
-            test: ["CMD-SHELL", "nodetool", "status"]
+            test: ["CMD", "curl", "-f", "http://localhost:9200/_cat/health"]
             interval: 1m30s
             timeout: 30s
             retries: 5
