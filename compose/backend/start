@@ -7,7 +7,7 @@ set -o nounset
 
 # Wait For Dependencies To Be Ready
 echo "Waiting For Dependencies To Be Ready..."
-sleep 120
+sleep 60
 
 # Start Backend Application
 echo "Starting Backend Application..."

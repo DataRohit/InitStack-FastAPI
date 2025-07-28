@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
-from config.auth import get_current_user
+from config.jwt_auth import get_current_user
 from src.models.users import User, UserRegisterRequest, UserResponse
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.models.users.reset_password import UserResetPasswordRequest

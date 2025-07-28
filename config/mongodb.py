@@ -5,9 +5,9 @@ from contextlib import asynccontextmanager, contextmanager
 # Third-Party Imports
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
-from pymongo.database import Database
 from pymongo.errors import PyMongoError
-from pymongo.mongo_client import MongoClient
+from pymongo.synchronous.database import Database
+from pymongo.synchronous.mongo_client import MongoClient
 
 # Local Imports
 from config.settings import settings

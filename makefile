@@ -36,10 +36,17 @@ help:
 	@printf "${GREEN}Code Analysis:${NC}\n"
 	@echo "  sonar-scan  - Run SonarQube Analysis For The Project"
 	@echo ""
+	@printf "${GREEN}Podman:${NC}\n"
+	@echo "  podman-compose-build    - Build All Services"
+	@echo "  podman-compose-up       - Build And Start All Services"
+	@echo "  podman-compose-restart  - Restart All Services"
+	@echo "  podman-clean            - Clean Unused Podman Resources"
+	@echo ""
 	@printf "${GREEN}Docker:${NC}\n"
-	@echo "  docker-build      - Build And Start All Docker Containers"
-	@echo "  docker-up         - Start All Containers And Nginx-Service"
-	@echo "  docker-restart    - Restart All Containers And Nginx-Service"
+	@echo "  docker-compose-build    - Build All Services"
+	@echo "  docker-compose-up       - Build And Start All Services"
+	@echo "  docker-compose-restart  - Restart All Services"
+	@echo "  docker-clean            - Clean Unused Docker Resources"
 	@echo ""
 	@printf "${GREEN}Cleaning:${NC}\n"
 	@echo "  clean-all      - Remove Python-related garbage files"
@@ -50,34 +57,74 @@ sonar-scan:
 	@echo ""
 	@printf "${YELLOW}Starting Sonarscanner...${NC}\n"
 	sonar-scanner \
-		-Dsonar.host.url=http://localhost:9000 \
-		-Dsonar.projectKey=InitStack \
-		-Dsonar.login=sqp_3ec9155b26578025ba805b2107edbcdafadc6976
+		-D sonar.host.url=http://localhost:9000 \
+		-D sonar.projectKey=InitStack \
+		-D sonar.login=sqp_e961691988eb743086df39c97413aff036dbc34b
 	@printf "${GREEN}SonarQube Scan Completed!${NC}\n"
 	@echo ""
 
+# Build All Services
+podman-compose-build:
+	@echo ""
+	@printf "${YELLOW}Building All Services...${NC}\n"
+	podman compose build --detach
+	@printf "${GREEN}Services Built Successfully!${NC}\n"
+	@echo ""
+
+# Build And Start All Services
+podman-compose-up:
+	@echo ""
+	@printf "${YELLOW}Building And Starting Services...${NC}\n"
+	podman compose up -d --build --detach
+	@printf "${GREEN}Services Built And Started Successfully!${NC}\n"
+	@echo ""
+
+# Restart All Services
+podman-compose-restart:
+	@echo ""
+	@printf "${YELLOW}Restarting Services...${NC}\n"
+	podman compose restart
+	@printf "${GREEN}Services Restarted Successfully!${NC}\n"
+	@echo ""
+
+# Clean Podman Resources
+podman-clean:
+	@echo ""
+	@printf "${YELLOW}Cleaning Unused Podman Resources...${NC}\n"
+	podman system prune -f --filter "until=24h"
+	podman builder prune -f
+	@printf "${GREEN}Podman Resources Cleaned Successfully!${NC}\n"
+	@echo ""
+
 # Docker Commands
-docker-build:
+docker-compose-build:
 	@echo ""
-	@printf "${YELLOW}Building And Starting Docker Containers...${NC}\n"
-	docker compose build && docker compose up -d --remove-orphans
-	@printf "${GREEN}Docker Containers Started Successfully!${NC}\n"
-	@echo ""
-
-docker-up:
-	@echo ""
-	@printf "${YELLOW}Starting Docker Containers...${NC}\n"
-	docker compose up -d --remove-orphans
-	@printf "${GREEN}Docker Containers Started Successfully!${NC}\n"
+	@printf "${YELLOW}Building All Services With Docker...${NC}\n"
+	docker compose build
+	@printf "${GREEN}Services Built Successfully With Docker!${NC}\n"
 	@echo ""
 
-docker-restart:
+docker-compose-up:
 	@echo ""
-	@printf "${YELLOW}Restarting Docker Containers...${NC}\n"
-	docker compose restart && docker compose up -d
-	@printf "${GREEN}Docker Containers Restarted Successfully!${NC}\n"
+	@printf "${YELLOW}Building And Starting Services With Docker...${NC}\n"
+	docker compose up -d --build
+	@printf "${GREEN}Services Built And Started Successfully With Docker!${NC}\n"
 	@echo ""
 
+docker-compose-restart:
+	@echo ""
+	@printf "${YELLOW}Restarting Services With Docker...${NC}\n"
+	docker compose restart
+	@printf "${GREEN}Services Restarted Successfully With Docker!${NC}\n"
+	@echo ""
+
+docker-clean:
+	@echo ""
+	@printf "${YELLOW}Cleaning Unused Docker Resources...${NC}\n"
+	docker system prune -f --filter "until=24h"
+	docker builder prune -f
+	@printf "${GREEN}Docker Resources Cleaned Successfully!${NC}\n"
+	@echo ""
 
 # Clean All Python Related Files
 clean-all:
@@ -87,4 +134,6 @@ clean-all:
 	@printf "${GREEN}Python files cleaned successfully!${NC}\n"
 	@echo ""
 
-.PHONY: help sonar-scan docker-build docker-up docker-restart clean-all
+.PHONY: help sonar-scan clean-all \
+	podman-compose-build podman-compose-up podman-compose-restart podman-clean \
+	docker-compose-build docker-compose-up docker-compose-restart docker-clean
