@@ -74,7 +74,7 @@ docker-up:
 docker-restart:
 	@echo ""
 	@printf "${YELLOW}Restarting Docker Containers...${NC}\n"
-	docker compose restart && docker compose restart nginx-service
+	docker compose restart && docker compose up -d
 	@printf "${GREEN}Docker Containers Restarted Successfully!${NC}\n"
 	@echo ""
 
