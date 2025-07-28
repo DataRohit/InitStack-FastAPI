@@ -41,6 +41,9 @@ help:
 	@echo "  docker-up         - Start All Containers And Nginx-Service"
 	@echo "  docker-restart    - Restart All Containers And Nginx-Service"
 	@echo ""
+	@printf "${GREEN}Cleaning:${NC}\n"
+	@echo "  clean-all      - Remove Python-related garbage files"
+	@echo ""
 
 # Execute SonarQube Code Analysis
 sonar-scan:
@@ -75,4 +78,13 @@ docker-restart:
 	@printf "${GREEN}Docker Containers Restarted Successfully!${NC}\n"
 	@echo ""
 
-.PHONY: help sonar-scan docker-build docker-up docker-restart
+
+# Clean All Python Related Files
+clean-all:
+	@echo ""
+	@printf "${YELLOW}Cleaning all Python-related files...${NC}\n"
+	rm -rf .pytest_cache/ .coverage .scannerwork/ __pycache__/ build/ dist/ *.egg-info/ *.pyc *.pyo
+	@printf "${GREEN}Python files cleaned successfully!${NC}\n"
+	@echo ""
+
+.PHONY: help sonar-scan docker-build docker-up docker-restart clean-all
