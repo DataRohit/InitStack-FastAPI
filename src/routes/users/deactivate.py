@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 # Local Imports
 from config.mailer import render_template, send_email
-from config.redis import redis_manager
+from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 
@@ -45,13 +45,10 @@ async def _generate_deactivation_token(
         algorithm=settings.DEACTIVATE_JWT_ALGORITHM,
     )
 
-    # Set Deactivation Token in Redis
-    await redis_manager.set(
-        key=f"deactivation_token:{user.id}",
-        value=deactivation_token,
-        expire=settings.DEACTIVATE_JWT_EXPIRE,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Set Deactivation Token in Redis
+        await redis.set(f"deactivation_token:{user.id}", value=deactivation_token)
 
     # Return Deactivation Token
     return deactivation_token
@@ -72,11 +69,10 @@ async def _send_deactivation_email(user: User) -> None:
     # Calculate Expiry Time
     expiry_time: datetime.datetime = current_time + datetime.timedelta(seconds=settings.DEACTIVATE_JWT_EXPIRE)
 
-    # Get Token from Redis
-    stored_token: str | None = await redis_manager.get(
-        key=f"deactivation_token:{user.id}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Get Token from Redis
+        stored_token: str | None = await redis.get(f"deactivation_token:{user.id}")
 
     # If Token Not Found
     if not stored_token:

@@ -11,7 +11,8 @@ from fastapi import FastAPI
 from config.indexes.profiles import create_profiles_indexes
 from config.indexes.users import create_users_indexes
 from config.mongodb import get_mongodb_manager
-from config.redis import redis_manager
+from config.redis_cache import get_redis_manager
+from config.s3_storage import get_s3_manager
 from config.settings import settings
 
 # Get MongoDB Manager Instance
@@ -38,17 +39,33 @@ async def setup_mongodb() -> None:
 
 
 # Setup Redis Function
-async def setup_redis() -> None:
+def setup_redis() -> None:
     """
     Setup Redis Function
 
     This Function Initializes the Redis Connection.
     """
 
-    # Get Redis Client
-    async with redis_manager.get_client(db=settings.REDIS_HTTP_RATE_LIMIT_DB):
-        # Pass
-        pass
+    # Get Redis Manager
+    redis_manager = get_redis_manager()
+
+    # Perform Health Check
+    redis_manager.health_check()
+
+
+# Setup S3 Function
+def setup_s3() -> None:
+    """
+    Setup S3 Function
+
+    This Function Initializes the S3/MinIO Connection.
+    """
+
+    # Get S3 Manager
+    s3_manager = get_s3_manager()
+
+    # Perform Health Check
+    s3_manager.health_check()
 
 
 # Lifespan Function
@@ -73,7 +90,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     await setup_mongodb()
 
     # Setup Redis
-    await setup_redis()
+    setup_redis()
+
+    # Setup S3
+    setup_s3()
 
     # Create SSL Context
     ssl_context: ssl.SSLContext = ssl.create_default_context()

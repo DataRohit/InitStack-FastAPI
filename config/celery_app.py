@@ -84,8 +84,11 @@ def shutdown_worker(**kwargs: dict[str, Any]) -> None:
     with contextlib.suppress(Exception):
         # If Event Loop is Running
         if asyncio.get_event_loop().is_running():
-            # Create Task to Close MongoDB Connections
-            asyncio.create_task(mongodb_manager.close_all())  # noqa: RUF006
+            # Close All MongoDB Connections Asynchronously
+            close_task = asyncio.create_task(mongodb_manager.close_all())
+
+            # Wait for The Task to Complete
+            asyncio.get_event_loop().run_until_complete(close_task)
 
         else:
             # Run MongoDB Connection Closure

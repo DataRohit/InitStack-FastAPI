@@ -12,7 +12,7 @@ from pymongo.results import InsertOneResult
 # Local Imports
 from config.mailer import render_template, send_email
 from config.mongodb import get_async_mongodb
-from config.redis import redis_manager
+from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User, UserRegisterRequest, UserResponse
 
@@ -45,13 +45,14 @@ async def _send_activation_email(user: User) -> None:
         algorithm=settings.ACTIVATION_JWT_ALGORITHM,
     )
 
-    # Set Activation Token in Redis
-    await redis_manager.set(
-        key=f"activation_token:{user.id}",
-        value=activation_token,
-        expire=settings.ACTIVATION_JWT_EXPIRE,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Set Activation Token in Redis
+        await redis.set(
+            f"activation_token:{user.id}",
+            value=activation_token,
+            ex=settings.ACTIVATION_JWT_EXPIRE,
+        )
 
     # Create Activation Link
     activation_link: str = f"{settings.PROJECT_DOMAIN}/api/users/activate?token={activation_token}"

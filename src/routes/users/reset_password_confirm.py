@@ -12,7 +12,7 @@ from pymongo.results import UpdateResult
 # Local Imports
 from config.mailer import render_template, send_email
 from config.mongodb import get_async_mongodb
-from config.redis import redis_manager
+from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User, UserResetPasswordConfirmRequest
 
@@ -26,11 +26,10 @@ async def _send_reset_password_confirm_email(user: User) -> None:
         user (User): User Instance
     """
 
-    # Remove Reset Password Token from Redis
-    await redis_manager.delete(
-        key=f"reset_password_token:{user.id}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Remove Reset Password Token from Redis
+        await redis.delete(f"reset_password_token:{user.id}")
 
     # Create Login Link
     login_link: str = f"{settings.PROJECT_DOMAIN}/api/login"
@@ -102,10 +101,8 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
         )
 
     # Get Token from Redis
-    stored_token: str | None = await redis_manager.get(
-        key=f"reset_password_token:{payload['sub']}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        stored_token: str | None = await redis.get(f"reset_password_token:{payload['sub']}")
 
     # If Token Not Found
     if not stored_token:

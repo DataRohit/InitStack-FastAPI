@@ -12,7 +12,7 @@ from pymongo.results import UpdateResult
 # Local Imports
 from config.mailer import render_template, send_email
 from config.mongodb import get_async_mongodb
-from config.redis import redis_manager
+from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 
@@ -26,11 +26,10 @@ async def _send_deactivated_email(user: User) -> None:
         user (User): User Instance
     """
 
-    # Remove Deactivation Token from Redis
-    await redis_manager.delete(
-        key=f"deactivation_token:{user.id}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Remove Deactivation Token from Redis
+        await redis.delete("deactivation_token:{user.id}")
 
     # Create Login Link
     login_link: str = f"{settings.PROJECT_DOMAIN}/api/login"
@@ -99,11 +98,10 @@ async def deactivate_user_confirm_handler(token: str) -> JSONResponse:
             content={"detail": "Invalid Deactivation Token"},
         )
 
-    # Get Token from Redis
-    stored_token: str | None = await redis_manager.get(
-        key=f"deactivation_token:{payload['sub']}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Get Token from Redis
+        stored_token: str | None = await redis.get("deactivation_token:{payload['sub']}")
 
     # If Token Not Found
     if not stored_token:

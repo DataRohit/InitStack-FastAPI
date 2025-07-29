@@ -11,7 +11,7 @@ from pymongo.asynchronous.collection import AsyncCollection
 # Local Imports
 from config.mailer import render_template, send_email
 from config.mongodb import get_async_mongodb
-from config.redis import redis_manager
+from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User, UserResetPasswordRequest
 
@@ -47,13 +47,14 @@ async def _generate_reset_password_token(
         algorithm=settings.RESET_PASSWORD_JWT_ALGORITHM,
     )
 
-    # Set Reset Password Token in Redis
-    await redis_manager.set(
-        key=f"reset_password_token:{user.id}",
-        value=reset_password_token,
-        expire=settings.RESET_PASSWORD_JWT_EXPIRE,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Set Reset Password Token in Redis
+        await redis.set(
+            f"reset_password_token:{user.id}",
+            value=reset_password_token,
+            ex=settings.RESET_PASSWORD_JWT_EXPIRE,
+        )
 
     # Return Reset Password Token
     return reset_password_token
@@ -74,11 +75,10 @@ async def _send_reset_password_email(user: User) -> None:
     # Calculate Expiry Time
     expiry_time: datetime.datetime = current_time + datetime.timedelta(seconds=settings.RESET_PASSWORD_JWT_EXPIRE)
 
-    # Get Token from Redis
-    stored_token: str | None = await redis_manager.get(
-        key=f"reset_password_token:{user.id}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Get Reset Password Token from Redis
+        stored_token: str | None = await redis.get(f"reset_password_token:{user.id}")
 
     # If Token Not Found
     if not stored_token:

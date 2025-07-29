@@ -166,7 +166,7 @@ class Profile(BaseModel):
             return None
 
         # Remove All Non-Digit Characters
-        digits = re.sub(r"[^0-9]", "", value)
+        digits = re.sub(r"\D", "", value)
 
         # If Phone Number is Not 7-15 Digits Long
         if not 7 <= len(digits) <= 15:  # noqa: PLR2004
@@ -210,7 +210,7 @@ class Profile(BaseModel):
             raise ValueError({"reason": "Date of Birth Cannot Be in the Future"})
 
         # If Date is More Than 18 Years Ago
-        if value < min_age_date:
+        if value > min_age_date:
             # Raise ValueError
             raise ValueError({"reason": "Date of Birth Cannot Be More Than 18 Years Ago"})
 
@@ -249,6 +249,37 @@ class Profile(BaseModel):
 
         # Return Validated Gender
         return value.lower()
+
+    # Model Dump
+    def model_dump(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> dict:
+        """
+        Model Dump
+
+        This Method Overrides the Default Model Dump Method to Convert Date Objects to DateTime
+
+        Args:
+            *args (tuple[Any, ...]): Positional Arguments
+            **kwargs (dict[str, Any]): Keyword Arguments
+
+        Returns:
+            dict: Model Dump Data
+        """
+
+        # Get Model Dump Data
+        data = super().model_dump(*args, **kwargs)
+
+        # Convert DateTime Objects to ISO Format
+        for field in ["date_of_birth"]:
+            # Get Field Value
+            value = getattr(self, field)
+
+            # If Field Value is a Date Object
+            if isinstance(value, datetime.date):
+                # Convert to DateTime Object
+                data[field] = datetime.datetime.combine(value, datetime.time.min)
+
+        # Return Model Dump Data
+        return data
 
 
 # Profile Response Model
@@ -347,19 +378,17 @@ class ProfileResponse(BaseModel):
             # Get Field Value
             value = getattr(self, field)
 
-            # If Field Value is a Date or DateTime Object
-            if isinstance(value, (datetime.date | datetime.datetime)):
-                # Convert to ISO Format
-                if isinstance(value, datetime.datetime):
-                    data[field] = (
-                        value.astimezone(datetime.UTC)
-                        .replace(microsecond=(value.microsecond // 1000) * 1000)
-                        .isoformat()
-                    )
+            # If Field Value is a DateTime Object
+            if isinstance(value, (datetime.datetime)):
+                # Convert to UTC and ISO Format
+                data[field] = (
+                    value.astimezone(datetime.UTC).replace(microsecond=(value.microsecond // 1000) * 1000).isoformat()
+                )
 
-                else:
-                    # Convert to ISO Format
-                    data[field] = value.isoformat()
+            # if Field Value is a Date Object
+            elif isinstance(value, (datetime.date)):
+                # Convert to DateTime Object
+                data[field] = value.isoformat()
 
         # Return Model Dump Data
         return data

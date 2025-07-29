@@ -59,7 +59,7 @@ sonar-scan:
 	sonar-scanner \
 		-D sonar.host.url=http://localhost:9000 \
 		-D sonar.projectKey=InitStack \
-		-D sonar.login=sqp_ef8fcf0eb14ebdc20b7506061d5840657d65d1f4
+		-D sonar.login=sqp_3d377807e947a21c8192810b635a9215a0499534
 	@printf "${GREEN}SonarQube Scan Completed!${NC}\n"
 	@echo ""
 

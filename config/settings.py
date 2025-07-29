@@ -49,7 +49,7 @@ class Settings(BaseSettings):
         REDIS_USER (str): Redis User
         REDIS_PASS (str): Redis Password
         REDIS_HTTP_RATE_LIMIT_DB (int): Redis Database Number for HTTP Rate Limiting
-        REDIST_TOKEN_CACHE_DB (int): Redis Database Number for Token Caching
+        REDIS_TOKEN_CACHE_DB (int): Redis Database Number for Token Caching
 
         RATE_LIMIT (int): Default Maximum Requests Per Window
         RATE_LIMIT_WINDOW (int): Default Rate Limit Window in Seconds
@@ -105,6 +105,14 @@ class Settings(BaseSettings):
 
         DICEBEAR_URL (str): Dicebear URL
 
+        MINIO_HOST (str): Minio Host
+        MINIO_PORT (int): Minio Port
+        MINIO_USER (str): Minio User
+        MINIO_PASS (str): Minio Password
+        MINIO_BASE_URL (str): Minio Base URL
+        MINIO_BUCKET_NAME (str): Minio Bucket Name
+        MINIO_REGION (str): Minio Region
+
     Configuration:
         env_file (str): Environment File
         env_file_encoding (str): Environment File Encoding
@@ -159,7 +167,7 @@ class Settings(BaseSettings):
     REDIS_USER: str = ""
     REDIS_PASS: str = "WFyzhcO3ByZIjdd"  # noqa: S105
     REDIS_HTTP_RATE_LIMIT_DB: int = 0
-    REDIST_TOKEN_CACHE_DB: int = 1
+    REDIS_TOKEN_CACHE_DB: int = 1
 
     # Rate Limit Configuration
     RATE_LIMIT: int = 60
@@ -227,6 +235,15 @@ class Settings(BaseSettings):
 
     # Dicebear Configuration
     DICEBEAR_URL: str = "http://localhost:8080/dicebear/9.x/avataaars/png"
+
+    # Minio Configuration
+    MINIO_HOST: str = "minio-service"
+    MINIO_PORT: int = 9000
+    MINIO_USER: str = "jJykCmipdg0gaIx"
+    MINIO_PASS: str = "gaOWa4JBeGwkWeG"  # noqa: S105
+    MINIO_BASE_URL: str = "http://localhost:8080/minio"
+    MINIO_BUCKET_NAME: str = "initstack"
+    MINIO_REGION: str = "us-east-1"
 
     # Configuration
     class Config:

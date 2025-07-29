@@ -9,7 +9,7 @@ from pymongo.asynchronous.collection import AsyncCollection
 
 # Local Imports
 from config.mongodb import get_async_mongodb
-from config.redis import redis_manager
+from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 from src.models.users.login import UserLoginRequest, UserLoginResponse
@@ -35,15 +35,11 @@ async def _check_if_new_tokens_required(user: User) -> dict:
     access_token_key: str = f"access_token:{user.id}"
     refresh_token_key: str = f"refresh_token:{user.id}"
 
-    # Check If Access Token & Refresh Token Are Cached
-    access_token: str | None = await redis_manager.get(
-        key=access_token_key,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
-    refresh_token: str | None = await redis_manager.get(
-        key=refresh_token_key,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Get Access Token & Refresh Token from Redis
+        access_token: str | None = await redis.get(access_token_key)
+        refresh_token: str | None = await redis.get(refresh_token_key)
 
     # If Access Token Is Cached
     if access_token:
@@ -143,13 +139,14 @@ async def _generate_access_token(user: User) -> str:
         algorithm=settings.ACCESS_JWT_ALGORITHM,
     )
 
-    # Set Access Token in Redis
-    await redis_manager.set(
-        key=f"access_token:{user.id}",
-        value=access_token,
-        expire=settings.ACCESS_JWT_EXPIRE,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Set Access Token in Redis
+        await redis.set(
+            f"access_token:{user.id}",
+            value=access_token,
+            ex=settings.ACCESS_JWT_EXPIRE,
+        )
 
     # Return Access Token
     return access_token
@@ -186,13 +183,14 @@ async def _generate_refresh_token(user: User) -> str:
         algorithm=settings.REFRESH_JWT_ALGORITHM,
     )
 
-    # Set Refresh Token in Redis
-    await redis_manager.set(
-        key=f"refresh_token:{user.id}",
-        value=refresh_token,
-        expire=settings.REFRESH_JWT_EXPIRE,
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Set Refresh Token in Redis
+        await redis.set(
+            f"refresh_token:{user.id}",
+            value=refresh_token,
+            ex=settings.REFRESH_JWT_EXPIRE,
+        )
 
     # Return Refresh Token
     return refresh_token

@@ -2,13 +2,14 @@
 from typing import Annotated
 
 # Third-Party Imports
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
 from config.jwt_auth import get_current_user
 from src.models.profiles import ProfileCreateRequest, ProfileResponse, ProfileUpdateRequest
 from src.models.users.base import User
+from src.routes.profiles.avatar import update_avatar_handler
 from src.routes.profiles.create import create_profile_handler
 from src.routes.profiles.delete import delete_profile_handler
 from src.routes.profiles.read import read_profile_handler
@@ -574,6 +575,157 @@ async def delete_profile(current_user: Annotated[User, Depends(get_current_user)
 
     # Delete Profile
     return await delete_profile_handler(current_user=current_user)
+
+
+# Update Avatar Endpoint
+@router.put(
+    path="/avatar",
+    status_code=status.HTTP_200_OK,
+    summary="Update User Avatar",
+    description="""
+    Update User Avatar.
+
+    This Endpoint Allows a Logged-in User to Update Their Avatar by Providing:
+    - File (JPEG, JPG, PNG)
+    """,
+    name="Update Avatar",
+    response_model=ProfileResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Avatar Updated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Avatar Updated": {
+                            "summary": "Avatar Updated Successfully",
+                            "value": {
+                                "id": "687ea9fa53bf34da640e4ef5",
+                                "user_id": "687ea9fa53bf34da640e4ef5",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                                "username": "john_doe",
+                                "email": "john_doe@example.com",
+                                "phone_number": "1234567890",
+                                "date_of_birth": "2000-01-01",
+                                "gender": "male",
+                                "avatar": "https://example.com/avatar.jpg",
+                                "created_at": "2022-01-01T00:00:00.000Z",
+                                "updated_at": "2022-01-01T00:00:00.000Z",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "No File Provided": {
+                            "summary": "No File Provided",
+                            "value": {
+                                "detail": "No File Provided",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Profile Not Found": {
+                            "summary": "Profile Not Found",
+                            "value": {
+                                "detail": "Profile Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Image Format": {
+                            "summary": "Invalid Image Format",
+                            "value": {
+                                "detail": "Invalid Image Format",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Update Failed": {
+                            "summary": "Profile Update Failed",
+                            "value": {
+                                "detail": "Failed to Update Profile",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_avatar(
+    file: Annotated[UploadFile | None, File(description="Image file to upload (JPEG, JPG, PNG)")],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> JSONResponse:
+    """
+    Update User Avatar
+
+    Args:
+        file (UploadFile | None): Image file to upload (JPEG, JPG, PNG)
+        current_user (User): Current authenticated user
+
+    Returns:
+        JSONResponse: ProfileResponse with updated avatar URL
+    """
+
+    # Update Avatar
+    return await update_avatar_handler(current_user=current_user, file=file)
 
 
 # Exports

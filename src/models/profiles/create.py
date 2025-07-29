@@ -1,6 +1,6 @@
 # Standard Library Imports
 import datetime
-from typing import ClassVar
+from typing import Any, ClassVar
 
 # Third-Party Imports
 from pydantic import BaseModel, Field
@@ -65,6 +65,37 @@ class ProfileCreateRequest(BaseModel):
         example="America/New_York",
         description="User's Timezone",
     )
+
+    # Model Dump
+    def model_dump(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> dict:
+        """
+        Model Dump
+
+        This Method Overrides the Default Model Dump Method to Convert DateTime Objects to ISO Format
+
+        Args:
+            *args (tuple[Any, ...]): Positional Arguments
+            **kwargs (dict[str, Any]): Keyword Arguments
+
+        Returns:
+            dict: Model Dump Data
+        """
+
+        # Get Model Dump Data
+        data = super().model_dump(*args, **kwargs)
+
+        # Convert DateTime Objects to ISO Format
+        for field in ["date_of_birth"]:
+            # Get Field Value
+            value = getattr(self, field)
+
+            # if Field Value is a Date Object
+            if isinstance(value, (datetime.date)):
+                # Convert to DateTime Object
+                data[field] = datetime.datetime.combine(value, datetime.time.min)
+
+        # Return Model Dump Data
+        return data
 
 
 # Exports

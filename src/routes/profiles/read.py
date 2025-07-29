@@ -28,25 +28,20 @@ async def read_profile_handler(current_user: User) -> JSONResponse:
         mongo_collection: AsyncCollection = db.get_collection("profiles")
 
         # Get Profile
-        profile: dict | None = await mongo_collection.find_one(
-            filter={
-                "user_id": current_user.id,
-            },
+        profile_data: dict | None = await mongo_collection.find_one(
+            filter={"user_id": current_user.id},
         )
 
         # If Profile Not Found
-        if not profile:
+        if not profile_data:
             # Return Not Found Response
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
                 content={"detail": "Profile Not Found"},
             )
 
-        # Create and Validate Profile
-        profile: Profile = Profile(
-            user_id=current_user.id,
-            **profile,
-        )
+        # Create Profile Instance for Validation
+        profile: Profile = Profile(**profile_data)
 
         # Return Response with ProfileResponse Model
         return JSONResponse(

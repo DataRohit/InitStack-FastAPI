@@ -12,7 +12,7 @@ from pymongo.results import DeleteResult
 # Local Imports
 from config.mailer import render_template, send_email
 from config.mongodb import get_async_mongodb
-from config.redis import redis_manager
+from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 from src.tasks.profiles import delete_profile_task
@@ -27,11 +27,10 @@ async def _send_deleted_email(user: User) -> None:
         user (User): User Instance
     """
 
-    # Remove Deletion Token from Redis
-    await redis_manager.delete(
-        key=f"deletion_token:{user.id}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Remove Deletion Token from Redis
+        await redis.delete(f"deletion_token:{user.id}")
 
     # Get Current Time
     current_time: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
@@ -96,11 +95,10 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
             content={"detail": "Invalid Deletion Token"},
         )
 
-    # Get Token from Redis
-    stored_token: str | None = await redis_manager.get(
-        key=f"deletion_token:{payload['sub']}",
-        db=settings.REDIST_TOKEN_CACHE_DB,
-    )
+    # Get Async Redis Adapter
+    async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
+        # Get Token from Redis
+        stored_token: str | None = await redis.get(f"deletion_token:{payload['sub']}")
 
     # If Token Not Found
     if not stored_token:

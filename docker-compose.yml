@@ -2,6 +2,9 @@ volumes:
     nginx-data:
         name: nginx-data
         driver: local
+    minio-data:
+        name: minio-data
+        driver: local
     prometheus-data:
         name: prometheus-data
         driver: local
@@ -82,6 +85,8 @@ services:
             retries: 5
             start_period: 30s
         depends_on:
+            minio-service:
+                condition: service_healthy
             mailpit-service:
                 condition: service_healthy
             redis-service:
@@ -152,6 +157,27 @@ services:
                 condition: service_healthy
             elasticsearch-service:
                 condition: service_healthy
+
+    minio-service:
+        image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+        container_name: minio-service
+        command: server /data --console-address ":9090"
+        ports:
+            - "9080:9090"
+        volumes:
+            - minio-data:/data
+        env_file:
+            - ./.envs/minio/.env
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test:
+                ["CMD", "curl", "-f", "http://localhost:9090/minio/health/live"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
 
     otel-collector-service:
         image: otel/opentelemetry-collector-contrib:latest
