@@ -257,6 +257,26 @@ services:
             retries: 5
             start_period: 30s
 
+    kibana-service:
+        image: bitnami/kibana:7.17.26
+        container_name: kibana-service
+        ports:
+            - "5601:5601"
+        env_file:
+            - ./.envs/kibana/.env
+        networks:
+            - initstack
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:5601"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+        depends_on:
+            elasticsearch-service:
+                condition: service_healthy
+
     elasticsearch-service:
         image: bitnami/elasticsearch:7.17.26
         container_name: elasticsearch-service
