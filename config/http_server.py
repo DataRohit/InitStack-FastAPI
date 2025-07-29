@@ -178,12 +178,12 @@ def _setup_400_handler(app: FastAPI) -> None:
         """
 
         # Get Error Data
-        error_data: dict = exc.errors()
+        error_data: list = exc.errors()
 
         # Traverse Error Data
         for idx in range(len(error_data)):
             # Extract Error Field
-            field = error_data[idx]["loc"][0]
+            field = error_data[idx]["loc"][-1]
 
             # If error in Error ctx
             if "error" in error_data[idx]["ctx"]:
@@ -235,28 +235,39 @@ def _setup_422_handler(app: FastAPI) -> None:
             JSONResponse: Formatted Error Response with Validation Details
         """
 
-        # List to Store Errors
-        errors = []
+        # Get Error Data
+        error_data: list = exc.errors()
 
         # Traverse Error Data
-        for error in exc.errors():
-            # Update Error Message to Title Case
-            error["msg"] = error["msg"].title()
+        for idx in range(len(error_data)):
+            # If Value Error
+            if error_data[idx]["type"] == "value_error":
+                # Extract Field
+                field = error_data[idx]["loc"][-1]
 
-            # If reason is in ctx
-            if error.get("ctx") and "reason" in error["ctx"]:
-                # Update Ctx Reason
-                error["ctx"]["reason"] = error["ctx"]["reason"].title()
+                # Extract Reason
+                reason = error_data[idx]["ctx"]["error"].args[0]["reason"].strip(".").title()
 
-            # Append Error to List
-            errors.append(error)
+            # Else
+            else:
+                # Extract Field
+                field = error_data[idx]["loc"][-1]
+
+                # Extract Reason
+                reason = error_data[idx]["msg"].strip(".").title()
+
+            # Update Error Data
+            error_data[idx] = {
+                "field": field,
+                "reason": reason,
+            }
 
         # Return Error Response
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content={
                 "detail": "Invalid Request",
-                "errors": errors,
+                "errors": error_data,
             },
         )
 

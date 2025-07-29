@@ -1,8 +1,8 @@
 # Standard Library Imports
-from typing import ClassVar
+from typing import Any, ClassVar
 
 # Third-Party Imports
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # User Register Request Model
@@ -16,6 +16,7 @@ class UserRegisterRequest(BaseModel):
         username (str): Unique Username with Specific Formatting
         email (str): Valid Email Address
         password (str): Plain Text Password
+        confirm_password (str): Password Confirmation
         first_name (str): User's First Name
         last_name (str): User's Last Name
     """
@@ -39,6 +40,11 @@ class UserRegisterRequest(BaseModel):
         example="SecurePassword@123",
         description="Plain Text Password",
     )
+    confirm_password: str = Field(
+        ...,
+        example="SecurePassword@123",
+        description="Password Confirmation",
+    )
 
     # Personal Information
     first_name: str = Field(
@@ -51,6 +57,34 @@ class UserRegisterRequest(BaseModel):
         example="Doe",
         description="User's Last Name (Alphabetic Characters Only)",
     )
+
+    # Password Match Validation
+    @field_validator("confirm_password")
+    @classmethod
+    def validate_password_match(cls, value: str, values: Any) -> str:
+        """
+        Validate Password Match
+
+        Ensures Password and Confirm Password Match
+
+        Args:
+            value (str): Confirm Password to Validate
+            values (Any): Other Field Values
+
+        Returns:
+            str: Validated Confirm Password
+
+        Raises:
+            ValueError: If Passwords Don't Match
+        """
+
+        # If Passwords Don't Match
+        if "password" in values.data and value != values.data["password"]:
+            # Raise ValueError
+            raise ValueError({"reason": "Passwords Do Not Match"})
+
+        # Return Validated Confirm Password
+        return value
 
 
 # Exports

@@ -123,11 +123,19 @@ async def update_avatar_handler(
         # Convert Image to JPG
         image_data: bytes = _convert_image_to_jpg(file)
 
-    except ValueError as e:
+    except ValueError:
         # Return Unprocessable Entity Response
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"detail": str(e)},
+            content={
+                "detail": "Invalid Request",
+                "errors": [
+                    {
+                        "field": "file",
+                        "reason": "Invalid Image Format",
+                    },
+                ],
+            },
         )
 
     # Upload Image to S3

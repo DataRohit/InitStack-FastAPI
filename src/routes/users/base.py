@@ -137,15 +137,20 @@ router = APIRouter(
                                 "detail": "Invalid Request",
                                 "errors": [
                                     {
-                                        "type": "missing",
-                                        "loc": ["body", "first_name"],
-                                        "msg": "Field Required",
-                                        "input": {
-                                            "username": "john_doe",
-                                            "email": "john_doe@example.com",
-                                            "password": "SecurePassword@123",
-                                            "last_name": "Doe",
-                                        },
+                                        "field": "first_name",
+                                        "reason": "Field Required",
+                                    },
+                                ],
+                            },
+                        },
+                        "Password Mismatch": {
+                            "summary": "Password Mismatch",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "confirm_password",
+                                        "reason": "Passwords Do Not Match",
                                     },
                                 ],
                             },
@@ -286,10 +291,8 @@ async def register_user(request: UserRegisterRequest) -> JSONResponse:
                                 "detail": "Invalid Request",
                                 "errors": [
                                     {
-                                        "type": "missing",
-                                        "loc": ["query", "token"],
-                                        "msg": "Field Required",
-                                        "input": None,
+                                        "field": "token",
+                                        "reason": "Field Required",
                                     },
                                 ],
                             },
@@ -932,10 +935,8 @@ async def delete_user_route(current_user: Annotated[User, Depends(get_current_us
                                 "detail": "Invalid Request",
                                 "errors": [
                                     {
-                                        "type": "missing",
-                                        "loc": ["query", "token"],
-                                        "msg": "Field Required",
-                                        "input": None,
+                                        "field": "token",
+                                        "reason": "Field Required",
                                     },
                                 ],
                             },

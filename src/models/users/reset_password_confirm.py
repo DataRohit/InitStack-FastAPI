@@ -1,8 +1,8 @@
 # Standard Library Imports
-from typing import ClassVar
+from typing import Any, ClassVar
 
 # Third-Party Imports
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 # User Reset Password Confirm Request Model
@@ -32,31 +32,33 @@ class UserResetPasswordConfirmRequest(BaseModel):
         description="Confirm Plain Text Password",
     )
 
-    # Model Validators
-    @model_validator(mode="after")
-    def check_passwords_match(self) -> "UserResetPasswordConfirmRequest":
+    # Password Match Validation
+    @field_validator("confirm_password")
+    @classmethod
+    def validate_password_match(cls, value: str, values: Any) -> str:
         """
-        Check Passwords Match
+        Validate Password Match
 
-        Ensures Passwords Match
+        Ensures Password and Confirm Password Match
+
+        Args:
+            value (str): Confirm Password to Validate
+            values (Any): Other Field Values
 
         Returns:
-            UserResetPasswordConfirmRequest: UserResetPasswordConfirmRequest
+            str: Validated Confirm Password
 
         Raises:
-            ValueError: If Passwords Do Not Match
+            ValueError: If Passwords Don't Match
         """
 
-        # If Passwords Do Not Match
-        if self.password != self.confirm_password:
-            # Set Error Message
-            msg = "Passwords Do Not Match"
-
+        # If Passwords Don't Match
+        if "password" in values.data and value != values.data["password"]:
             # Raise ValueError
-            raise ValueError(msg)
+            raise ValueError({"reason": "Passwords Do Not Match"})
 
-        # Return UserResetPasswordConfirmRequest
-        return self
+        # Return Validated Confirm Password
+        return value
 
 
 # Exports

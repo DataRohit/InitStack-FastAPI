@@ -685,7 +685,13 @@ async def delete_profile(current_user: Annotated[User, Depends(get_current_user)
                         "Invalid Image Format": {
                             "summary": "Invalid Image Format",
                             "value": {
-                                "detail": "Invalid Image Format",
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "file",
+                                        "reason": "Invalid Image Format",
+                                    },
+                                ],
                             },
                         },
                     },
