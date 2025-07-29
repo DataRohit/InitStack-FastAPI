@@ -7,11 +7,12 @@ from fastapi.responses import JSONResponse
 
 # Local Imports
 from config.jwt_auth import get_current_user
-from src.models.users import User, UserRegisterRequest, UserResponse
+from src.models.users import User, UserCheckUsernameRequest, UserRegisterRequest, UserResponse
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.models.users.reset_password import UserResetPasswordRequest
 from src.models.users.reset_password_confirm import UserResetPasswordConfirmRequest
 from src.routes.users.activate import activate_user_handler
+from src.routes.users.check_username import check_username_handler
 from src.routes.users.deactivate import deactivate_user_handler
 from src.routes.users.deactivate_confirm import deactivate_user_confirm_handler
 from src.routes.users.delete import delete_user_handler
@@ -1278,6 +1279,98 @@ async def reset_password_confirm_route(request: UserResetPasswordConfirmRequest,
 
     # Reset Password Confirm
     return await reset_password_confirm_handler(request=request, token=token)
+
+
+# User Check Username Endpoint
+@router.post(
+    path="/check_username",
+    status_code=status.HTTP_200_OK,
+    summary="Check Username Availability",
+    description="""
+    Check if a Username is Available.
+
+    This Endpoint Allows Checking if a Given Username is Already Taken by Another User.
+    It Returns a Success Response if the Username is Available, or a Conflict Response if it is Already in Use.
+    """,
+    name="Check Username",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Username is Available",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Username Available": {
+                            "summary": "Username Available",
+                            "value": {"detail": "Username is Available"},
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Username Already Exists",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Username Taken": {
+                            "summary": "Username Taken",
+                            "value": {"detail": "Username Already Exists"},
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Invalid Request",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Username Format": {
+                            "summary": "Invalid Username Format",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "username",
+                                        "reason": "Username Must Be 8+ Characters, Using Lowercase Letters, Numbers, @, -, _",  # noqa: E501
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Internal Server Error": {
+                            "summary": "Internal Server Error",
+                            "value": {
+                                "detail": "Internal Server Error",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def check_username(request: UserCheckUsernameRequest) -> JSONResponse:
+    """
+    Check Username Availability
+
+    Args:
+        request (UserCheckUsernameRequest): UserCheckUsernameRequest Containing Username to Check
+
+    Returns:
+        JSONResponse: Success or Error Response Indicating Username Availability
+    """
+
+    # Check Username Availability
+    return await check_username_handler(request=request)
 
 
 # Exports
