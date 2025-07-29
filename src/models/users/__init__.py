@@ -4,6 +4,7 @@ from src.models.users.check_username import UserCheckUsernameRequest
 from src.models.users.register import UserRegisterRequest
 from src.models.users.reset_password import UserResetPasswordRequest
 from src.models.users.reset_password_confirm import UserResetPasswordConfirmRequest
+from src.models.users.update_username_confirm import UserUpdateUsernameConfirmRequest
 
 # Exports
 __all__: list[str] = [
@@ -13,4 +14,5 @@ __all__: list[str] = [
     "UserResetPasswordConfirmRequest",
     "UserResetPasswordRequest",
     "UserResponse",
+    "UserUpdateUsernameConfirmRequest",
 ]

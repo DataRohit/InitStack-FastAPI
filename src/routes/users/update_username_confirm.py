@@ -14,22 +14,24 @@ from config.mailer import render_template, send_email
 from config.mongodb import get_async_mongodb
 from config.redis_cache import get_async_redis
 from config.settings import settings
-from src.models.users import User, UserResetPasswordConfirmRequest
+from src.models.users import User
+from src.models.users.update_username_confirm import UserUpdateUsernameConfirmRequest
 
 
-# Internal Function to Send Reset Password Confirm Email
-async def _send_reset_password_confirm_email(user: User) -> None:
+# Internal Function to Send Update Username Success Email
+async def _send_update_username_success_email(user: User, new_username: str) -> None:
     """
-    Send Reset Password Confirm Email
+    Send Update Username Success Email
 
     Args:
         user (User): User Instance
+        new_username (str): The New Username
     """
 
     # Get Async Redis Adapter
     async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
-        # Remove Reset Password Token from Redis
-        await redis.delete(f"reset_password_token:{user.id}")
+        # Remove Update Username Token from Redis
+        await redis.delete(f"update_username_token:{user.id}")
 
     # Create Login Link
     login_link: str = f"{settings.PROJECT_DOMAIN}/api/login"
@@ -40,6 +42,7 @@ async def _send_reset_password_confirm_email(user: User) -> None:
     # Prepare Email Context
     email_context: dict = {
         "username": user.username,
+        "new_username": new_username,
         "first_name": user.first_name,
         "last_name": user.last_name,
         "login_link": login_link,
@@ -49,7 +52,7 @@ async def _send_reset_password_confirm_email(user: User) -> None:
 
     # Set Email Template Path
     template_path: str = str(
-        Path(__file__).parent.parent.parent / "templates" / "users" / "reset_password_confirm.html",
+        Path(__file__).parent.parent.parent / "templates" / "users" / "update_username_success.html",
     )
 
     # Render Email Template
@@ -58,29 +61,30 @@ async def _send_reset_password_confirm_email(user: User) -> None:
     # Send Email
     await send_email(
         to_email=user.email,
-        subject="Password Reset Successfully",
+        subject="Username Updated Successfully",
         html_content=html_content,
     )
 
 
-# Reset Password Confirm
-async def reset_password_confirm_handler(request: UserResetPasswordConfirmRequest, token: str) -> JSONResponse:
+# Update Username Confirm
+async def update_username_confirm_handler(token: str, request: UserUpdateUsernameConfirmRequest) -> JSONResponse:
     """
-    Reset Password Confirm
+    Update Username Confirm
 
     Args:
-        token (str): Reset Password Token
+        token (str): Update Username Token
+        request (UserUpdateUsernameConfirmRequest): UserUpdateUsernameConfirmRequest Containing New Username
 
     Returns:
-        JSONResponse: UserResponse with User Data
+        JSONResponse: Success Message
     """
 
     try:
         # Decode Token
         payload: dict = jwt.decode(
             jwt=token,
-            key=settings.RESET_PASSWORD_JWT_SECRET,
-            algorithms=[settings.RESET_PASSWORD_JWT_ALGORITHM],
+            key=settings.UPDATE_USERNAME_JWT_SECRET,
+            algorithms=[settings.UPDATE_USERNAME_JWT_ALGORITHM],
             verify=True,
             audience=settings.PROJECT_NAME,
             issuer=settings.PROJECT_NAME,
@@ -97,20 +101,20 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Reset Password Token"},
+            content={"detail": "Invalid Update Username Token"},
         )
 
     # Get Async Redis Adapter
     async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
         # Get Token from Redis
-        stored_token: str | None = await redis.get(f"reset_password_token:{payload['sub']}")
+        stored_token: str | None = await redis.get(f"update_username_token:{payload['sub']}")
 
     # If Token Not Found
     if not stored_token:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Reset Password Token"},
+            content={"detail": "Invalid Update Username Token"},
         )
 
     # Get Database and Collection
@@ -133,25 +137,16 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
                 content={"detail": "User Not Found"},
             )
 
-        # If User Is Not Active
-        if not existing_user["is_active"]:
+        # If New Username Already Exists
+        if await mongo_collection.find_one({"username": request.username}):
             # Return Conflict Response
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                content={"detail": "User Is Not Active"},
+                content={"detail": "Username Already Exists"},
             )
 
         # Calculated Updated At
         updated_at: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
-
-        # Create User Instance
-        user: User = User(**existing_user)
-
-        # Set New Password
-        user.set_password(request.password)
-
-        # Set Updated At
-        user.updated_at = updated_at
 
         # Update User in Database
         response: UpdateResult = await mongo_collection.update_one(
@@ -160,8 +155,8 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
             },
             update={
                 "$set": {
-                    "password": user.password,
-                    "updated_at": user.updated_at,
+                    "username": request.username,
+                    "updated_at": updated_at,
                 },
             },
         )
@@ -171,16 +166,27 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
             # Return Internal Server Error Response
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Reset Password"},
+                content={"detail": "Failed to Update Username"},
             )
 
-    # Send Reset Password Confirm Email
-    await _send_reset_password_confirm_email(user=user)
+        # Update existing_user with new username
+        existing_user["username"] = request.username
+        existing_user["updated_at"] = updated_at
+
+    # Create User Instance
+    user: User = User(**existing_user)
+
+    # Send Update Username Success Email
+    await _send_update_username_success_email(user=user, new_username=request.username)
 
     # Return Response with UserResponse Model
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
-            "detail": "User Reset Password Confirmed Successfully",
+            "detail": "Username Updated Successfully",
         },
     )
+
+
+# Exports
+__all__: list[str] = ["update_username_confirm_handler"]

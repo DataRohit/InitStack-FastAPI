@@ -11,6 +11,7 @@ from src.models.users import User, UserCheckUsernameRequest, UserRegisterRequest
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.models.users.reset_password import UserResetPasswordRequest
 from src.models.users.reset_password_confirm import UserResetPasswordConfirmRequest
+from src.models.users.update_username_confirm import UserUpdateUsernameConfirmRequest
 from src.routes.users.activate import activate_user_handler
 from src.routes.users.check_username import check_username_handler
 from src.routes.users.deactivate import deactivate_user_handler
@@ -22,6 +23,8 @@ from src.routes.users.me import get_current_user_handler
 from src.routes.users.register import register_user_handler
 from src.routes.users.reset_password import reset_password_handler
 from src.routes.users.reset_password_confirm import reset_password_confirm_handler
+from src.routes.users.update_username import update_username_handler
+from src.routes.users.update_username_confirm import update_username_confirm_handler
 
 # Initialize Router
 router = APIRouter(
@@ -1371,6 +1374,227 @@ async def check_username(request: UserCheckUsernameRequest) -> JSONResponse:
 
     # Check Username Availability
     return await check_username_handler(request=request)
+
+
+# User Update Username Endpoint
+@router.post(
+    path="/update_username",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Update Username Endpoint",
+    description="""
+    Initiate User Update Username Process.
+
+    This Endpoint Allows an Authenticated User to Initiate the Username Update Process.
+    A Confirmation Email Will Be Sent to the User's Registered Email Address.
+    """,
+    name="User Update Username",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "User Update Username Email Sent Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Success": {
+                            "summary": "Success",
+                            "value": {
+                                "detail": "User Update Username Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Unauthorized": {
+                            "summary": "Unauthorized",
+                            "value": {
+                                "detail": "Not Authenticated",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Active": {
+                            "summary": "User Not Active",
+                            "value": {
+                                "detail": "User Account Not Active",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Failed to Send Email": {
+                            "summary": "Failed to Send Email",
+                            "value": {
+                                "detail": "Failed to Send Update Username Email",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_username_route(current_user: Annotated[User, Depends(get_current_user)]) -> JSONResponse:
+    """
+    Initiate User Update Username
+
+    Args:
+        current_user (User): The Authenticated User From Dependency
+
+    Returns:
+        JSONResponse: Success Message With 202 Status
+    """
+
+    # Initiate User Update Username
+    return await update_username_handler(current_user=current_user)
+
+
+# User Update Username Confirm Endpoint
+@router.post(
+    path="/update_username_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="User Update Username Confirmation Endpoint",
+    description="""
+    Confirm User Update Username Process.
+
+    This Endpoint Allows a User to Confirm Their Username Update by Providing:
+    - Update Username Token (Query Parameter)
+    - New Username (Request Body)
+    """,
+    name="User Update Username Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Username Updated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Success": {
+                            "summary": "Success",
+                            "value": {
+                                "detail": "Username Updated Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Update Username Token",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Username Exists": {
+                            "summary": "Username Exists",
+                            "value": {
+                                "detail": "Username Already Exists",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Missing Token": {
+                            "summary": "Missing Token",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "token",
+                                        "reason": "Field Required",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Failed to Update Username": {
+                            "summary": "Failed to Update Username",
+                            "value": {
+                                "detail": "Failed to Update Username",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_username_confirm_route(
+    token: str,
+    request: UserUpdateUsernameConfirmRequest,
+) -> JSONResponse:
+    """
+    Confirm User Update Username
+
+    Args:
+        token (str): Update Username Token
+        request (UserUpdateUsernameConfirmRequest): UserUpdateUsernameConfirmRequest Containing New Username
+
+    Returns:
+        JSONResponse: Success Message With 200 Status
+    """
+
+    # Confirm User Update Username
+    return await update_username_confirm_handler(token=token, request=request)
 
 
 # Exports
