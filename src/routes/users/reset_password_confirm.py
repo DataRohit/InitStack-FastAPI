@@ -15,6 +15,7 @@ from config.mongodb import get_async_mongodb
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User, UserResetPasswordConfirmRequest
+from src.routes.users.base import router
 
 
 # Internal Function to Send Reset Password Confirm Email
@@ -63,16 +64,116 @@ async def _send_reset_password_confirm_email(user: User) -> None:
     )
 
 
-# Reset Password Confirm
-async def reset_password_confirm_handler(request: UserResetPasswordConfirmRequest, token: str) -> JSONResponse:
+# User Reset Password Confirm Endpoint
+@router.post(
+    path="/reset_password_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="User Reset Password Confirm Endpoint",
+    description="""
+    Confirms User Reset Password Process.
+
+    This Endpoint Allows a User to Confirm the Reset Password Process by Providing:
+    - Reset Password Request (Password and Password Confirmation)
+    - Reset Password Token (Query Parameter)
+
+    Returns:
+        JSONResponse: Success Message With 200 Status
+    """,
+    name="User Reset Password Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Reset Password Confirmed Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Password Reset Confirmed": {
+                            "summary": "Password Reset Confirmed",
+                            "value": {
+                                "detail": "User Reset Password Confirmed Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Reset Password Token",
+                            },
+                        },
+                        "Token Not Found": {
+                            "summary": "Token Not Found",
+                            "value": {
+                                "detail": "Invalid Reset Password Token",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Inactive User": {
+                            "summary": "Inactive User",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Reset Failed": {
+                            "summary": "Reset Failed",
+                            "value": {
+                                "detail": "Failed To Reset Password",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def reset_password_confirm(request: UserResetPasswordConfirmRequest, token: str) -> JSONResponse:
     """
-    Reset Password Confirm
+    Resets User Password.
 
     Args:
+        request (UserResetPasswordConfirmRequest): Reset Password Confirm Request
         token (str): Reset Password Token
 
     Returns:
-        JSONResponse: UserResponse with User Data
+        JSONResponse: Success Message With 200 Status
     """
 
     try:
@@ -184,3 +285,9 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
             "detail": "User Reset Password Confirmed Successfully",
         },
     )
+
+
+# Exports
+__all__ = [
+    "reset_password_confirm",
+]

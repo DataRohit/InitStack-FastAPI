@@ -1,17 +1,20 @@
 # Standard Library Imports
 import datetime
 from pathlib import Path
+from typing import Annotated
 
 # Third-Party Imports
 import jwt
-from fastapi import status
+from fastapi import Depends, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
+from config.jwt_auth import get_current_user
 from config.mailer import render_template, send_email
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
+from src.routes.users.base import router
 
 
 # Internal Function to Generate Update Username Token
@@ -144,18 +147,90 @@ async def _send_update_username_email(user: User) -> None:
     )
 
 
-# Initiate User Update Username
-async def update_username_handler(current_user: User) -> JSONResponse:
+# User Update Username Endpoint
+@router.post(
+    path="/update_username",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Update Username Endpoint",
+    description="""
+    Initiate User Update Username Process.
+
+    This Endpoint Allows an Authenticated User to Initiate the Username Update Process.
+    A Confirmation Email Will Be Sent to the User's Registered Email Address.
+    """,
+    name="User Update Username",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "User Update Username Email Sent Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Success": {
+                            "summary": "Success",
+                            "value": {
+                                "detail": "User Update Username Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Unauthorized": {
+                            "summary": "Unauthorized",
+                            "value": {
+                                "detail": "Not Authenticated",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Active": {
+                            "summary": "User Not Active",
+                            "value": {
+                                "detail": "User Account Not Active",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Failed to Send Email": {
+                            "summary": "Failed to Send Email",
+                            "value": {
+                                "detail": "Failed to Send Update Username Email",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_username(current_user: Annotated[User, Depends(get_current_user)]) -> JSONResponse:
     """
     Initiate User Update Username
 
-    Generates an update username token and sends a confirmation email to the user.
-
     Args:
-        current_user (User): The authenticated user from dependency
+        current_user (User): The Authenticated User From Dependency
 
     Returns:
-        JSONResponse: Success message with 202 status
+        JSONResponse: Success Message With 202 Status
     """
 
     # If User Not Active
@@ -177,4 +252,4 @@ async def update_username_handler(current_user: User) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["update_username_handler"]
+__all__: list[str] = ["update_username"]

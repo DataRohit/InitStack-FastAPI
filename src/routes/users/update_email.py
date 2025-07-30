@@ -1,18 +1,21 @@
 # Standard Library Imports
 import datetime
 from pathlib import Path
+from typing import Annotated
 
 # Third-Party Imports
 import jwt
-from fastapi import status
+from fastapi import Depends, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
+from config.jwt_auth import get_current_user
 from config.mailer import render_template, send_email
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 from src.models.users.update_email import UserUpdateEmailRequest
+from src.routes.users.base import router
 
 
 # Internal Function to Generate Update Email Token
@@ -153,22 +156,152 @@ async def _send_update_email(
     )
 
 
-# Initiate User Update Email
-async def update_email_handler(
-    current_user: User,
+# User Update Email Endpoint
+@router.post(
+    path="/update_email",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Initiate User Email Update",
+    description="""
+    Initiate User Email Update.
+
+    This Endpoint Allows an Authenticated User to Initiate an Email Update:
+    - Requires Valid JWT Authentication
+    - Sends a Confirmation Email to the User's Current Email Address
+    """,
+    name="Update Email",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "Email Update Initiated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Update Initiated": {
+                            "summary": "Email Update Initiated",
+                            "value": {
+                                "message": "Email Update Initiated. Check Your Email For Confirmation.",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Inactive User": {
+                            "summary": "Inactive User",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                        "Email Already Exists": {
+                            "summary": "Email Already Exists",
+                            "value": {
+                                "detail": "New Email Already Exists",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Email Format": {
+                            "summary": "Invalid Email Format",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "new_email",
+                                        "reason": "Invalid Email Format",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Update Failed": {
+                            "summary": "Email Update Failed",
+                            "value": {
+                                "detail": "Failed To Initiate Email Update",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_email(
     request: UserUpdateEmailRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> JSONResponse:
     """
-    Initiate User Update Email
-
-    Generates an update email token and sends a confirmation email to the user.
+    Initiate User Email Update.
 
     Args:
-        current_user (User): The authenticated user from dependency
         request (UserUpdateEmailRequest): UserUpdateEmailRequest Containing New Email
+        current_user (User): The Authenticated User From Dependency
 
     Returns:
-        JSONResponse: Success message with 202 status
+        JSONResponse: Success Message With 202 Status
     """
 
     # If User Not Active
@@ -190,4 +323,4 @@ async def update_email_handler(
 
 
 # Exports
-__all__: list[str] = ["update_email_handler"]
+__all__: list[str] = ["update_email"]

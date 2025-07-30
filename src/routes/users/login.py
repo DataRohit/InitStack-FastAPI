@@ -13,6 +13,7 @@ from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 from src.models.users.login import UserLoginRequest, UserLoginResponse
+from src.routes.users.base import router
 
 
 # Internal Function to Check If New Access & Refresh Token Are Required
@@ -196,16 +197,141 @@ async def _generate_refresh_token(user: User) -> str:
     return refresh_token
 
 
-# Login User
-async def login_user_handler(request: UserLoginRequest) -> JSONResponse:
+# User Login Endpoint
+@router.post(
+    path="/login",
+    status_code=status.HTTP_200_OK,
+    summary="User Login Endpoint",
+    description="""
+    Login a User.
+
+    This Endpoint Allows a User to Login by Providing:
+    - Identifier (Email or Username)
+    - Password
+    """,
+    name="User Login",
+    response_model=UserLoginResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Logged In Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Successful Login": {
+                            "summary": "Successful Login",
+                            "value": {
+                                "user": {
+                                    "id": "687ea9fa53bf34da640e4ef5",
+                                    "username": "john_doe",
+                                    "email": "john_doe@example.com",
+                                    "first_name": "John",
+                                    "last_name": "Doe",
+                                    "is_active": True,
+                                    "is_staff": False,
+                                    "is_superuser": False,
+                                    "date_joined": "2025-07-21T20:58:34.273000+00:00",
+                                    "last_login": "2025-07-21T21:58:34.273000+00:00",
+                                    "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                                },
+                                "access_token": {
+                                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
+                                    "type": "bearer",
+                                    "expires_in": 3600,
+                                },
+                                "refresh_token": {
+                                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmMxMjM0NTY3ODkwMTIzNCIsImlzcyI6IkpvaG4gRG9lIiwiYXVkIjoiSm9obiBEb2UiLCJpYXQiOjE2NzY3ODkwMTIsImV4cCI6MTY3Njc4OTIxMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",  # noqa: E501
+                                    "expires_in": 86400,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Validation Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Missing Identifier": {
+                            "summary": "Missing Identifier",
+                            "value": {
+                                "detail": "Validation Error",
+                                "errors": [
+                                    {
+                                        "type": "missing",
+                                        "loc": ["body", "identifier"],
+                                        "msg": "Field Required",
+                                        "input": None,
+                                    },
+                                ],
+                            },
+                        },
+                        "Missing Password": {
+                            "summary": "Missing Password",
+                            "value": {
+                                "detail": "Validation Error",
+                                "errors": [
+                                    {
+                                        "type": "missing",
+                                        "loc": ["body", "password"],
+                                        "msg": "Field Required",
+                                        "input": None,
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Password": {
+                            "summary": "Invalid Password",
+                            "value": {
+                                "detail": "Invalid Password",
+                            },
+                        },
+                        "Account Not Activated": {
+                            "summary": "Account Not Activated",
+                            "value": {
+                                "detail": "User Account Has Not Been Activated",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def login_user(request: UserLoginRequest) -> JSONResponse:
     """
-    Login a User
+    Login User
 
     Args:
         request (UserLoginRequest): UserLoginRequest Containing User Login Data
 
     Returns:
-        JSONResponse: UserResponse with User Data
+        JSONResponse: UserLoginResponse with User Data
     """
 
     # Get Database and Collection
@@ -320,4 +446,4 @@ async def login_user_handler(request: UserLoginRequest) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["login_user_handler"]
+__all__: list[str] = ["login_user"]

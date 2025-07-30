@@ -1,4 +1,4 @@
-# Third-Party Imports
+# Standard Library Imports
 import datetime
 from pathlib import Path
 
@@ -15,6 +15,7 @@ from config.mongodb import get_async_mongodb
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User, UserResponse
+from src.routes.users.base import router
 
 
 # Internal Function to Send Activated Email
@@ -62,8 +63,134 @@ async def _send_activated_email(user: User) -> None:
     )
 
 
-# Activate User
-async def activate_user_handler(token: str) -> JSONResponse:
+# User Activate Endpoint
+@router.get(
+    path="/activate",
+    status_code=status.HTTP_200_OK,
+    summary="User Activation Endpoint",
+    description="""
+    Activate a User Account.
+
+    This Endpoint Allows a User to Activate Their Account by Providing:
+    - Activation Token (Query Parameter)
+    """,
+    name="User Activate",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Activated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Successful Activation": {
+                            "summary": "Successful Activation",
+                            "value": {
+                                "id": "687ea9fa53bf34da640e4ef5",
+                                "username": "john_doe",
+                                "email": "john_doe@example.com",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                                "is_active": True,
+                                "is_staff": False,
+                                "is_superuser": False,
+                                "date_joined": "2025-07-21T20:58:34.273000+00:00",
+                                "last_login": "2025-07-21T21:58:34.273000+00:00",
+                                "updated_at": "2025-07-21T21:30:34.273000+00:00",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Activation Token",
+                            },
+                        },
+                        "Token Not Found": {
+                            "summary": "Token Not Found",
+                            "value": {
+                                "detail": "Invalid Activation Token",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Already Activated": {
+                            "summary": "Already Activated",
+                            "value": {
+                                "detail": "User Already Activated",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Missing Token": {
+                            "summary": "Missing Token",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "token",
+                                        "reason": "Field Required",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Activation Failed": {
+                            "summary": "Activation Failed",
+                            "value": {
+                                "detail": "Failed to Activate User",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def activate_user(token: str) -> JSONResponse:
     """
     Activate User
 
@@ -185,4 +312,4 @@ async def activate_user_handler(token: str) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["activate_user_handler"]
+__all__: list[str] = ["activate_user"]

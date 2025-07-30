@@ -15,6 +15,7 @@ from config.mongodb import get_async_mongodb
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
+from src.routes.users.base import router
 from src.tasks.profiles import delete_profile_task
 
 
@@ -58,16 +59,111 @@ async def _send_deleted_email(user: User) -> None:
     )
 
 
-# Delete User
-async def delete_user_confirm_handler(token: str) -> JSONResponse:
+# User Delete Confirm Endpoint
+@router.get(
+    path="/delete_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="User Delete Confirm Endpoint",
+    description="""
+    Confirms User Deletion Process.
+
+    This Endpoint Allows a User to Confirm Account Deletion by Providing:
+    - Valid Deletion Token
+    """,
+    name="User Delete Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "User Deleted Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Successfully Deleted": {
+                            "summary": "Successfully Deleted",
+                            "value": {
+                                "detail": "User Deleted Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Deletion Token",
+                            },
+                        },
+                        "Token Not Found": {
+                            "summary": "Token Not Found",
+                            "value": {
+                                "detail": "Invalid Deletion Token",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Active": {
+                            "summary": "User Not Active",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Deletion Failed": {
+                            "summary": "Deletion Failed",
+                            "value": {
+                                "detail": "Failed To Delete User",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def delete_user_confirm(token: str) -> JSONResponse:
     """
-    Delete User
+    Confirms User Deletion Process.
 
     Args:
         token (str): Deletion Token
 
     Returns:
-        JSONResponse: UserResponse with User Data
+        JSONResponse: Success Message With 200 Status
     """
 
     try:
@@ -170,4 +266,4 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["delete_user_confirm_handler"]
+__all__: list[str] = ["delete_user_confirm"]

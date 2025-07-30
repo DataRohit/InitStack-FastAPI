@@ -16,6 +16,7 @@ from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 from src.models.users.update_username_confirm import UserUpdateUsernameConfirmRequest
+from src.routes.users.base import router
 
 
 # Internal Function to Send Update Username Success Email
@@ -66,17 +67,131 @@ async def _send_update_username_success_email(user: User, new_username: str) -> 
     )
 
 
-# Update Username Confirm
-async def update_username_confirm_handler(token: str, request: UserUpdateUsernameConfirmRequest) -> JSONResponse:
+# User Update Username Confirm Endpoint
+@router.post(
+    path="/update_username_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="User Update Username Confirmation Endpoint",
+    description="""
+    Confirm User Update Username Process.
+
+    This Endpoint Allows a User to Confirm Their Username Update by Providing:
+    - Update Username Token (Query Parameter)
+    - New Username (Request Body)
+    """,
+    name="User Update Username Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Username Updated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Success": {
+                            "summary": "Success",
+                            "value": {
+                                "detail": "Username Updated Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Update Username Token",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Username Exists": {
+                            "summary": "Username Exists",
+                            "value": {
+                                "detail": "Username Already Exists",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Missing Token": {
+                            "summary": "Missing Token",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "token",
+                                        "reason": "Field Required",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Failed to Update Username": {
+                            "summary": "Failed to Update Username",
+                            "value": {
+                                "detail": "Failed to Update Username",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_username_confirm(
+    token: str,
+    request: UserUpdateUsernameConfirmRequest,
+) -> JSONResponse:
     """
-    Update Username Confirm
+    Confirm User Update Username
 
     Args:
         token (str): Update Username Token
         request (UserUpdateUsernameConfirmRequest): UserUpdateUsernameConfirmRequest Containing New Username
 
     Returns:
-        JSONResponse: Success Message
+        JSONResponse: Success Message With 200 Status
     """
 
     try:
@@ -189,4 +304,4 @@ async def update_username_confirm_handler(token: str, request: UserUpdateUsernam
 
 
 # Exports
-__all__: list[str] = ["update_username_confirm_handler"]
+__all__: list[str] = ["update_username_confirm"]

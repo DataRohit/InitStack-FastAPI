@@ -14,6 +14,7 @@ from config.mongodb import get_async_mongodb
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User, UserResetPasswordRequest
+from src.routes.users.base import router
 
 
 # Internal Function to Generate Reset Password Token
@@ -150,16 +151,78 @@ async def _send_reset_password_email(user: User) -> None:
     )
 
 
-# Initiate Reset Password
-async def reset_password_handler(request: UserResetPasswordRequest) -> JSONResponse:
+# User Reset Password Endpoint
+@router.post(
+    path="/reset_password",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Reset Password Endpoint",
+    description="""
+    Initiate User Reset Password Process.
+
+    This Endpoint Allows a User to Initiate the Reset Password Process by Providing:
+    - Identifier (Username or Email)
+
+    Returns:
+        JSONResponse: Success Message With 202 Status
+    """,
+    name="User Reset Password",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "Reset Password Email Sent Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Sent": {
+                            "summary": "Email Sent",
+                            "value": {
+                                "detail": "User Reset Password Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Inactive User": {
+                            "summary": "Inactive User",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def reset_password(request: UserResetPasswordRequest) -> JSONResponse:
     """
-    Initiate Reset Password
+    Initiate Reset Password Process.
 
     Args:
         request (UserResetPasswordRequest): Reset Password Request
 
     Returns:
-        JSONResponse: JSON Response
+        JSONResponse: Success Message With 202 Status
     """
 
     # Get Database and Collection
@@ -207,4 +270,4 @@ async def reset_password_handler(request: UserResetPasswordRequest) -> JSONRespo
 
 
 # Exports
-__all__: list[str] = ["reset_password_handler"]
+__all__: list[str] = ["reset_password"]

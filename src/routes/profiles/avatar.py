@@ -1,21 +1,24 @@
 # Standard Imports
 import datetime
 import io
+from typing import Annotated
 
 # Third-Party Imports
-from fastapi import UploadFile, status
+from fastapi import Depends, File, UploadFile, status
 from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.results import UpdateResult
 
 # Local Imports
+from config.jwt_auth import get_current_user
 from config.mongodb import get_async_mongodb
 from config.s3_storage import get_sync_s3
 from config.settings import settings
 from src.models.profiles import Profile
 from src.models.profiles.base import ProfileResponse
 from src.models.users.base import User
+from src.routes.profiles.base import router
 
 
 # Convert Image to JPG
@@ -95,20 +98,157 @@ def _upload_image_to_s3(image_data: bytes, current_user: User) -> str:
     return f"{settings.MINIO_BASE_URL}/{settings.MINIO_BUCKET_NAME}/{s3_key}"
 
 
-# Update Avatar
-async def update_avatar_handler(
-    current_user: User,
-    file: UploadFile | None,
+# Update Avatar Endpoint
+@router.put(
+    path="/avatar/update",
+    status_code=status.HTTP_200_OK,
+    summary="Update User Avatar",
+    description="""
+    Update User Avatar.
+
+    This Endpoint Allows a Logged-in User to Update Their Avatar by Providing:
+    - File (JPEG, JPG, PNG)
+    """,
+    name="Update Avatar",
+    response_model=ProfileResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Avatar Updated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Avatar Updated": {
+                            "summary": "Avatar Updated Successfully",
+                            "value": {
+                                "id": "687ea9fa53bf34da640e4ef5",
+                                "user_id": "687ea9fa53bf34da640e4ef5",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                                "username": "john_doe",
+                                "email": "john_doe@example.com",
+                                "phone_number": "1234567890",
+                                "date_of_birth": "2000-01-01",
+                                "gender": "male",
+                                "avatar": "https://example.com/avatar.jpg",
+                                "created_at": "2022-01-01T00:00:00.000Z",
+                                "updated_at": "2022-01-01T00:00:00.000Z",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "No File Provided": {
+                            "summary": "No File Provided",
+                            "value": {
+                                "detail": "No File Provided",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Profile Not Found": {
+                            "summary": "Profile Not Found",
+                            "value": {
+                                "detail": "Profile Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Image Format": {
+                            "summary": "Invalid Image Format",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "file",
+                                        "reason": "Invalid Image Format",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Update Failed": {
+                            "summary": "Profile Update Failed",
+                            "value": {
+                                "detail": "Failed to Update Profile",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_avatar(
+    file: Annotated[UploadFile | None, File(description="Image file to upload (JPEG, JPG, PNG)")],
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> JSONResponse:
     """
     Update User Avatar
 
     Args:
-        current_user (User): Current Authenticated User
-        file (UploadFile | None): Image File to Upload (JPEG, JPG, PNG)
+        file (UploadFile | None): Image file to upload (JPEG, JPG, PNG)
+        current_user (User): Current authenticated user
 
     Returns:
-        JSONResponse: ProfileResponse with Updated Avatar URL
+        JSONResponse: ProfileResponse with updated avatar URL
     """
 
     # If No File Provided
@@ -180,17 +320,17 @@ async def update_avatar_handler(
             filter={"user_id": current_user.id},
         )
 
-        # Create Profile Instance for Response
-        profile: Profile = Profile(**updated_profile_data)
+    # Create Profile Instance for Response
+    profile: Profile = Profile(**updated_profile_data)
 
-        # Return Response with ProfileResponse Model
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content=ProfileResponse(**profile.model_dump()).model_dump(mode="json"),
-        )
+    # Return Response with ProfileResponse Model
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=ProfileResponse(**profile.model_dump()).model_dump(mode="json"),
+    )
 
 
 # Exports
 __all__: list[str] = [
-    "update_avatar_handler",
+    "update_avatar",
 ]

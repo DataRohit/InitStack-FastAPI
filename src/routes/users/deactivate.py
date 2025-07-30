@@ -1,17 +1,20 @@
 # Standard Library Imports
 import datetime
 from pathlib import Path
+from typing import Annotated
 
 # Third-Party Imports
 import jwt
-from fastapi import status
+from fastapi import Depends, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
+from config.jwt_auth import get_current_user
 from config.mailer import render_template, send_email
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
+from src.routes.users.base import router
 
 
 # Internal Function to Generate Deactivation Token
@@ -142,18 +145,120 @@ async def _send_deactivation_email(user: User) -> None:
     )
 
 
-# Initiate User Deactivation
-async def deactivate_user_handler(current_user: User) -> JSONResponse:
-    """
-    Initiate User Deactivation
+# User Deactivate Endpoint
+@router.get(
+    path="/deactivate",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Deactivate Endpoint",
+    description="""
+    Initiates User Deactivation Process.
 
-    Generates a deactivation token and sends a confirmation email to the user.
+    This Endpoint Allows a User to Initiate the Deactivation Process by Providing:
+    - Requires Valid JWT Authentication
+    """,
+    name="User Deactivate",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "User Deactivation Email Sent Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Deactivation Email Sent": {
+                            "summary": "Deactivation Email Sent",
+                            "value": {
+                                "detail": "User Deactivation Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Already Deactivated": {
+                            "summary": "Already Deactivated",
+                            "value": {
+                                "detail": "User Already Deactivated",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Deactivation Failed": {
+                            "summary": "Deactivation Failed",
+                            "value": {
+                                "detail": "Failed To Deactivate User",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def deactivate_user(current_user: Annotated[User, Depends(get_current_user)]) -> JSONResponse:
+    """
+    Deactivates The Currently Authenticated User's Account.
 
     Args:
-        current_user (User): The authenticated user from dependency
+        current_user (User): The Authenticated User From Dependency
 
     Returns:
-        JSONResponse: Success message with 202 status
+        JSONResponse: Success Message With 202 Status
     """
 
     # If User Already Deactivated
@@ -175,4 +280,4 @@ async def deactivate_user_handler(current_user: User) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["deactivate_user_handler"]
+__all__: list[str] = ["deactivate_user"]

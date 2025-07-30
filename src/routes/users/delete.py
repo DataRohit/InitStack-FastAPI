@@ -1,17 +1,20 @@
 # Standard Library Imports
 import datetime
 from pathlib import Path
+from typing import Annotated
 
 # Third-Party Imports
 import jwt
-from fastapi import status
+from fastapi import Depends, status
 from fastapi.responses import JSONResponse
 
 # Local Imports
+from config.jwt_auth import get_current_user
 from config.mailer import render_template, send_email
 from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
+from src.routes.users.base import router
 
 
 # Internal Function to Generate Deletion Token
@@ -146,18 +149,120 @@ async def _send_deletion_email(user: User) -> None:
     )
 
 
-# Initiate User Deletion
-async def delete_user_handler(current_user: User) -> JSONResponse:
-    """
-    Initiate User Deletion
+# User Delete Endpoint
+@router.get(
+    path="/delete",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="User Delete Endpoint",
+    description="""
+    Initiates User Delete Process.
 
-    Generates a deletion token and sends a confirmation email to the user.
+    This Endpoint Allows a User to Initiate the Delete Process by Providing:
+    - Requires Valid JWT Authentication
+    """,
+    name="User Delete",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "User Delete Email Sent Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Delete Email Sent": {
+                            "summary": "Delete Email Sent",
+                            "value": {
+                                "detail": "User Delete Email Sent Successfully",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Active": {
+                            "summary": "User Not Active",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Delete Failed": {
+                            "summary": "Delete Failed",
+                            "value": {
+                                "detail": "Failed To Delete User",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def delete_user(current_user: Annotated[User, Depends(get_current_user)]) -> JSONResponse:
+    """
+    Deletes The Currently Authenticated User's Account.
 
     Args:
-        current_user (User): The authenticated user from dependency
+        current_user (User): The Authenticated User From Dependency
 
     Returns:
-        JSONResponse: Success message with 202 status
+        JSONResponse: Success Message With 202 Status
     """
 
     # If User Is Not Active
@@ -179,4 +284,4 @@ async def delete_user_handler(current_user: User) -> JSONResponse:
 
 
 # Exports
-__all__: list[str] = ["delete_user_handler"]
+__all__: list[str] = ["delete_user"]

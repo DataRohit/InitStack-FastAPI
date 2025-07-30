@@ -16,6 +16,7 @@ from config.redis_cache import get_async_redis
 from config.settings import settings
 from src.models.users import User
 from src.models.users.update_email import UserUpdateEmailRequest
+from src.routes.users.base import router
 
 
 # Internal Function to Send Update Email Success Email
@@ -64,17 +65,137 @@ async def _send_update_email_success_email(user: User, new_email: str) -> None:
     )
 
 
-# Update Email Confirm
-async def update_email_confirm_handler(token: str, request: UserUpdateEmailRequest) -> JSONResponse:
+# User Update Email Confirm Endpoint
+@router.post(
+    path="/update_email_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="Confirm User Email Update",
+    description="""
+    Confirm User Email Update.
+
+    This Endpoint Allows a User to Confirm Their Email Update by Providing:
+    - Token (Query Parameter)
+    - New Email (Request Body)
+    """,
+    name="Update Email Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Email Updated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Updated": {
+                            "summary": "Email Updated",
+                            "value": {
+                                "message": "Email Updated Successfully.",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Token",
+                            },
+                        },
+                        "Token Expired": {
+                            "summary": "Token Expired",
+                            "value": {
+                                "detail": "Token Expired",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Already Exists": {
+                            "summary": "Email Already Exists",
+                            "value": {
+                                "detail": "New Email Already Exists",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Missing Token": {
+                            "summary": "Missing Token",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "token",
+                                        "reason": "Field Required",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Update Failed": {
+                            "summary": "Email Update Failed",
+                            "value": {
+                                "detail": "Failed To Confirm Email Update",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_email_confirm(
+    token: str,
+    request: UserUpdateEmailRequest,
+) -> JSONResponse:
     """
-    Update Email Confirm
+    Confirm User Email Update.
 
     Args:
         token (str): Update Email Token
         request (UserUpdateEmailRequest): UserUpdateEmailRequest Containing New Email
 
     Returns:
-        JSONResponse: Success Message
+        JSONResponse: Success Message With 200 Status
     """
 
     try:
@@ -187,4 +308,4 @@ async def update_email_confirm_handler(token: str, request: UserUpdateEmailReque
 
 
 # Exports
-__all__: list[str] = ["update_email_confirm_handler"]
+__all__: list[str] = ["update_email_confirm"]
