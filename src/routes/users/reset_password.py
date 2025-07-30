@@ -177,21 +177,21 @@ async def reset_password_handler(request: UserResetPasswordRequest) -> JSONRespo
             },
         )
 
-        # If User Does Not Exist
-        if not existing_user:
-            # Return Not Found Response
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"detail": "User Not Found"},
-            )
+    # If User Does Not Exist
+    if not existing_user:
+        # Return Not Found Response
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"detail": "User Not Found"},
+        )
 
-        # If User Is Not Active
-        if not existing_user["is_active"]:
-            # Return Conflict Response
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={"detail": "User Is Not Active"},
-            )
+    # If User Is Not Active
+    if not existing_user["is_active"]:
+        # Return Conflict Response
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"detail": "User Is Not Active"},
+        )
 
     # Create User Instance
     user: User = User(**existing_user)

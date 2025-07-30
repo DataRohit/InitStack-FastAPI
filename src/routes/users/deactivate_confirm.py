@@ -155,17 +155,17 @@ async def deactivate_user_confirm_handler(token: str) -> JSONResponse:
             },
         )
 
-        # If User Not Deactivated
-        if response.modified_count == 0:
-            # Return Internal Server Error Response
-            return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Deactivate User"},
-            )
+    # If User Not Deactivated
+    if response.modified_count == 0:
+        # Return Internal Server Error Response
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Failed to Deactivate User"},
+        )
 
-        # Update existing_user with deactivated status
-        existing_user["is_active"] = False
-        existing_user["updated_at"] = updated_at
+    # Update existing_user with deactivated status
+    existing_user["is_active"] = False
+    existing_user["updated_at"] = updated_at
 
     # Create User Instance
     user: User = User(**existing_user)

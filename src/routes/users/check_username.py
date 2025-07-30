@@ -34,23 +34,23 @@ async def check_username_handler(request: UserCheckUsernameRequest) -> JSONRespo
             },
         )
 
-        # If Username Already Exists
-        if existing_user:
-            # Return Conflict Response
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={
-                    "detail": "Username Already Exists",
-                },
-            )
-
-        # If Username is Available
+    # If Username Already Exists
+    if existing_user:
+        # Return Conflict Response
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=status.HTTP_409_CONFLICT,
             content={
-                "detail": "Username is Available",
+                "detail": "Username Already Exists",
             },
         )
+
+    # If Username is Available
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "detail": "Username is Available",
+        },
+    )
 
 
 # Exports

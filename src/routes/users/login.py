@@ -296,8 +296,8 @@ async def login_user_handler(request: UserLoginRequest) -> JSONResponse:
             update={"$set": {"last_login": last_login}},
         )
 
-        # Update User Login in User Instance
-        user.last_login = last_login
+    # Update User Login in User Instance
+    user.last_login = last_login
 
     # Prepare Response Data
     response_data: dict = {

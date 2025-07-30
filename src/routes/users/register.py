@@ -135,13 +135,13 @@ async def register_user_handler(request: UserRegisterRequest) -> JSONResponse:
             document=user.model_dump(by_alias=True),
         )
 
-        # If Insertion Failed
-        if not result:
-            # Return Internal Server Error
-            return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Register User"},
-            )
+    # If Insertion Failed
+    if not result:
+        # Return Internal Server Error
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Failed to Register User"},
+        )
 
     # Send Activation Email
     await _send_activation_email(user=user)

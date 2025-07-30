@@ -166,13 +166,13 @@ async def reset_password_confirm_handler(request: UserResetPasswordConfirmReques
             },
         )
 
-        # If User Not Updated
-        if response.modified_count == 0:
-            # Return Internal Server Error Response
-            return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Reset Password"},
-            )
+    # If User Not Updated
+    if response.modified_count == 0:
+        # Return Internal Server Error Response
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Failed to Reset Password"},
+        )
 
     # Send Reset Password Confirm Email
     await _send_reset_password_confirm_email(user=user)

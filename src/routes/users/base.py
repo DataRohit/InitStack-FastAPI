@@ -11,6 +11,7 @@ from src.models.users import User, UserCheckUsernameRequest, UserRegisterRequest
 from src.models.users.login import UserLoginRequest, UserLoginResponse
 from src.models.users.reset_password import UserResetPasswordRequest
 from src.models.users.reset_password_confirm import UserResetPasswordConfirmRequest
+from src.models.users.update_email import UserUpdateEmailRequest
 from src.models.users.update_username_confirm import UserUpdateUsernameConfirmRequest
 from src.routes.users.activate import activate_user_handler
 from src.routes.users.check_username import check_username_handler
@@ -23,6 +24,8 @@ from src.routes.users.me import get_current_user_handler
 from src.routes.users.register import register_user_handler
 from src.routes.users.reset_password import reset_password_handler
 from src.routes.users.reset_password_confirm import reset_password_confirm_handler
+from src.routes.users.update_email import update_email_handler
+from src.routes.users.update_email_confirm import update_email_confirm_handler
 from src.routes.users.update_username import update_username_handler
 from src.routes.users.update_username_confirm import update_username_confirm_handler
 
@@ -1595,6 +1598,295 @@ async def update_username_confirm_route(
 
     # Confirm User Update Username
     return await update_username_confirm_handler(token=token, request=request)
+
+
+# User Update Email Endpoint
+@router.post(
+    path="/update_email",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Initiate User Email Update",
+    description="""
+    Initiate User Email Update.
+
+    This Endpoint Allows an Authenticated User to Initiate an Email Update:
+    - Requires Valid JWT Authentication
+    - Sends a Confirmation Email to the User's Current Email Address
+    """,
+    name="Update Email",
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            "description": "Email Update Initiated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Update Initiated": {
+                            "summary": "Email Update Initiated",
+                            "value": {
+                                "message": "Email Update Initiated. Check Your Email For Confirmation.",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {
+                                "detail": "Invalid Authentication Credentials",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Authentication Required": {
+                            "summary": "Authentication Required",
+                            "value": {
+                                "detail": "Authentication Required",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Inactive User": {
+                            "summary": "Inactive User",
+                            "value": {
+                                "detail": "User Is Not Active",
+                            },
+                        },
+                        "Email Already Exists": {
+                            "summary": "Email Already Exists",
+                            "value": {
+                                "detail": "New Email Already Exists",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Email Format": {
+                            "summary": "Invalid Email Format",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "new_email",
+                                        "reason": "Invalid Email Format",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Update Failed": {
+                            "summary": "Email Update Failed",
+                            "value": {
+                                "detail": "Failed To Initiate Email Update",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_email_route(
+    request: UserUpdateEmailRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> JSONResponse:
+    """
+    Initiate User Email Update.
+
+    Args:
+        request (UserUpdateEmailRequest): UserUpdateEmailRequest Containing New Email
+        current_user (User): The Authenticated User From Dependency
+
+    Returns:
+        JSONResponse: Success Message With 202 Status
+    """
+
+    # Initiate Email Update
+    return await update_email_handler(request=request, current_user=current_user)
+
+
+# User Update Email Confirm Endpoint
+@router.post(
+    path="/update_email_confirm",
+    status_code=status.HTTP_200_OK,
+    summary="Confirm User Email Update",
+    description="""
+    Confirm User Email Update.
+
+    This Endpoint Allows a User to Confirm Their Email Update by Providing:
+    - Token (Query Parameter)
+    - New Email (Request Body)
+    """,
+    name="Update Email Confirm",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Email Updated Successfully",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Updated": {
+                            "summary": "Email Updated",
+                            "value": {
+                                "message": "Email Updated Successfully.",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Invalid Token": {
+                            "summary": "Invalid Token",
+                            "value": {
+                                "detail": "Invalid Token",
+                            },
+                        },
+                        "Token Expired": {
+                            "summary": "Token Expired",
+                            "value": {
+                                "detail": "Token Expired",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "User Not Found": {
+                            "summary": "User Not Found",
+                            "value": {
+                                "detail": "User Not Found",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Already Exists": {
+                            "summary": "Email Already Exists",
+                            "value": {
+                                "detail": "New Email Already Exists",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Unprocessable Entity",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Missing Token": {
+                            "summary": "Missing Token",
+                            "value": {
+                                "detail": "Invalid Request",
+                                "errors": [
+                                    {
+                                        "field": "token",
+                                        "reason": "Field Required",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Email Update Failed": {
+                            "summary": "Email Update Failed",
+                            "value": {
+                                "detail": "Failed To Confirm Email Update",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
+async def update_email_confirm_route(
+    token: str,
+    request: UserUpdateEmailRequest,
+) -> JSONResponse:
+    """
+    Confirm User Email Update.
+
+    Args:
+        token (str): Update Email Token
+        request (UserUpdateEmailRequest): UserUpdateEmailRequest Containing New Email
+
+    Returns:
+        JSONResponse: Success Message With 200 Status
+    """
+
+    # Confirm Email Update
+    return await update_email_confirm_handler(token=token, request=request)
 
 
 # Exports

@@ -1,6 +1,6 @@
 # Standard Library Imports
 import re
-from typing import ClassVar
+from typing import Any, ClassVar
 
 # Third-Party Imports
 from pydantic import BaseModel, Field, field_validator
@@ -11,21 +11,55 @@ class UserUpdateUsernameConfirmRequest(BaseModel):
     """
     User Update Username Confirm Request Model
 
-    This Model Defines the Structure of User Update Username Confirm Data.
+    This Model Defines the Structure of the Request Body for Confirming a User Username Update.
 
     Attributes:
-        username (str): Unique Username with Specific Formatting
+        username (str): The New Username to Update To.
+        confirm_username (str): Confirmation of the New Username.
     """
 
     # Model Configuration
     model_config: ClassVar[dict] = {"arbitrary_types_allowed": True, "extra": "forbid"}
 
-    # Authentication Fields
+    # Username Fields
     username: str = Field(
         ...,
-        example="john_doe",
-        description="Unique Username (Lowercase, Alphanumeric with @-_)",
+        example="new_username",
+        description="The New Username to Update To",
     )
+    confirm_username: str = Field(
+        ...,
+        example="new_username",
+        description="Confirmation of the New Username",
+    )
+
+    # Username Match Validation
+    @field_validator("confirm_username")
+    @classmethod
+    def validate_username_match(cls, value: str, values: Any) -> str:
+        """
+        Validate Username Match
+
+        Ensures Username and Confirm Username Match
+
+        Args:
+            value (str): Confirm Username to Validate
+            values (Any): Other Field Values
+
+        Returns:
+            str: Validated Confirm Username
+
+        Raises:
+            ValueError: If Usernames Don't Match
+        """
+
+        # If Usernames Don't Match
+        if "username" in values.data and value != values.data["username"]:
+            # Raise ValueError
+            raise ValueError({"reason": "Usernames Do Not Match"})
+
+        # Return Validated Confirm Username
+        return value
 
     # Username Validation
     @field_validator("username")

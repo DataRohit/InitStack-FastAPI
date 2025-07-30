@@ -143,16 +143,16 @@ async def delete_user_confirm_handler(token: str) -> JSONResponse:
             },
         )
 
-        # If User Not Deleted
-        if response.deleted_count == 0:
-            # Return Internal Server Error Response
-            return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Delete User"},
-            )
+    # If User Not Deleted
+    if response.deleted_count == 0:
+        # Return Internal Server Error Response
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Failed to Delete User"},
+        )
 
-        # Delete User Profile
-        delete_profile_task.delay(user_id=payload["sub"])
+    # Delete User Profile
+    delete_profile_task.delay(user_id=payload["sub"])
 
     # Create User Instance
     user: User = User(**existing_user)

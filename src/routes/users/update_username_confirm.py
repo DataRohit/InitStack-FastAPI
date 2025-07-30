@@ -161,17 +161,17 @@ async def update_username_confirm_handler(token: str, request: UserUpdateUsernam
             },
         )
 
-        # If User Not Updated
-        if response.modified_count == 0:
-            # Return Internal Server Error Response
-            return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Failed to Update Username"},
-            )
+    # If User Not Updated
+    if response.modified_count == 0:
+        # Return Internal Server Error Response
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Failed to Update Username"},
+        )
 
-        # Update existing_user with new username
-        existing_user["username"] = request.username
-        existing_user["updated_at"] = updated_at
+    # Update existing_user with new username
+    existing_user["username"] = request.username
+    existing_user["updated_at"] = updated_at
 
     # Create User Instance
     user: User = User(**existing_user)

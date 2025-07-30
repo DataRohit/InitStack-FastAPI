@@ -104,6 +104,10 @@ class Settings(BaseSettings):
         UPDATE_USERNAME_JWT_ALGORITHM (str): JWT Algorithm
         UPDATE_USERNAME_JWT_EXPIRE (int): JWT Expiration Time in Seconds
 
+        UPDATE_EMAIL_JWT_SECRET (str): JWT Secret Key
+        UPDATE_EMAIL_JWT_ALGORITHM (str): JWT Algorithm
+        UPDATE_EMAIL_JWT_EXPIRE (int): JWT Expiration Time in Seconds
+
         SENTRY_DSN (str): Sentry DSN
         SENTRY_SAMPLE_RATE (float): Sentry Sample Rate
 
@@ -237,6 +241,11 @@ class Settings(BaseSettings):
     UPDATE_USERNAME_JWT_SECRET: str = "6e32cc494aceb87cb2baf6670e24e1db43cf660e8223aa39db2c58869d112ba7"  # noqa: S105
     UPDATE_USERNAME_JWT_ALGORITHM: str = "HS256"
     UPDATE_USERNAME_JWT_EXPIRE: int = 86400
+
+    # Update Email JWT Configuration
+    UPDATE_EMAIL_JWT_SECRET: str = "278dea796fc1771e8c28dd1f8fe58dc0f462beb636262eb75ed0779e474509e3"  # noqa: S105
+    UPDATE_EMAIL_JWT_ALGORITHM: str = "HS256"
+    UPDATE_EMAIL_JWT_EXPIRE: int = 86400
 
     # Sentry Configuration
     SENTRY_DSN: str = "https://4787ddf812f5e8325f109819dc6ac68a@o4507312074915840.ingest.us.sentry.io/4509722861502464"

@@ -1,4 +1,4 @@
-# Third-Party Imports
+# Standard Library Imports
 import datetime
 from pathlib import Path
 
@@ -14,22 +14,24 @@ from config.mailer import render_template, send_email
 from config.mongodb import get_async_mongodb
 from config.redis_cache import get_async_redis
 from config.settings import settings
-from src.models.users import User, UserResponse
+from src.models.users import User
+from src.models.users.update_email import UserUpdateEmailRequest
 
 
-# Internal Function to Send Activated Email
-async def _send_activated_email(user: User) -> None:
+# Internal Function to Send Update Email Success Email
+async def _send_update_email_success_email(user: User, new_email: str) -> None:
     """
-    Send Activated Email
+    Send Update Email Success Email
 
     Args:
         user (User): User Instance
+        new_email (str): The New Email Address
     """
 
     # Get Async Redis Adapter
     async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
-        # Remove Activation Token from Redis
-        await redis.delete(f"activation_token:{user.id}")
+        # Remove Update Email Token from Redis
+        await redis.delete(f"update_email_token:{user.id}")
 
     # Create Login Link
     login_link: str = f"{settings.PROJECT_DOMAIN}/api/login"
@@ -40,7 +42,7 @@ async def _send_activated_email(user: User) -> None:
     # Prepare Email Context
     email_context: dict = {
         "username": user.username,
-        "email": user.email,
+        "email": new_email,
         "first_name": user.first_name,
         "last_name": user.last_name,
         "login_link": login_link,
@@ -49,37 +51,38 @@ async def _send_activated_email(user: User) -> None:
     }
 
     # Set Email Template Path
-    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "activated.html")
+    template_path: str = str(Path(__file__).parent.parent.parent / "templates" / "users" / "update_email_success.html")
 
     # Render Email Template
     html_content: str = await render_template(template_path, email_context)
 
     # Send Email
     await send_email(
-        to_email=user.email,
-        subject="Account Activated Successfully",
+        to_email=new_email,
+        subject="Email Updated Successfully",
         html_content=html_content,
     )
 
 
-# Activate User
-async def activate_user_handler(token: str) -> JSONResponse:
+# Update Email Confirm
+async def update_email_confirm_handler(token: str, request: UserUpdateEmailRequest) -> JSONResponse:
     """
-    Activate User
+    Update Email Confirm
 
     Args:
-        token (str): Activation Token
+        token (str): Update Email Token
+        request (UserUpdateEmailRequest): UserUpdateEmailRequest Containing New Email
 
     Returns:
-        JSONResponse: UserResponse with User Data
+        JSONResponse: Success Message
     """
 
     try:
         # Decode Token
         payload: dict = jwt.decode(
             jwt=token,
-            key=settings.ACTIVATION_JWT_SECRET,
-            algorithms=[settings.ACTIVATION_JWT_ALGORITHM],
+            key=settings.UPDATE_EMAIL_JWT_SECRET,
+            algorithms=[settings.UPDATE_EMAIL_JWT_ALGORITHM],
             verify=True,
             audience=settings.PROJECT_NAME,
             issuer=settings.PROJECT_NAME,
@@ -96,20 +99,20 @@ async def activate_user_handler(token: str) -> JSONResponse:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Activation Token"},
+            content={"detail": "Invalid Update Email Token"},
         )
 
     # Get Async Redis Adapter
     async with get_async_redis(db=settings.REDIS_TOKEN_CACHE_DB) as redis:
         # Get Token from Redis
-        stored_token: str | None = await redis.get(f"activation_token:{payload['sub']}")
+        stored_token: str | None = await redis.get(f"update_email_token:{payload['sub']}")
 
     # If Token Not Found
     if not stored_token:
         # Return Unauthorized Response
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid Activation Token"},
+            content={"detail": "Invalid Update Email Token"},
         )
 
     # Get Database and Collection
@@ -132,12 +135,12 @@ async def activate_user_handler(token: str) -> JSONResponse:
                 content={"detail": "User Not Found"},
             )
 
-        # If User Already Activated
-        if existing_user["is_active"]:
+        # If New Email Already Exists
+        if await mongo_collection.find_one({"email": request.email}):
             # Return Conflict Response
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                content={"detail": "User Already Activated"},
+                content={"detail": "Email Already Exists"},
             )
 
         # Calculated Updated At
@@ -150,39 +153,38 @@ async def activate_user_handler(token: str) -> JSONResponse:
             },
             update={
                 "$set": {
-                    "is_active": True,
+                    "email": request.email,
                     "updated_at": updated_at,
                 },
             },
         )
 
-    # If User Not Activated
+    # If User Not Updated
     if response.modified_count == 0:
         # Return Internal Server Error Response
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Failed to Activate User"},
+            content={"detail": "Failed to Update Email"},
         )
 
-    # Update existing_user with activated status
-    existing_user["is_active"] = True
+    # Update existing_user with new email
+    existing_user["email"] = request.email
     existing_user["updated_at"] = updated_at
 
     # Create User Instance
     user: User = User(**existing_user)
 
-    # Send Activated Email
-    await _send_activated_email(user=user)
+    # Send Update Email Success Email
+    await _send_update_email_success_email(user=user, new_email=request.email)
 
-    # Prepare Response Data
-    response_data: dict = {key: value for key, value in user.model_dump().items() if key != "password"}
-
-    # Return Response with UserResponse Model
+    # Return Response with Success Message
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content=UserResponse(**response_data).model_dump(mode="json"),
+        content={
+            "detail": "Email Updated Successfully",
+        },
     )
 
 
 # Exports
-__all__: list[str] = ["activate_user_handler"]
+__all__: list[str] = ["update_email_confirm_handler"]
