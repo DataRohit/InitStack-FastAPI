@@ -115,8 +115,8 @@ class Settings(BaseSettings):
 
         MINIO_HOST (str): Minio Host
         MINIO_PORT (int): Minio Port
-        MINIO_USER (str): Minio User
-        MINIO_PASS (str): Minio Password
+        MINIO_ACCESS_KEY (str): Minio Access Key
+        MINIO_SECRET_KEY (str): Minio Secret Key
         MINIO_BASE_URL (str): Minio Base URL
         MINIO_BUCKET_NAME (str): Minio Bucket Name
         MINIO_REGION (str): Minio Region
@@ -257,8 +257,8 @@ class Settings(BaseSettings):
     # Minio Configuration
     MINIO_HOST: str = "minio-service"
     MINIO_PORT: int = 9000
-    MINIO_USER: str = "jJykCmipdg0gaIx"
-    MINIO_PASS: str = "gaOWa4JBeGwkWeG"  # noqa: S105
+    MINIO_ACCESS_KEY: str = "MD9xH0gT3bD7usp1qZpr"
+    MINIO_SECRET_KEY: str = "DQ0uEKEfpo6zdwC0zaiXjpznkaCM1rk6xZOEL2bW"  # noqa: S105
     MINIO_BASE_URL: str = "http://localhost:8080/minio"
     MINIO_BUCKET_NAME: str = "initstack"
     MINIO_REGION: str = "us-east-1"

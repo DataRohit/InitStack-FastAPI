@@ -65,8 +65,8 @@ class S3Manager:
             self.sync_client: BaseClient = boto3.client(
                 "s3",
                 endpoint_url=f"http://{settings.MINIO_HOST}:{settings.MINIO_PORT}",
-                aws_access_key_id=settings.MINIO_USER,
-                aws_secret_access_key=settings.MINIO_PASS,
+                aws_access_key_id=settings.MINIO_ACCESS_KEY,
+                aws_secret_access_key=settings.MINIO_SECRET_KEY,
                 config=s3_config,
             )
 
