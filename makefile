@@ -2,7 +2,7 @@
 ifeq ($(OS),Windows_NT)
     # Git Bash Support Only
     ifeq ($(shell echo $$BASH_VERSION 2>/dev/null),)
-        $(error This Makefile only supports Git Bash on Windows)
+        $(error This Makefile Only Supports Git Bash On Windows)
     endif
     GREEN=\033[0;32m
     BLUE=\033[0;34m
@@ -49,7 +49,7 @@ help:
 	@echo "  docker-clean    - Clean Unused Docker Resources"
 	@echo ""
 	@printf "${GREEN}Cleaning:${NC}\n"
-	@echo "  clean-all       - Remove Python-related garbage files"
+	@echo "  clean-all       - Remove Python-Related Garbage Files"
 	@echo ""
 
 # Execute SonarQube Code Analysis
@@ -59,7 +59,7 @@ sonar-scan:
 	sonar-scanner \
 		-D sonar.host.url=http://localhost:9000 \
 		-D sonar.projectKey=InitStack \
-		-D sonar.login=sqp_3d377807e947a21c8192810b635a9215a0499534
+		-D sonar.login=sqp_ab997217a5a0bd169dbaf5c8c1b2cedbfbb2c935
 	@printf "${GREEN}SonarQube Scan Completed!${NC}\n"
 	@echo ""
 
@@ -129,9 +129,9 @@ docker-clean:
 # Clean All Python Related Files
 clean-all:
 	@echo ""
-	@printf "${YELLOW}Cleaning all Python-related files...${NC}\n"
-	rm -rf .pytest_cache/ .coverage .scannerwork/ __pycache__/ build/ dist/ *.egg-info/ *.pyc *.pyo
-	@printf "${GREEN}Python files cleaned successfully!${NC}\n"
+	@printf "${YELLOW}Cleaning All Python-Related Files...${NC}\n"
+	rm -rf .scannerwork/ __pycache__/ build/ dist/ *.egg-info/ *.pyc *.pyo
+	@printf "${GREEN}Python Files Cleaned Successfully!${NC}\n"
 	@echo ""
 
 .PHONY: help sonar-scan clean-all \
