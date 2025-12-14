@@ -155,6 +155,30 @@ services:
                 soft: 65536
                 hard: 65536
 
+    initstack-elasticsearch-exporter-service:
+        image: prometheuscommunity/elasticsearch-exporter:v1.10.0
+        container_name: initstack-elasticsearch-exporter-service
+        entrypoint: ["/bin/sh", "/start-elasticsearch-exporter.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/elasticsearch-exporter/.env
+        volumes:
+            - ./compose/elasticsearch-exporter/start-elasticsearch-exporter.sh:/start-elasticsearch-exporter.sh:ro
+            - ./compose/elasticsearch-exporter/healthcheck.sh:/healthcheck.sh:ro
+        ports:
+            - "9114:9114"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
     initstack-kibana-service:
         image: kibana:8.19.8
         container_name: initstack-kibana-service
