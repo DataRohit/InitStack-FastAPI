@@ -71,6 +71,30 @@ services:
             retries: 3
             start_period: 30s
 
+    initstack-redis-exporter-service:
+        image: oliver006/redis_exporter:v1.80.1-alpine
+        container_name: initstack-redis-exporter-service
+        entrypoint: ["/usr/local/bin/start-exporter.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/redis-exporter/.env
+        volumes:
+            - ./compose/redis-exporter/start-exporter.sh:/usr/local/bin/start-exporter.sh:ro
+            - ./compose/redis-exporter/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "9121:9121"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-redis-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
     initstack-sonarqube-service:
         image: sonarqube:25.12.0.117093-community
         container_name: initstack-sonarqube-service
