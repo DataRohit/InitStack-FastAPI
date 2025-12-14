@@ -1,0 +1,52 @@
+{
+    "users": [
+        {
+            "name": "Qw8rT5nM3xZ9pL2v",
+            "password": "Hj6kN4mB8vC1sF7q",
+            "tags": "administrator"
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "initstack_vhost"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "Qw8rT5nM3xZ9pL2v",
+            "vhost": "initstack_vhost",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "exchanges": [
+        {
+            "name": "initstack.direct",
+            "vhost": "initstack_vhost",
+            "type": "direct",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        },
+        {
+            "name": "initstack.topic",
+            "vhost": "initstack_vhost",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        }
+    ],
+    "queues": [
+        {
+            "name": "initstack.default",
+            "vhost": "initstack_vhost",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        }
+    ]
+}

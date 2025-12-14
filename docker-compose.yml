@@ -95,6 +95,34 @@ services:
             retries: 3
             start_period: 30s
 
+    initstack-rabbitmq-service:
+        image: rabbitmq:4.2.1-management
+        container_name: initstack-rabbitmq-service
+        hostname: initstack-rabbitmq
+        entrypoint: ["/usr/local/bin/start-rabbitmq.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/rabbitmq/.env
+        volumes:
+            - initstack-rabbitmq-data:/var/lib/rabbitmq
+            - ./compose/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+            - ./compose/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+            - ./compose/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+            - ./compose/rabbitmq/start-rabbitmq.sh:/usr/local/bin/start-rabbitmq.sh:ro
+            - ./compose/rabbitmq/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+            - "15692:15692"
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
     initstack-sonarqube-service:
         image: sonarqube:25.12.0.117093-community
         container_name: initstack-sonarqube-service
@@ -146,6 +174,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-redis-data"
+            - "environment=development"
+
+    initstack-rabbitmq-data:
+        name: initstack-rabbitmq-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-rabbitmq-data"
             - "environment=development"
 
     initstack-sonarqube-data:
