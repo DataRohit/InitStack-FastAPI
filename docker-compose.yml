@@ -33,7 +33,7 @@ services:
             - ./compose/postgres-exporter/postgres_exporter.yml:/etc/postgres_exporter/postgres_exporter.yml:ro
             - ./compose/postgres-exporter/queries.yml:/etc/postgres_exporter/queries.yml:ro
             - ./compose/postgres-exporter/start-exporter.sh:/usr/local/bin/start-exporter.sh:ro
-            - ./compose/postgres-exporter/healthcheck.sh:/usr/local/bin/healthcheck.
+            - ./compose/postgres-exporter/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
         ports:
             - "9187:9187"
         networks:
@@ -48,12 +48,75 @@ services:
             retries: 3
             start_period: 30s
 
+    initstack-sonarqube-service:
+        image: sonarqube:25.12.0.117093-community
+        container_name: initstack-sonarqube-service
+        user: "1000:1000"
+        entrypoint: ["/usr/local/bin/start-sonarqube.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/sonarqube/.env
+        volumes:
+            - initstack-sonarqube-data:/opt/sonarqube/data
+            - initstack-sonarqube-logs:/opt/sonarqube/logs
+            - initstack-sonarqube-temp:/opt/sonarqube/temp
+            - initstack-sonarqube-extensions:/opt/sonarqube/extensions
+            - ./compose/sonarqube/sonar.properties:/opt/sonarqube/conf/sonar.properties:ro
+            - ./compose/sonarqube/start-sonarqube.sh:/usr/local/bin/start-sonarqube.sh:ro
+            - ./compose/sonarqube/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "9000:9000"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-postgres-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 60s
+            timeout: 30s
+            retries: 5
+            start_period: 120s
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+            nofile:
+                soft: 131072
+                hard: 131072
+            nproc: 8192
+
 volumes:
     initstack-postgres-data:
         name: initstack-postgres-data
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-postgres-data"
+            - "environment=development"
+
+    initstack-sonarqube-data:
+        name: initstack-sonarqube-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-sonarqube-data"
+            - "environment=development"
+    initstack-sonarqube-logs:
+        name: initstack-sonarqube-logs
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-sonarqube-logs"
+            - "environment=development"
+    initstack-sonarqube-temp:
+        name: initstack-sonarqube-temp
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-sonarqube-temp"
+            - "environment=development"
+    initstack-sonarqube-extensions:
+        name: initstack-sonarqube-extensions
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-sonarqube-extensions"
             - "environment=development"
 
 networks:
