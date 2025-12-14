@@ -123,6 +123,38 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-elasticsearch-service:
+        image: elasticsearch:8.19.8
+        container_name: initstack-elasticsearch-service
+        entrypoint: ["/usr/local/bin/start-elasticsearch.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/elasticsearch/.env
+        volumes:
+            - initstack-elasticsearch-data:/usr/share/elasticsearch/data
+            - ./compose/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+            - ./compose/elasticsearch/jvm.options:/usr/share/elasticsearch/config/jvm.options:ro
+            - ./compose/elasticsearch/start-elasticsearch.sh:/usr/local/bin/start-elasticsearch.sh:ro
+            - ./compose/elasticsearch/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 120s
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+            nofile:
+                soft: 65536
+                hard: 65536
+
     initstack-sonarqube-service:
         image: sonarqube:25.12.0.117093-community
         container_name: initstack-sonarqube-service
@@ -181,6 +213,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-rabbitmq-data"
+            - "environment=development"
+
+    initstack-elasticsearch-data:
+        name: initstack-elasticsearch-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-elasticsearch-data"
             - "environment=development"
 
     initstack-sonarqube-data:
