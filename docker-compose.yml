@@ -1,0 +1,41 @@
+services:
+    initstack-postgres-service:
+        image: postgres:18.1
+        container_name: initstack-postgres-service
+        restart: unless-stopped
+        shm_size: 256mb
+        env_file:
+            - .envs/postgres/.env
+        volumes:
+            - initstack-postgres-data:/var/lib/postgresql
+            - ./compose/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+            - ./compose/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+            - ./compose/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+            - ./compose/postgres/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5432:5432"
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+volumes:
+    initstack-postgres-data:
+        name: initstack-postgres-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-postgres-data"
+            - "environment=development"
+
+networks:
+    initstack-network:
+        name: initstack-network
+        driver: bridge
+        labels:
+            - "com.docker.compose.network=initstack-network"
+            - "environment=development"
+            - "project=local-dev"
