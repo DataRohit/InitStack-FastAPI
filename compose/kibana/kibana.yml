@@ -1,0 +1,55 @@
+server.host: 0.0.0.0
+server.port: 5601
+server.name: initstack-kibana
+server.publicBaseUrl: http://localhost:5601
+
+elasticsearch.hosts: ["http://initstack-elasticsearch-service:9200"]
+elasticsearch.username: kibana_system
+elasticsearch.password: Mx7nQ4wR8vK2sL9p
+
+xpack.security.encryptionKey: Zx4vB9nK2mQ8wE5rTy6uI3oP1aS7dF0g
+xpack.reporting.encryptionKey: Hj6kN4mB8vC1sF7qLp9rE2wT5yU8iO3a
+xpack.encryptedSavedObjects.encryptionKey: Qw8rT5nM3xZ9pL2vCx6bV1nA4sD7fG0j
+
+logging:
+    appenders:
+        default:
+            type: console
+            layout:
+                type: json
+    root:
+        appenders: [default]
+        level: info
+
+pid.file: /usr/share/kibana/kibana.pid
+
+monitoring.ui.container.elasticsearch.enabled: true
+monitoring.ui.container.logstash.enabled: false
+
+telemetry.enabled: false
+telemetry.optIn: false
+
+newsfeed.enabled: false
+
+xpack.reporting.roles.enabled: false
+
+server.maxPayload: 1048576
+
+elasticsearch.requestTimeout: 30000
+elasticsearch.shardTimeout: 30000
+
+map.includeElasticMapsService: false
+
+xpack.canvas.enabled: true
+xpack.infra.enabled: true
+xpack.apm.enabled: false
+xpack.uptime.enabled: false
+
+
+server.compression.enabled: true
+
+
+
+server.cors.enabled: true
+server.cors.allowCredentials: true
+server.cors.allowOrigin: ["http://localhost:3000", "http://localhost:8080"]
