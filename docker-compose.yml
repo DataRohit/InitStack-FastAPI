@@ -48,6 +48,29 @@ services:
             retries: 3
             start_period: 30s
 
+    initstack-redis-service:
+        image: redis:8.4.0
+        container_name: initstack-redis-service
+        entrypoint: ["/usr/local/bin/start-redis.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/redis/.env
+        volumes:
+            - initstack-redis-data:/data
+            - ./compose/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+            - ./compose/redis/start-redis.sh:/usr/local/bin/start-redis.sh:ro
+            - ./compose/redis/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "6379:6379"
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
     initstack-sonarqube-service:
         image: sonarqube:25.12.0.117093-community
         container_name: initstack-sonarqube-service
@@ -92,6 +115,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-postgres-data"
+            - "environment=development"
+
+    initstack-redis-data:
+        name: initstack-redis-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-redis-data"
             - "environment=development"
 
     initstack-sonarqube-data:
