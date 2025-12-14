@@ -3,7 +3,6 @@ services:
         image: postgres:18.1
         container_name: initstack-postgres-service
         restart: unless-stopped
-        shm_size: 256mb
         env_file:
             - .envs/postgres/.env
         volumes:
@@ -22,6 +21,32 @@ services:
             timeout: 10s
             retries: 3
             start_period: 60s
+
+    initstack-postgres-exporter-service:
+        image: prometheuscommunity/postgres-exporter:v0.18.1
+        container_name: initstack-postgres-exporter-service
+        entrypoint: ["/usr/local/bin/start-exporter.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/postgres-exporter/.env
+        volumes:
+            - ./compose/postgres-exporter/postgres_exporter.yml:/etc/postgres_exporter/postgres_exporter.yml:ro
+            - ./compose/postgres-exporter/queries.yml:/etc/postgres_exporter/queries.yml:ro
+            - ./compose/postgres-exporter/start-exporter.sh:/usr/local/bin/start-exporter.sh:ro
+            - ./compose/postgres-exporter/healthcheck.sh:/usr/local/bin/healthcheck.
+        ports:
+            - "9187:9187"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-postgres-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
 
 volumes:
     initstack-postgres-data:

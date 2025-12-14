@@ -1,0 +1,35 @@
+pg_database_size:
+    query: "SELECT pg_database.datname, pg_database_size(pg_database.datname) as size FROM pg_database"
+    master: true
+    metrics:
+        - datname:
+                usage: "LABEL"
+                description: "Name of the database"
+        - size:
+                usage: "GAUGE"
+                description: "Disk space used by the database"
+
+pg_table_size:
+    query: "SELECT schemaname, tablename, pg_total_relation_size(schemaname||'.'||tablename) as size FROM pg_tables"
+    master: true
+    metrics:
+        - schemaname:
+                usage: "LABEL"
+                description: "Name of the schema"
+        - tablename:
+                usage: "LABEL"
+                description: "Name of the table"
+        - size:
+                usage: "GAUGE"
+                description: "Total size of the table including indexes"
+
+pg_connection_count:
+    query: "SELECT datname, count(*) as connections FROM pg_stat_activity GROUP BY datname"
+    master: true
+    metrics:
+        - datname:
+                usage: "LABEL"
+                description: "Name of the database"
+        - connections:
+                usage: "GAUGE"
+                description: "Number of active connections to the database"
