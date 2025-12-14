@@ -1,0 +1,6 @@
+[run]
+omit =
+    **/templates/**/*.html
+    **/tests/**
+    "*/migrations/*.py"
+    "staticfiles/*"

@@ -1,0 +1,65 @@
+* text=auto
+
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.bz2 binary
+*.xz binary
+*.7z binary
+*.rar binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+
+*.css text
+*.html text
+*.js text
+*.json text
+*.md text
+*.py text
+*.scss text
+*.sh text eol=lf
+*.toml text
+*.txt text
+*.xml text
+*.yaml text
+*.yml text
+*.ini text
+*.rst text
+*.conf text
+*.env text
+*.editorconfig text eol=lf
+*.gitattributes text eol=lf
+*.gitignore text eol=lf
+requirements*.txt text eol=lf
+Pipfile text eol=lf
+Pipfile.lock text eol=lf
+poetry.lock text eol=lf
+.pre-commit-config.yaml text eol=lf
+
+.gitattributes text
+.gitignore text
+.gitconfig text eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+.github/ export-ignore
+.idea/ export-ignore
+.vscode/ export-ignore
+tests/ export-ignore
+docs/ export-ignore
+.travis.yml export-ignore
+.gitlab-ci.yml export-ignore
+.readthedocs.yml export-ignore
+.pre-commit-config.yaml export-ignore
