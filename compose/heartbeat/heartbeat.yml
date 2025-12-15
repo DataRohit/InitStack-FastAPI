@@ -67,6 +67,38 @@ heartbeat.monitors:
   timeout: 10s
   check.response.status: [200]
 
+- type: http
+  id: consul-health
+  name: Consul Health Check
+  urls: ["http://initstack-consul-service:8500/v1/status/leader"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: consul-ui-health
+  name: Consul UI Health Check
+  urls: ["http://initstack-consul-service:8500/ui/"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: consul-exporter-health
+  name: Consul Exporter Health Check
+  urls: ["http://initstack-consul-exporter-service:9107/metrics"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: apm-health
+  name: APM Server Health Check
+  urls: ["http://initstack-apm-service:8200/"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
 - type: tcp
   id: postgres-tcp
   name: PostgreSQL TCP Check
@@ -102,10 +134,24 @@ heartbeat.monitors:
   schedule: '@every 30s'
   timeout: 10s
 
+- type: tcp
+  id: consul-tcp
+  name: Consul TCP Check
+  hosts: ["initstack-consul-service:8500"]
+  schedule: '@every 30s'
+  timeout: 10s
+
+- type: tcp
+  id: apm-tcp
+  name: APM Server TCP Check
+  hosts: ["initstack-apm-service:8200"]
+  schedule: '@every 30s'
+  timeout: 10s
+
 - type: icmp
   id: docker-network-ping
   name: Docker Network Connectivity
-  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-postgres-service"]
+  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-postgres-service", "initstack-consul-service", "initstack-apm-service"]
   schedule: '@every 60s'
   timeout: 10s
 

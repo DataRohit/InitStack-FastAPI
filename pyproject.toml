@@ -19,8 +19,8 @@ indent_size = 4
 target-version = "py314"
 line-length = 120
 extend-exclude = [
-    **/templates/**/*.html,
-    **/tests/**,
+    "**/templates/**/*.html",
+    "**/tests/**",
     "*/migrations/*.py",
     "staticfiles/*",
 ]
