@@ -3,15 +3,15 @@
 set -e
 
 echo "Waiting for Elasticsearch to be ready..."
-until curl -s -f -u elastic:$ELASTICSEARCH_PASSWORD $ELASTICSEARCH_HOSTS/_cluster/health?wait_for_status=yellow&timeout=30s > /dev/null; do
+until curl -s -f -u elastic:$ELASTIC_PASSWORD $ELASTICSEARCH_HOSTS/_cluster/health?wait_for_status=yellow&timeout=30s > /dev/null; do
     echo "Elasticsearch is unavailable - sleeping"
     sleep 5
 done
 
 echo "Setting up kibana_system user password..."
-curl -s -X POST -u elastic:$ELASTICSEARCH_PASSWORD "$ELASTICSEARCH_HOSTS/_security/user/kibana_system/_password" \
+curl -s -X POST -u elastic:$ELASTIC_PASSWORD "$ELASTICSEARCH_HOSTS/_security/user/kibana_system/_password" \
     -H "Content-Type: application/json" \
-    -d "{\"password\":\"$ELASTICSEARCH_PASSWORD\"}" || echo "Password already set or user exists"
+    -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}" || echo "Password already set or user exists"
 
 echo "Elasticsearch is ready - starting Kibana"
 
@@ -25,7 +25,7 @@ fi
 
 if ! /usr/share/kibana/bin/kibana-keystore list | grep -q "elasticsearch.password"; then
     echo "Adding Elasticsearch password to keystore..."
-    echo "$ELASTICSEARCH_PASSWORD" | /usr/share/kibana/bin/kibana-keystore add elasticsearch.password --stdin
+    echo "$KIBANA_SYSTEM_PASSWORD" | /usr/share/kibana/bin/kibana-keystore add elasticsearch.password --stdin
 fi
 
 if ! /usr/share/kibana/bin/kibana-keystore list | grep -q "xpack.security.encryptionKey"; then
