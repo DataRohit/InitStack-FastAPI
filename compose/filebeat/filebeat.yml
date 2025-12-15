@@ -1,0 +1,161 @@
+filebeat.inputs:
+- type: container
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  processors:
+    - add_docker_metadata:
+        host: "unix:///var/run/docker.sock"
+    - decode_json_fields:
+        fields: ["message"]
+        target: ""
+        overwrite_keys: true
+        add_error_key: true
+    - add_host_metadata:
+        when.not.contains.tags: forwarded
+    - add_cloud_metadata: ~
+    - add_kubernetes_metadata: ~
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      host: "unix:///var/run/docker.sock"
+      templates:
+        - condition:
+            contains:
+              docker.container.name: "initstack-postgres-service"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/*/*.log
+              processors:
+                - add_docker_metadata:
+                    host: "unix:///var/run/docker.sock"
+                - decode_json_fields:
+                    fields: ["message"]
+                    target: ""
+                    overwrite_keys: true
+        - condition:
+            contains:
+              docker.container.name: "initstack-redis-service"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/*/*.log
+              processors:
+                - add_docker_metadata:
+                    host: "unix:///var/run/docker.sock"
+                - decode_json_fields:
+                    fields: ["message"]
+                    target: ""
+                    overwrite_keys: true
+        - condition:
+            contains:
+              docker.container.name: "initstack-rabbitmq-service"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/*/*.log
+              processors:
+                - add_docker_metadata:
+                    host: "unix:///var/run/docker.sock"
+                - decode_json_fields:
+                    fields: ["message"]
+                    target: ""
+                    overwrite_keys: true
+        - condition:
+            contains:
+              docker.container.name: "initstack-elasticsearch-service"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/*/*.log
+              processors:
+                - add_docker_metadata:
+                    host: "unix:///var/run/docker.sock"
+                - decode_json_fields:
+                    fields: ["message"]
+                    target: ""
+                    overwrite_keys: true
+        - condition:
+            contains:
+              docker.container.name: "initstack-kibana-service"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/*/*.log
+              processors:
+                - add_docker_metadata:
+                    host: "unix:///var/run/docker.sock"
+                - decode_json_fields:
+                    fields: ["message"]
+                    target: ""
+                    overwrite_keys: true
+        - condition:
+            contains:
+              docker.container.name: "initstack-sonarqube-service"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/*/*.log
+              processors:
+                - add_docker_metadata:
+                    host: "unix:///var/run/docker.sock"
+                - decode_json_fields:
+                    fields: ["message"]
+                    target: ""
+                    overwrite_keys: true
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS}"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+  protocol: "http"
+  compression_level: 1
+  bulk_max_size: 1600
+  worker: 2
+
+setup.kibana:
+  host: "${KIBANA_HOST}"
+  username: "${KIBANA_USERNAME}"
+  password: "${KIBANA_PASSWORD}"
+
+setup.template.enabled: true
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+  index.refresh_interval: 5s
+
+setup.ilm.enabled: true
+setup.ilm.rollover_alias: "filebeat"
+setup.ilm.pattern: "{now/d}-000001"
+setup.ilm.policy: "filebeat-policy"
+
+setup.dashboards.enabled: true
+setup.dashboards.retry.enabled: true
+setup.dashboards.retry.interval: 5s
+setup.dashboards.retry.maximum: 5
+
+monitoring.enabled: true
+monitoring.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS}"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+
+logging.level: "${FILEBEAT_LOG_LEVEL}"
+logging.to_files: false
+logging.to_stderr: true
+logging.json: true
+
+http.enabled: true
+http.host: "0.0.0.0"
+http.port: 5066
+
+path.data: /usr/share/filebeat/data
+path.logs: /usr/share/filebeat/logs

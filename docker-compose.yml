@@ -243,6 +243,37 @@ services:
                 hard: 131072
             nproc: 8192
 
+    initstack-filebeat-service:
+        image: elastic/filebeat:8.19.8
+        container_name: initstack-filebeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-filebeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/filebeat/.env
+        volumes:
+            - initstack-filebeat-data:/usr/share/filebeat/data
+            - ./compose/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+            - ./compose/filebeat/start-filebeat.sh:/usr/local/bin/start-filebeat.sh:ro
+            - ./compose/filebeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/lib/docker/containers:/var/lib/docker/containers:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        ports:
+            - "5066:5066"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
 volumes:
     initstack-postgres-data:
         name: initstack-postgres-data
@@ -284,6 +315,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-sonarqube-data"
+            - "environment=development"
+
+    initstack-filebeat-data:
+        name: initstack-filebeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-filebeat-data"
             - "environment=development"
     initstack-sonarqube-logs:
         name: initstack-sonarqube-logs
