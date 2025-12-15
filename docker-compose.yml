@@ -39,7 +39,6 @@ services:
             - .envs/consul-exporter/.env
         volumes:
             - ./compose/consul-exporter/start-consul-exporter.sh:/start-consul-exporter.sh:ro
-            - ./compose/consul-exporter/healthcheck.sh:/healthcheck.sh:ro
         ports:
             - "9107:9107"
         networks:
@@ -47,12 +46,6 @@ services:
         depends_on:
             initstack-consul-service:
                 condition: service_healthy
-        healthcheck:
-            test: ["CMD-SHELL", "/healthcheck.sh"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
 
     initstack-postgres-service:
         image: postgres:18.1
@@ -88,7 +81,6 @@ services:
             - ./compose/postgres-exporter/postgres_exporter.yml:/etc/postgres_exporter/postgres_exporter.yml:ro
             - ./compose/postgres-exporter/queries.yml:/etc/postgres_exporter/queries.yml:ro
             - ./compose/postgres-exporter/start-exporter.sh:/usr/local/bin/start-exporter.sh:ro
-            - ./compose/postgres-exporter/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
         ports:
             - "9187:9187"
         networks:
@@ -96,12 +88,6 @@ services:
         depends_on:
             initstack-postgres-service:
                 condition: service_healthy
-        healthcheck:
-            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
 
     initstack-redis-service:
         image: redis:8.4.0
@@ -135,7 +121,6 @@ services:
             - .envs/redis-exporter/.env
         volumes:
             - ./compose/redis-exporter/start-exporter.sh:/usr/local/bin/start-exporter.sh:ro
-            - ./compose/redis-exporter/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
         ports:
             - "9121:9121"
         networks:
@@ -143,12 +128,6 @@ services:
         depends_on:
             initstack-redis-service:
                 condition: service_healthy
-        healthcheck:
-            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
 
     initstack-rabbitmq-service:
         image: rabbitmq:4.2.1-management
@@ -219,7 +198,6 @@ services:
             - .envs/elasticsearch-exporter/.env
         volumes:
             - ./compose/elasticsearch-exporter/start-elasticsearch-exporter.sh:/start-elasticsearch-exporter.sh:ro
-            - ./compose/elasticsearch-exporter/healthcheck.sh:/healthcheck.sh:ro
         ports:
             - "9114:9114"
         networks:
@@ -227,12 +205,6 @@ services:
         depends_on:
             initstack-elasticsearch-service:
                 condition: service_healthy
-        healthcheck:
-            test: ["CMD-SHELL", "/healthcheck.sh"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
 
     initstack-kibana-service:
         image: kibana:8.19.8
@@ -658,13 +630,13 @@ services:
             initstack-kibana-service:
                 condition: service_healthy
             initstack-consul-exporter-service:
-                condition: service_healthy
+                condition: service_started
             initstack-postgres-exporter-service:
-                condition: service_healthy
+                condition: service_started
             initstack-redis-exporter-service:
-                condition: service_healthy
+                condition: service_started
             initstack-elasticsearch-exporter-service:
-                condition: service_healthy
+                condition: service_started
         healthcheck:
             test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
             interval: 30s
