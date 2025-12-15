@@ -644,6 +644,45 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-elasticstack-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-elasticstack-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/elasticstack-metricbeat/.env
+        volumes:
+            - initstack-elasticstack-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/elasticstack-metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/elasticstack-metricbeat/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/elasticstack-metricbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /proc:/hostfs/proc:ro
+            - /:/hostfs:ro
+        ports:
+            - "5075:5075"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-filebeat-service:
+                condition: service_healthy
+            initstack-apm-service:
+                condition: service_healthy
+            initstack-heartbeat-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
 volumes:
     initstack-consul-data:
         name: initstack-consul-data
@@ -787,6 +826,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-exporters-metricbeat-data"
+            - "environment=development"
+
+    initstack-elasticstack-metricbeat-data:
+        name: initstack-elasticstack-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-elasticstack-metricbeat-data"
             - "environment=development"
 
 networks:
