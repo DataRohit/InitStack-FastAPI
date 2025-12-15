@@ -1,0 +1,47 @@
+metricbeat.config.modules:
+  path: /usr/share/metricbeat/modules.d/*.yml
+  reload.enabled: true
+  reload.period: 10s
+
+metricbeat.modules:
+- module: redis
+  metricsets: ["info", "keyspace"]
+  enabled: true
+  period: 10s
+  hosts: ["initstack-redis-service:6379"]
+  password: "${REDIS_PASSWORD}"
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS}"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+
+setup.kibana:
+  host: "${KIBANA_HOST}"
+  username: "${KIBANA_USERNAME}"
+  password: "${KIBANA_PASSWORD}"
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+
+setup.ilm.enabled: true
+setup.ilm.rollover_alias: "metricbeat"
+setup.ilm.pattern: "{now/d}-000001"
+
+monitoring.enabled: ${METRICBEAT_MONITORING_ENABLED}
+
+http.enabled: true
+http.host: 0.0.0.0
+http.port: 5067
+
+logging.level: ${METRICBEAT_LOG_LEVEL}
+logging.to_files: true
+logging.files:
+  path: /var/log/metricbeat
+  name: metricbeat
+  keepfiles: 7
+  permissions: 0644
+
+processors:
+  - add_cloud_metadata: ~

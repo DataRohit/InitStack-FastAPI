@@ -274,6 +274,257 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-docker-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-docker-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-docker/.env
+        volumes:
+            - initstack-docker-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-docker/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-docker/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-docker/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /proc:/hostfs/proc:ro
+            - /:/hostfs:ro
+        ports:
+            - "5067:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-system-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-system-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-system/.env
+        volumes:
+            - initstack-system-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-system/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-system/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-system/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /proc:/hostfs/proc:ro
+            - /:/hostfs:ro
+        ports:
+            - "5068:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-postgres-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-postgres-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-postgres/.env
+        volumes:
+            - initstack-postgres-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-postgres/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-postgres/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-postgres/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5069:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-postgres-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-redis-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-redis-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-redis/.env
+        volumes:
+            - initstack-redis-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-redis/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-redis/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-redis/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5070:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-redis-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-rabbitmq-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-rabbitmq-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-rabbitmq/.env
+        volumes:
+            - initstack-rabbitmq-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-rabbitmq/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-rabbitmq/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-rabbitmq/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5071:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-rabbitmq-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-elasticsearch-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-elasticsearch-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-elasticsearch/.env
+        volumes:
+            - initstack-elasticsearch-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-elasticsearch/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-elasticsearch/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-elasticsearch/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5072:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-kibana-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-kibana-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-kibana/.env
+        volumes:
+            - initstack-kibana-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-kibana/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-kibana/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-kibana/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5073:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-prometheus-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-prometheus-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/metricbeat-prometheus/.env
+        volumes:
+            - initstack-prometheus-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/metricbeat-prometheus/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/metricbeat-prometheus/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/metricbeat-prometheus/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5074:5067"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-postgres-exporter-service:
+                condition: service_healthy
+            initstack-redis-exporter-service:
+                condition: service_healthy
+            initstack-elasticsearch-exporter-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
 volumes:
     initstack-postgres-data:
         name: initstack-postgres-data
@@ -340,6 +591,62 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-sonarqube-extensions"
+            - "environment=development"
+
+    initstack-docker-metricbeat-data:
+        name: initstack-docker-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-docker-metricbeat-data"
+            - "environment=development"
+
+    initstack-system-metricbeat-data:
+        name: initstack-system-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-system-metricbeat-data"
+            - "environment=development"
+
+    initstack-postgres-metricbeat-data:
+        name: initstack-postgres-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-postgres-metricbeat-data"
+            - "environment=development"
+
+    initstack-redis-metricbeat-data:
+        name: initstack-redis-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-redis-metricbeat-data"
+            - "environment=development"
+
+    initstack-rabbitmq-metricbeat-data:
+        name: initstack-rabbitmq-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-rabbitmq-metricbeat-data"
+            - "environment=development"
+
+    initstack-elasticsearch-metricbeat-data:
+        name: initstack-elasticsearch-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-elasticsearch-metricbeat-data"
+            - "environment=development"
+
+    initstack-kibana-metricbeat-data:
+        name: initstack-kibana-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-kibana-metricbeat-data"
+            - "environment=development"
+
+    initstack-prometheus-metricbeat-data:
+        name: initstack-prometheus-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-prometheus-metricbeat-data"
             - "environment=development"
 
 networks:
