@@ -41,13 +41,10 @@ map.includeElasticMapsService: false
 
 xpack.canvas.enabled: true
 xpack.infra.enabled: true
-xpack.apm.enabled: false
-xpack.uptime.enabled: false
-
+xpack.apm.enabled: true
+xpack.uptime.enabled: true
 
 server.compression.enabled: true
-
-
 
 server.cors.enabled: true
 server.cors.allowCredentials: true

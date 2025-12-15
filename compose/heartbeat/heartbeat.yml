@@ -1,0 +1,146 @@
+heartbeat.config.monitors:
+  path: /usr/share/heartbeat/monitors.d/*.yml
+  reload.enabled: true
+  reload.period: 10s
+
+heartbeat.monitors:
+- type: http
+  id: elasticsearch-health
+  name: Elasticsearch Health Check
+  urls: ["http://initstack-elasticsearch-service:9200/_cluster/health"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+  check.response.body: ["green", "yellow"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+
+- type: http
+  id: kibana-health
+  name: Kibana Health Check
+  urls: ["http://initstack-kibana-service:5601/api/status"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+  username: "${KIBANA_USERNAME}"
+  password: "${KIBANA_PASSWORD}"
+
+- type: http
+  id: postgres-exporter-health
+  name: PostgreSQL Exporter Health Check
+  urls: ["http://initstack-postgres-exporter-service:9187/metrics"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: redis-exporter-health
+  name: Redis Exporter Health Check
+  urls: ["http://initstack-redis-exporter-service:9121/metrics"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: elasticsearch-exporter-health
+  name: Elasticsearch Exporter Health Check
+  urls: ["http://initstack-elasticsearch-exporter-service:9114/metrics"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: rabbitmq-management-health
+  name: RabbitMQ Management Health Check
+  urls: ["http://initstack-rabbitmq-service:15672/api/overview"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+  username: "${RABBITMQ_USER}"
+  password: "${RABBITMQ_PASSWORD}"
+
+- type: http
+  id: sonarqube-health
+  name: SonarQube Health Check
+  urls: ["http://initstack-sonarqube-service:9000/api/system/status"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: tcp
+  id: postgres-tcp
+  name: PostgreSQL TCP Check
+  hosts: ["initstack-postgres-service:5432"]
+  schedule: '@every 30s'
+  timeout: 10s
+
+- type: tcp
+  id: redis-tcp
+  name: Redis TCP Check
+  hosts: ["initstack-redis-service:6379"]
+  schedule: '@every 30s'
+  timeout: 10s
+
+- type: tcp
+  id: rabbitmq-tcp
+  name: RabbitMQ TCP Check
+  hosts: ["initstack-rabbitmq-service:5672"]
+  schedule: '@every 30s'
+  timeout: 10s
+
+- type: tcp
+  id: elasticsearch-tcp
+  name: Elasticsearch TCP Check
+  hosts: ["initstack-elasticsearch-service:9200"]
+  schedule: '@every 30s'
+  timeout: 10s
+
+- type: tcp
+  id: kibana-tcp
+  name: Kibana TCP Check
+  hosts: ["initstack-kibana-service:5601"]
+  schedule: '@every 30s'
+  timeout: 10s
+
+- type: icmp
+  id: docker-network-ping
+  name: Docker Network Connectivity
+  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-postgres-service"]
+  schedule: '@every 60s'
+  timeout: 10s
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS}"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+
+setup.kibana:
+  host: "${KIBANA_HOST}"
+  username: "${KIBANA_USERNAME}"
+  password: "${KIBANA_PASSWORD}"
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+
+setup.ilm.enabled: true
+setup.ilm.rollover_alias: "heartbeat"
+setup.ilm.pattern: "{now/d}-000001"
+
+monitoring.enabled: ${HEARTBEAT_MONITORING_ENABLED}
+
+http.enabled: true
+http.host: 0.0.0.0
+http.port: 5065
+
+logging.level: ${HEARTBEAT_LOG_LEVEL}
+logging.to_files: true
+logging.files:
+  path: /var/log/heartbeat
+  name: heartbeat
+  keepfiles: 7
+  permissions: 0644
+
+processors:
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~

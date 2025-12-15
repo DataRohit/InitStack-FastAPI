@@ -525,6 +525,37 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-heartbeat-service:
+        image: elastic/heartbeat:8.19.8
+        container_name: initstack-heartbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-heartbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/heartbeat/.env
+        volumes:
+            - initstack-heartbeat-data:/usr/share/heartbeat/data
+            - ./compose/heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
+            - ./compose/heartbeat/start-heartbeat.sh:/usr/local/bin/start-heartbeat.sh:ro
+            - ./compose/heartbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5065:5065"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+        cap_add:
+            - NET_RAW
+
 volumes:
     initstack-postgres-data:
         name: initstack-postgres-data
@@ -647,6 +678,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-prometheus-metricbeat-data"
+            - "environment=development"
+
+    initstack-heartbeat-data:
+        name: initstack-heartbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-heartbeat-data"
             - "environment=development"
 
 networks:
