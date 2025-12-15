@@ -5,7 +5,6 @@ server.publicBaseUrl: http://localhost:5601
 
 elasticsearch.hosts: ["http://initstack-elasticsearch-service:9200"]
 elasticsearch.username: kibana_system
-elasticsearch.password: Bx9nK4mQ7wR2sL5p
 
 xpack.security.encryptionKey: Zx4vB9nK2mQ8wE5rTy6uI3oP1aS7dF0g
 xpack.reporting.encryptionKey: Hj6kN4mB8vC1sF7qLp9rE2wT5yU8iO3a

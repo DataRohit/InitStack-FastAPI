@@ -2,6 +2,9 @@
 
 set -e
 
+echo "Sleeping for 30 seconds before starting Filebeat..."
+sleep 30
+
 echo "Waiting for Elasticsearch to be ready..."
 until curl -s -f -u ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD} ${ELASTICSEARCH_HOSTS}/_cluster/health?wait_for_status=yellow&timeout=30s > /dev/null; do
     echo "Elasticsearch is unavailable - sleeping"

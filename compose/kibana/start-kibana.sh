@@ -2,6 +2,9 @@
 
 set -e
 
+echo "Sleeping for 30 seconds before starting Kibana..."
+sleep 30
+
 echo "Waiting for Elasticsearch to be ready..."
 until curl -s -f -u elastic:$ELASTIC_PASSWORD $ELASTICSEARCH_HOSTS/_cluster/health?wait_for_status=yellow&timeout=30s > /dev/null; do
     echo "Elasticsearch is unavailable - sleeping"
@@ -9,9 +12,19 @@ until curl -s -f -u elastic:$ELASTIC_PASSWORD $ELASTICSEARCH_HOSTS/_cluster/heal
 done
 
 echo "Setting up kibana_system user password..."
-curl -s -X POST -u elastic:$ELASTIC_PASSWORD "$ELASTICSEARCH_HOSTS/_security/user/kibana_system/_password" \
+response=$(curl -s -w "%{http_code}" -X POST -u elastic:$ELASTIC_PASSWORD "$ELASTICSEARCH_HOSTS/_security/user/kibana_system/_password" \
     -H "Content-Type: application/json" \
-    -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}" || echo "Password already set or user exists"
+    -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}")
+
+http_code="${response: -3}"
+if [ "$http_code" = "200" ]; then
+    echo "kibana_system password set successfully"
+elif [ "$http_code" = "400" ]; then
+    echo "kibana_system password already set or validation error"
+else
+    echo "Failed to set kibana_system password. HTTP code: $http_code"
+    echo "Response: ${response%???}"
+fi
 
 echo "Elasticsearch is ready - starting Kibana"
 
