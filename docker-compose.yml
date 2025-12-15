@@ -525,6 +525,36 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-apm-service:
+        image: elastic/apm-server:8.19.8
+        container_name: initstack-apm-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-apm-server.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/apm/.env
+        volumes:
+            - initstack-apm-data:/usr/share/apm-server/data
+            - ./compose/apm/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+            - ./compose/apm/start-apm-server.sh:/usr/local/bin/start-apm-server.sh:ro
+            - ./compose/apm/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        ports:
+            - "8200:8200"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 120s
+
     initstack-heartbeat-service:
         image: elastic/heartbeat:8.19.8
         container_name: initstack-heartbeat-service
@@ -678,6 +708,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-prometheus-metricbeat-data"
+            - "environment=development"
+
+    initstack-apm-data:
+        name: initstack-apm-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-apm-data"
             - "environment=development"
 
     initstack-heartbeat-data:

@@ -1,0 +1,17 @@
+apm-server:
+  host: "0.0.0.0:8200"
+  secret_token: "${APM_SERVER_SECRET_TOKEN}"
+
+output.elasticsearch:
+  hosts: ["${OUTPUT_ELASTICSEARCH_HOSTS}"]
+  username: "${OUTPUT_ELASTICSEARCH_USERNAME}"
+  password: "${OUTPUT_ELASTICSEARCH_PASSWORD}"
+
+setup.kibana:
+  host: "${KIBANA_HOST}"
+  username: "${KIBANA_USERNAME}"
+  password: "${KIBANA_PASSWORD}"
+
+logging:
+  level: info
+  to_stderr: true
