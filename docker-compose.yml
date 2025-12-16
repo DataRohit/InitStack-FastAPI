@@ -270,6 +270,42 @@ services:
                 hard: 131072
             nproc: 8192
 
+    initstack-fastapi-service:
+        build:
+            context: .
+            dockerfile: dockerfile
+        image: initstack-fastapi-service:latest
+        container_name: initstack-fastapi-service
+        restart: unless-stopped
+        depends_on:
+            initstack-consul-service:
+                condition: service_healthy
+            initstack-postgres-service:
+                condition: service_healthy
+            initstack-redis-service:
+                condition: service_healthy
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-apm-service:
+                condition: service_healthy
+        env_file:
+            - .env
+        volumes:
+            - .:/app
+            - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "8000:8000"
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
     initstack-filebeat-service:
         image: elastic/filebeat:8.19.8
         container_name: initstack-filebeat-service
@@ -683,41 +719,40 @@ services:
             retries: 3
             start_period: 60s
 
-    initstack-fastapi-service:
-        build:
-            context: .
-            dockerfile: dockerfile
-        image: initstack-fastapi-service:latest
-        container_name: initstack-fastapi-service
+    initstack-fastapi-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-fastapi-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
         restart: unless-stopped
-        depends_on:
-            initstack-consul-service:
-                condition: service_healthy
-            initstack-postgres-service:
-                condition: service_healthy
-            initstack-redis-service:
-                condition: service_healthy
-            initstack-rabbitmq-service:
-                condition: service_healthy
-            initstack-elasticsearch-service:
-                condition: service_healthy
-            initstack-apm-service:
-                condition: service_healthy
         env_file:
-            - .env
+            - .envs/fastapi-metricbeat/.env
         volumes:
-            - .:/app
-            - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - initstack-fastapi-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/fastapi-metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/fastapi-metricbeat/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/fastapi-metricbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /proc:/hostfs/proc:ro
+            - /:/hostfs:ro
         ports:
-            - "8000:8000"
+            - "5076:5076"
         networks:
             - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-fastapi-service:
+                condition: service_healthy
         healthcheck:
             test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
             interval: 30s
             timeout: 10s
             retries: 3
-            start_period: 30s
+            start_period: 60s
 
 volumes:
     initstack-consul-data:
@@ -869,6 +904,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-elasticstack-metricbeat-data"
+            - "environment=development"
+
+    initstack-fastapi-metricbeat-data:
+        name: initstack-fastapi-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-fastapi-metricbeat-data"
             - "environment=development"
 
 networks:

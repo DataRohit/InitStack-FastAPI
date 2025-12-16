@@ -99,6 +99,30 @@ heartbeat.monitors:
   timeout: 10s
   check.response.status: [200]
 
+- type: http
+  id: fastapi-docs
+  name: FastAPI Documentation Health Check
+  urls: ["http://initstack-fastapi-service:8000/docs"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: fastapi-openapi
+  name: FastAPI OpenAPI Schema Check
+  urls: ["http://initstack-fastapi-service:8000/openapi.json"]
+  schedule: '@every 30s'
+  timeout: 10s
+  check.response.status: [200]
+
+- type: http
+  id: fastapi-redoc
+  name: FastAPI ReDoc Documentation Check
+  urls: ["http://initstack-fastapi-service:8000/redoc"]
+  schedule: '@every 60s'
+  timeout: 10s
+  check.response.status: [200]
+
 - type: tcp
   id: postgres-tcp
   name: PostgreSQL TCP Check
@@ -148,10 +172,17 @@ heartbeat.monitors:
   schedule: '@every 30s'
   timeout: 10s
 
+- type: tcp
+  id: fastapi-tcp
+  name: FastAPI Application TCP Check
+  hosts: ["initstack-fastapi-service:8000"]
+  schedule: '@every 30s'
+  timeout: 10s
+
 - type: icmp
   id: docker-network-ping
   name: Docker Network Connectivity
-  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-postgres-service", "initstack-consul-service", "initstack-apm-service"]
+  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-postgres-service", "initstack-consul-service", "initstack-apm-service", "initstack-fastapi-service"]
   schedule: '@every 60s'
   timeout: 10s
 
