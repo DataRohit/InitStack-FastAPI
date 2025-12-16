@@ -1,5 +1,3 @@
-import logging
-import sys
 from datetime import UTC
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -14,11 +12,16 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
+from config.logger import LoggerManager
+from config.logger import get_logger
+from config.middlewares import LoggingMiddleware
 from config.middlewares import RequestSizeLimitMiddleware
 from config.settings import settings
 from src.models.base import ErrorResponse
 
 if TYPE_CHECKING:
+    import logging
+
     from starlette.requests import Request
 
 
@@ -34,21 +37,7 @@ def setup_logging():
     Raises:
         None
     """
-
-    log_level: str = getattr(logging, settings.log_level.upper())
-
-    if settings.log_format == "json":
-        logging.basicConfig(
-            level=log_level,
-            format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s"}',
-            handlers=[logging.StreamHandler(stream=sys.stdout)],
-        )
-    else:
-        logging.basicConfig(
-            level=log_level,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=[logging.StreamHandler(stream=sys.stdout)],
-        )
+    LoggerManager.setup_root_logger()
 
 
 def create_app() -> FastAPI:
@@ -65,6 +54,9 @@ def create_app() -> FastAPI:
     """
 
     setup_logging()
+
+    logger: logging.Logger = get_logger(name="server.create_app")
+    logger.info(msg="Initializing FastAPI application")
 
     app: FastAPI = FastAPI(
         title=settings.app_name,
@@ -84,6 +76,10 @@ def create_app() -> FastAPI:
         openapi_url="/openapi.json" if settings.debug else None,
     )
 
+    logger.info(msg="Adding logging middleware")
+    app.add_middleware(middleware_class=LoggingMiddleware)  # ty:ignore[invalid-argument-type]
+
+    logger.info(msg="Adding CORS middleware")
     app.add_middleware(
         middleware_class=CORSMiddleware,  # ty:ignore[invalid-argument-type]
         allow_origins=settings.cors_origins,
@@ -93,11 +89,13 @@ def create_app() -> FastAPI:
     )
 
     if settings.proxy_headers_enabled:
+        logger.info(msg="Adding proxy headers middleware")
         app.add_middleware(
             middleware_class=ProxyHeadersMiddleware,  # ty:ignore[invalid-argument-type]
             trusted_hosts=settings.proxy_headers_trusted_hosts,
         )
 
+    logger.info(msg="Adding request size limit middleware")
     app.add_middleware(
         middleware_class=RequestSizeLimitMiddleware,  # ty:ignore[invalid-argument-type]
         max_request_size=settings.max_request_size,
@@ -105,6 +103,7 @@ def create_app() -> FastAPI:
     )
 
     if not settings.debug:
+        logger.info(msg="Adding trusted host middleware")
         app.add_middleware(
             middleware_class=TrustedHostMiddleware,  # ty:ignore[invalid-argument-type]
             allowed_hosts=["*"],
@@ -124,6 +123,17 @@ def create_app() -> FastAPI:
         Raises:
             None
         """
+
+        error_logger: logging.Logger = get_logger(name="server.http_exception")
+        error_logger.warning(
+            msg=f"HTTP exception: {exc.status_code} - {exc.detail}",
+            extra={
+                "status_code": exc.status_code,
+                "detail": exc.detail,
+                "url": str(object=request.url),
+                "method": request.method,
+            },
+        )
 
         return JSONResponse(
             status_code=exc.status_code,
@@ -149,6 +159,16 @@ def create_app() -> FastAPI:
             None
         """
 
+        error_logger: logging.Logger = get_logger(name="server.validation_exception")
+        error_logger.warning(
+            msg=f"Validation error: {exc!s}",
+            extra={
+                "validation_errors": exc.errors(),
+                "url": str(object=request.url),
+                "method": request.method,
+            },
+        )
+
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content=ErrorResponse(
@@ -173,7 +193,18 @@ def create_app() -> FastAPI:
             None
         """
 
-        logging.exception(msg="Unhandled exception")
+        error_logger: logging.Logger = get_logger(name="server.general_exception")
+        error_logger.error(
+            msg=f"Unhandled exception: {type(exc).__name__} - {exc!s}",
+            extra={
+                "exception_type": type(exc).__name__,
+                "exception_message": str(object=exc),
+                "url": str(object=request.url),
+                "method": request.method,
+            },
+            exc_info=True,
+        )
+
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=ErrorResponse(
@@ -183,6 +214,7 @@ def create_app() -> FastAPI:
             ).model_dump(mode="json"),
         )
 
+    logger.info(msg="FastAPI application initialized successfully")
     return app
 
 

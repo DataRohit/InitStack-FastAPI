@@ -72,7 +72,7 @@ class Settings(BaseSettings):
     cors_allow_headers: list[str] = Field(default_factory=lambda: ["*"])
 
     log_level: str = "DEBUG"
-    log_format: str = "standard"
+    log_format: str = "json"
 
     workers: int = 1
 

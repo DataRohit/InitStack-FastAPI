@@ -1,3 +1,4 @@
+import time
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
@@ -5,7 +6,11 @@ from fastapi import Response
 from fastapi import status
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from config.logger import get_logger
+
 if TYPE_CHECKING:
+    import logging
+
     from starlette.requests import Request
 
 
@@ -79,4 +84,106 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-__all__: list[str] = ["RequestSizeLimitMiddleware"]
+class LoggingMiddleware(BaseHTTPMiddleware):
+    """Middleware For Request And Response Logging.
+
+    Inherits:
+        BaseHTTPMiddleware
+
+    Attributes:
+        logger (logging.Logger): Logger instance for request/response logging.
+
+    Properties:
+        None
+
+    Methods:
+        dispatch: Process request and log request/response information.
+    """
+
+    def __init__(self, app):
+        """Initialize Logging Middleware.
+
+        Arguments:
+            app: ASGI application.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+
+        super().__init__(app)
+        self.logger: logging.Logger = get_logger(name="middleware.logging")
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        """Process Request And Log Request/Response Information.
+
+        Arguments:
+            request (Request): Incoming request.
+            call_next: Next middleware or endpoint.
+
+        Returns:
+            Response: HTTP response.
+
+        Raises:
+            None
+        """
+
+        start_time: int | float = time.time()
+
+        client_ip: str = request.client.host if request.client else "unknown"
+        method: str = request.method
+        url = str(object=request.url)
+        user_agent: str = request.headers.get("user-agent", default="unknown")
+
+        self.logger.info(
+            msg=f"Request started: {method} {url}",
+            extra={
+                "client_ip": client_ip,
+                "method": method,
+                "url": url,
+                "user_agent": user_agent,
+                "request_id": id(request),
+            },
+        )
+
+        try:
+            response: Response = await call_next(request)
+            process_time: int | float = time.time() - start_time
+
+            self.logger.info(
+                msg=f"Request completed: {method} {url} - {response.status_code}",
+                extra={
+                    "client_ip": client_ip,
+                    "method": method,
+                    "url": url,
+                    "status_code": response.status_code,
+                    "process_time": round(number=process_time, ndigits=4),
+                    "request_id": id(request),
+                },
+            )
+
+            response.headers["X-Process-Time"] = str(object=process_time)
+
+        except Exception as exc:
+            process_time: int | float = time.time() - start_time
+
+            self.logger.exception(
+                msg=f"Request failed: {method} {url} - {type(exc).__name__}",
+                extra={
+                    "client_ip": client_ip,
+                    "method": method,
+                    "url": url,
+                    "exception": str(object=exc),
+                    "process_time": round(number=process_time, ndigits=4),
+                    "request_id": id(request),
+                },
+            )
+            raise
+
+        else:
+            return response
+
+
+__all__: list[str] = ["LoggingMiddleware", "RequestSizeLimitMiddleware"]
