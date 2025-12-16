@@ -5,119 +5,21 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
-from fastapi import HTTPException
 from fastapi import Request
-from fastapi import Response
 from fastapi import status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from pydantic import ConfigDict
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from .settings import settings
+from config.middlewares import RequestSizeLimitMiddleware
+from config.settings import settings
+from src.models.base import ErrorResponse
 
 if TYPE_CHECKING:
     from starlette.requests import Request
-
-
-class ErrorResponse(BaseModel):
-    """Standard Error Response Payload.
-
-    Inherits:
-        BaseModel
-
-    Attributes:
-        error (str): High-level error message.
-        detail (str): Detailed error information.
-        timestamp (datetime): Error timestamp.
-
-    Properties:
-        None
-
-    Methods:
-        None
-    """
-
-    model_config: ConfigDict = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
-
-    error: str
-    detail: str
-    timestamp: datetime
-
-
-class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
-    """Middleware To Limit Request Body Size And Upload Size.
-
-    Inherits:
-        BaseHTTPMiddleware
-
-    Attributes:
-        max_request_size (int): Maximum request body size in bytes.
-        max_upload_size (int): Maximum upload file size in bytes.
-
-    Properties:
-        None
-
-    Methods:
-        dispatch: Process request and check size limits.
-    """
-
-    def __init__(self, app, max_request_size: int = 16777216, max_upload_size: int = 104857600):
-        """Initialize Request Size Limit Middleware.
-
-        Arguments:
-            app: ASGI application.
-            max_request_size (int): Maximum request body size in bytes (default: 16MB).
-            max_upload_size (int): Maximum upload file size in bytes (default: 100MB).
-
-        Returns:
-            None
-
-        Raises:
-            None
-        """
-
-        super().__init__(app)
-        self.max_request_size = max_request_size
-        self.max_upload_size = max_upload_size
-
-    async def dispatch(self, request: Request, call_next) -> Response:
-        """Process Request And Check Size Limits.
-
-        Arguments:
-            request (Request): Incoming request.
-            call_next: Next middleware or endpoint.
-
-        Returns:
-            Response: HTTP response.
-
-        Raises:
-            HTTPException: If request size exceeds limits.
-        """
-
-        content_length = request.headers.get("content-length")
-        if content_length:
-            content_length = int(content_length)
-            content_type = request.headers.get("content-type", "")
-
-            if "multipart/form-data" in content_type:
-                if content_length > self.max_upload_size:
-                    raise HTTPException(
-                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                        detail=f"Upload size {content_length} bytes exceeds maximum allowed {self.max_upload_size} bytes",
-                    )
-            elif content_length > self.max_request_size:
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"Request size {content_length} bytes exceeds maximum allowed {self.max_request_size} bytes",
-                )
-
-        return await call_next(request)
 
 
 def setup_logging():
@@ -197,7 +99,7 @@ def create_app() -> FastAPI:
         )
 
     app.add_middleware(
-        RequestSizeLimitMiddleware,
+        middleware_class=RequestSizeLimitMiddleware,  # ty:ignore[invalid-argument-type]
         max_request_size=settings.max_request_size,
         max_upload_size=settings.max_upload_size,
     )
