@@ -16,6 +16,7 @@ from config.logger import LoggerManager
 from config.logger import get_logger
 from config.middlewares import LoggingMiddleware
 from config.middlewares import RequestSizeLimitMiddleware
+from config.routes import create_api_router
 from config.settings import settings
 from src.models.base import ErrorResponse
 
@@ -213,6 +214,10 @@ def create_app() -> FastAPI:
                 timestamp=datetime.now(tz=UTC),
             ).model_dump(mode="json"),
         )
+
+    logger.info(msg="Adding API routes")
+    api_router = create_api_router()
+    app.include_router(router=api_router)
 
     logger.info(msg="FastAPI application initialized successfully")
     return app
