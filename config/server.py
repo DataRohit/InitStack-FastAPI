@@ -1,7 +1,9 @@
+from contextlib import asynccontextmanager
 from datetime import UTC
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import status
@@ -12,16 +14,20 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
+from config.adapters import ConsulAdapter
+from config.adapters import initialize_consul
+from config.adapters import shutdown_consul
 from config.logger import LoggerManager
 from config.logger import get_logger
 from config.middlewares import LoggingMiddleware
 from config.middlewares import RequestSizeLimitMiddleware
 from config.routes import create_api_router
 from config.settings import settings
-from src.models.base import ErrorResponse
+from src.models import ErrorResponse
 
 if TYPE_CHECKING:
     import logging
+    from collections.abc import AsyncGenerator
 
     from starlette.requests import Request
 
@@ -39,6 +45,53 @@ def setup_logging():
         None
     """
     LoggerManager.setup_root_logger()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    """Handle Application Lifespan Events.
+
+    Arguments:
+        app (FastAPI): FastAPI application instance.
+
+    Returns:
+        AsyncGenerator[None, None]: Async context manager for lifespan events.
+
+    Raises:
+        None
+    """
+
+    startup_logger: logging.Logger = get_logger(name="server.startup")
+    startup_logger.info(msg="Application startup initiated")
+
+    consul_adapter = None
+    if settings.consul_enabled:
+        startup_logger.info(msg="Initializing Consul service registration")
+        consul_adapter: ConsulAdapter | None = await initialize_consul()
+        if consul_adapter:
+            startup_logger.info(
+                msg="Consul service registration completed",
+                extra={
+                    "service_id": consul_adapter.service_id,
+                    "service_name": consul_adapter.service_name,
+                },
+            )
+        else:
+            startup_logger.warning(msg="Consul service registration failed")
+
+    startup_logger.info(msg="Application startup completed")
+
+    yield
+
+    shutdown_logger: logging.Logger = get_logger(name="server.shutdown")
+    shutdown_logger.info(msg="Application shutdown initiated")
+
+    if settings.consul_enabled:
+        shutdown_logger.info(msg="Shutting down Consul service registration")
+        await shutdown_consul()
+        shutdown_logger.info(msg="Consul service deregistration completed")
+
+    shutdown_logger.info(msg="Application shutdown completed")
 
 
 def create_app() -> FastAPI:
@@ -75,6 +128,7 @@ def create_app() -> FastAPI:
         docs_url="/docs" if settings.debug else None,
         redoc_url="/redoc" if settings.debug else None,
         openapi_url="/openapi.json" if settings.debug else None,
+        lifespan=lifespan,
     )
 
     logger.info(msg="Adding logging middleware")
@@ -216,7 +270,7 @@ def create_app() -> FastAPI:
         )
 
     logger.info(msg="Adding API routes")
-    api_router = create_api_router()
+    api_router: APIRouter = create_api_router()
     app.include_router(router=api_router)
 
     logger.info(msg="FastAPI application initialized successfully")

@@ -413,10 +413,10 @@ class HealthResponse(BaseModel):
 
 
 __all__: list[str] = [
-    "SystemInfo",
     "CPUInfo",
-    "MemoryInfo",
     "DiskInfo",
-    "ProcessInfo",
     "HealthResponse",
+    "MemoryInfo",
+    "ProcessInfo",
+    "SystemInfo",
 ]

@@ -1,6 +1,5 @@
 import os
 import platform
-import sys
 import time
 from datetime import UTC
 from datetime import datetime
@@ -14,13 +13,13 @@ from fastapi import status
 
 from config.logger import get_logger
 from config.settings import settings
-from src.models.base import ErrorResponse
-from src.models.health import CPUInfo
-from src.models.health import DiskInfo
-from src.models.health import HealthResponse
-from src.models.health import MemoryInfo
-from src.models.health import ProcessInfo
-from src.models.health import SystemInfo
+from src.models import CPUInfo
+from src.models import DiskInfo
+from src.models import ErrorResponse
+from src.models import HealthResponse
+from src.models import MemoryInfo
+from src.models import ProcessInfo
+from src.models import SystemInfo
 
 if TYPE_CHECKING:
     import logging
@@ -128,15 +127,15 @@ class HealthController:
                 },
             )
 
-            return health_response
-
         except Exception as exc:
-            self._logger.error(
+            self._logger.exception(
                 msg=f"Health check failed: {exc!s}",
                 extra={"exception_type": type(exc).__name__},
-                exc_info=True,
             )
             raise
+
+        else:
+            return health_response
 
     def _get_system_info(self) -> SystemInfo:
         """Get System Information.
@@ -173,7 +172,7 @@ class HealthController:
 
         cpu_count: int = psutil.cpu_count(logical=True) or 1
         cpu_usage: float = psutil.cpu_percent(interval=1)
-        cpu_freq = psutil.cpu_freq()
+        cpu_freq: float = psutil.cpu_freq()  # ty:ignore[possibly-missing-attribute]
         frequency: float = cpu_freq.current if cpu_freq else 0.0
 
         return CPUInfo(
@@ -287,12 +286,11 @@ class HealthController:
             None
         """
 
-        if cpu_usage > 90 or memory_usage > 90 or disk_usage > 95:
+        if cpu_usage > 90 or memory_usage > 90 or disk_usage > 95:  # noqa: PLR2004
             return "unhealthy"
-        elif cpu_usage > 70 or memory_usage > 80 or disk_usage > 85:
+        if cpu_usage > 70 or memory_usage > 80 or disk_usage > 85:  # noqa: PLR2004
             return "degraded"
-        else:
-            return "healthy"
+        return "healthy"
 
     def _setup_routes(self) -> None:
         """Setup FastAPI Routes For Health Endpoints.
@@ -312,7 +310,7 @@ class HealthController:
             response_model=HealthResponse,
             status_code=status.HTTP_200_OK,
             summary="System Health Check",
-            description="Get comprehensive system health information including CPU, memory, disk usage, and process details.",
+            description="Get comprehensive system health information including CPU, memory, disk usage, and process details.",  # noqa: E501
             responses={
                 status.HTTP_200_OK: {
                     "description": "Health check successful",
@@ -366,7 +364,7 @@ class HealthController:
                                 },
                                 "degraded_system": {
                                     "summary": "Degraded system example",
-                                    "description": "Example response when system metrics indicate performance degradation",
+                                    "description": "Example response when system metrics indicate performance degradation",  # noqa: E501
                                     "value": {
                                         "status": "degraded",
                                         "timestamp": "2025-01-01T12:34:56Z",
@@ -410,7 +408,7 @@ class HealthController:
                                 },
                                 "unhealthy_system": {
                                     "summary": "Unhealthy system example",
-                                    "description": "Example response when system metrics indicate critical resource usage",
+                                    "description": "Example response when system metrics indicate critical resource usage",  # noqa: E501
                                     "value": {
                                         "status": "unhealthy",
                                         "timestamp": "2025-01-01T12:34:56Z",
@@ -507,7 +505,7 @@ class HealthController:
 
             Raises:
                 HTTPException: If health check fails or service is unavailable.
-            """
+            """  # noqa: E501
 
             try:
                 self._logger.info(msg="Health check endpoint accessed")
@@ -518,19 +516,19 @@ class HealthController:
                     extra={"health_status": health_data.status},
                 )
 
-                return health_data
-
             except Exception as exc:
-                self._logger.error(
+                self._logger.exception(
                     msg=f"Health check failed: {exc!s}",
                     extra={"exception_type": type(exc).__name__},
-                    exc_info=True,
                 )
 
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Health check failed",
                 ) from exc
+
+            else:
+                return health_data
 
 
 health_controller: HealthController = HealthController()
