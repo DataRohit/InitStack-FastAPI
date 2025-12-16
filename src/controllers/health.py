@@ -312,9 +312,98 @@ class HealthController:
             summary="System Health Check",
             description="Get comprehensive system health information including CPU, memory, disk usage, and process details.",  # noqa: E501
             responses={
+                status.HTTP_503_SERVICE_UNAVAILABLE: {
+                    "description": "Service temporarily unavailable",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "service_unavailable": {
+                                    "summary": "Service unavailable",
+                                    "description": "Example response when service is temporarily unavailable",
+                                    "value": {
+                                        "error": "Service Unavailable",
+                                        "detail": "HTTP 503",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                status.HTTP_500_INTERNAL_SERVER_ERROR: {
+                    "description": "Internal server error during health check",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "health_check_failure": {
+                                    "summary": "Health check failure",
+                                    "description": "Example response when health check encounters an internal error",
+                                    "value": {
+                                        "error": "Internal Server Error",
+                                        "detail": "An Unexpected Error Occurred",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                status.HTTP_429_TOO_MANY_REQUESTS: {
+                    "description": "Rate limit exceeded",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "rate_limit_exceeded": {
+                                    "summary": "Rate limit exceeded",
+                                    "description": "Example response when client exceeds rate limit",
+                                    "value": {
+                                        "error": "Too Many Requests",
+                                        "detail": "Rate limit exceeded. Try again in 30 seconds.",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window",
+                            "schema": {"type": "string", "example": "0"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                        "Retry-After": {
+                            "description": "Seconds to wait before retrying",
+                            "schema": {"type": "string", "example": "30"},
+                        },
+                    },
+                },
                 status.HTTP_200_OK: {
                     "description": "Health check successful",
                     "model": HealthResponse,
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "59"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                    },
                     "content": {
                         "application/json": {
                             "examples": {
@@ -448,44 +537,6 @@ class HealthController:
                                             "environment": "production",
                                             "debug_mode": False,
                                         },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-                status.HTTP_500_INTERNAL_SERVER_ERROR: {
-                    "description": "Internal server error during health check",
-                    "model": ErrorResponse,
-                    "content": {
-                        "application/json": {
-                            "examples": {
-                                "health_check_failure": {
-                                    "summary": "Health check failure",
-                                    "description": "Example response when health check encounters an internal error",
-                                    "value": {
-                                        "error": "Internal Server Error",
-                                        "detail": "An Unexpected Error Occurred",
-                                        "timestamp": "2025-01-01T12:34:56Z",
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-                status.HTTP_503_SERVICE_UNAVAILABLE: {
-                    "description": "Service temporarily unavailable",
-                    "model": ErrorResponse,
-                    "content": {
-                        "application/json": {
-                            "examples": {
-                                "service_unavailable": {
-                                    "summary": "Service unavailable",
-                                    "description": "Example response when service is temporarily unavailable",
-                                    "value": {
-                                        "error": "Service Unavailable",
-                                        "detail": "HTTP 503",
-                                        "timestamp": "2025-01-01T12:34:56Z",
                                     },
                                 },
                             },

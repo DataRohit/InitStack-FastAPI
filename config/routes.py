@@ -2,6 +2,8 @@ from fastapi import APIRouter
 
 from src.controllers import consul_controller
 from src.controllers import health_controller
+from src.controllers import rate_limit_controller
+from src.controllers import redis_controller
 
 
 def create_api_router() -> APIRouter:
@@ -21,6 +23,8 @@ def create_api_router() -> APIRouter:
 
     main_router.include_router(router=health_controller.router)
     main_router.include_router(router=consul_controller.router)
+    main_router.include_router(router=redis_controller.router)
+    main_router.include_router(router=rate_limit_controller.router)
 
     return main_router
 

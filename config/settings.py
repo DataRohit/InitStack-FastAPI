@@ -48,6 +48,32 @@ class Settings(BaseSettings):
         consul_health_check_interval (str): Health check interval.
         consul_health_check_timeout (str): Health check timeout.
         consul_health_check_deregister_critical_after (str): Deregister after critical.
+        redis_enabled (bool): Enable Redis connection.
+        redis_host (str): Redis server host.
+        redis_port (int): Redis server port.
+        redis_username (str): Redis username.
+        redis_password (str): Redis password.
+        redis_database (int): Redis database number.
+        redis_ssl (bool): Enable SSL for Redis connection.
+        redis_ssl_verify (bool): Verify SSL certificates for Redis.
+        redis_connection_timeout (int): Redis connection timeout in seconds.
+        redis_socket_timeout (int): Redis socket timeout in seconds.
+        redis_socket_keepalive (bool): Enable Redis socket keepalive.
+        redis_socket_keepalive_options (dict[str, Any]): Redis socket keepalive options.
+        redis_health_check_interval (int): Redis health check interval in seconds.
+        redis_max_connections (int): Maximum Redis connections in pool.
+        redis_retry_on_timeout (bool): Retry Redis operations on timeout.
+        redis_decode_responses (bool): Decode Redis responses to strings.
+        redis_encoding (str): Redis response encoding.
+        rate_limit_enabled (bool): Enable rate limiting middleware.
+        rate_limit_requests_per_minute (int): Maximum requests per minute per client.
+        rate_limit_burst_size (int): Burst size for rate limiting.
+        rate_limit_window_size (int): Rate limit window size in seconds.
+        rate_limit_redis_key_prefix (str): Redis key prefix for rate limiting.
+        rate_limit_redis_key_expiry (int): Redis key expiry for rate limiting in seconds.
+        rate_limit_exempt_ips (list[str]): IP addresses exempt from rate limiting.
+        rate_limit_header_enabled (bool): Include rate limit headers in responses.
+        rate_limit_retry_after_header (bool): Include Retry-After header when rate limited.
 
     Properties:
         None
@@ -58,6 +84,8 @@ class Settings(BaseSettings):
         parse_cors_headers: Parse CORS headers from env input.
         parse_proxy_headers_trusted_hosts: Parse proxy headers trusted hosts from env input.
         parse_consul_service_tags: Parse Consul service tags from env input.
+        parse_redis_socket_keepalive_options: Parse Redis socket keepalive options from env input.
+        parse_rate_limit_exempt_ips: Parse rate limit exempt IPs from env input.
     """
 
     app_name: str = "InitStack FastAPI Development Server"
@@ -109,6 +137,34 @@ class Settings(BaseSettings):
     consul_health_check_interval: str = "10s"
     consul_health_check_timeout: str = "5s"
     consul_health_check_deregister_critical_after: str = "30s"
+
+    redis_enabled: bool = True
+    redis_host: str = "initstack-redis-service"
+    redis_port: int = 6379
+    redis_username: str = "z2yju1mD0GQxgV6Z"
+    redis_password: str = "Bv3cX8nM1qW6eR9t"  # noqa: S105
+    redis_database: int = 0
+    redis_ssl: bool = False
+    redis_ssl_verify: bool = True
+    redis_connection_timeout: int = 5
+    redis_socket_timeout: int = 5
+    redis_socket_keepalive: bool = True
+    redis_socket_keepalive_options: dict[str, Any] = Field(default_factory=dict)
+    redis_health_check_interval: int = 30
+    redis_max_connections: int = 50
+    redis_retry_on_timeout: bool = True
+    redis_decode_responses: bool = True
+    redis_encoding: str = "utf-8"
+
+    rate_limit_enabled: bool = True
+    rate_limit_requests_per_minute: int = 20
+    rate_limit_burst_size: int = 10
+    rate_limit_window_size: int = 60
+    rate_limit_redis_key_prefix: str = "rate_limit"
+    rate_limit_redis_key_expiry: int = 3600
+    rate_limit_exempt_ips: list[str] = Field(default_factory=list)
+    rate_limit_header_enabled: bool = True
+    rate_limit_retry_after_header: bool = True
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -218,6 +274,50 @@ class Settings(BaseSettings):
                 return json.loads(s=v)
             except json.JSONDecodeError:
                 return [tag.strip() for tag in v.split(",")]
+        return v
+
+    @field_validator("redis_socket_keepalive_options", mode="before")
+    @classmethod
+    def parse_redis_socket_keepalive_options(cls, v: Any) -> Any:
+        """Parse Redis Socket Keepalive Options From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed value, typically a dictionary.
+
+        Raises:
+            None
+        """
+
+        if isinstance(v, str):
+            try:
+                return json.loads(s=v)
+            except json.JSONDecodeError:
+                return {}
+        return v
+
+    @field_validator("rate_limit_exempt_ips", mode="before")
+    @classmethod
+    def parse_rate_limit_exempt_ips(cls, v: Any) -> Any:
+        """Parse Rate Limit Exempt IPs From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed value, typically a list of strings.
+
+        Raises:
+            None
+        """
+
+        if isinstance(v, str):
+            try:
+                return json.loads(s=v)
+            except json.JSONDecodeError:
+                return [ip.strip() for ip in v.split(",")]
         return v
 
     class Config:

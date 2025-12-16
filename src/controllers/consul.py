@@ -83,42 +83,6 @@ class ConsulController:
             summary="Get Consul Status",
             description="Get comprehensive Consul cluster status and current service registration information.",
             responses={
-                status.HTTP_200_OK: {
-                    "description": "Consul status retrieved successfully",
-                    "model": ConsulStatusResponse,
-                    "content": {
-                        "application/json": {
-                            "examples": {
-                                "healthy_consul": {
-                                    "summary": "Healthy Consul cluster",
-                                    "description": "Example response when Consul is healthy and service is registered",
-                                    "value": {
-                                        "consul_healthy": True,
-                                        "leader": "172.18.0.10:8300",
-                                        "peers_count": 1,
-                                        "service_registered": True,
-                                        "service_id": "initstack-fastapi-service-172.18.0.19-8000-402f4c44",
-                                        "service_name": "initstack-fastapi-service",
-                                        "timestamp": "2025-01-01T12:34:56Z",
-                                    },
-                                },
-                                "unhealthy_consul": {
-                                    "summary": "Unhealthy Consul cluster",
-                                    "description": "Example response when Consul is not accessible",
-                                    "value": {
-                                        "consul_healthy": False,
-                                        "leader": None,
-                                        "peers_count": 0,
-                                        "service_registered": False,
-                                        "service_id": None,
-                                        "service_name": None,
-                                        "timestamp": "2025-01-01T12:34:56Z",
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
                 status.HTTP_503_SERVICE_UNAVAILABLE: {
                     "description": "Consul is not enabled or not available",
                     "model": ErrorResponse,
@@ -157,6 +121,93 @@ class ConsulController:
                         },
                     },
                 },
+                status.HTTP_429_TOO_MANY_REQUESTS: {
+                    "description": "Rate limit exceeded",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "rate_limit_exceeded": {
+                                    "summary": "Rate limit exceeded",
+                                    "description": "Example response when client exceeds rate limit",
+                                    "value": {
+                                        "error": "Too Many Requests",
+                                        "detail": "Rate limit exceeded. Try again in 30 seconds.",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window",
+                            "schema": {"type": "string", "example": "0"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                        "Retry-After": {
+                            "description": "Seconds to wait before retrying",
+                            "schema": {"type": "string", "example": "30"},
+                        },
+                    },
+                },
+                status.HTTP_200_OK: {
+                    "description": "Consul status retrieved successfully",
+                    "model": ConsulStatusResponse,
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "59"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                    },
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "healthy_consul": {
+                                    "summary": "Healthy Consul cluster",
+                                    "description": "Example response when Consul is healthy and service is registered",
+                                    "value": {
+                                        "consul_healthy": True,
+                                        "leader": "172.18.0.10:8300",
+                                        "peers_count": 1,
+                                        "service_registered": True,
+                                        "service_id": "initstack-fastapi-service-172.18.0.19-8000-402f4c44",
+                                        "service_name": "initstack-fastapi-service",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                                "unhealthy_consul": {
+                                    "summary": "Unhealthy Consul cluster",
+                                    "description": "Example response when Consul is not accessible",
+                                    "value": {
+                                        "consul_healthy": False,
+                                        "leader": None,
+                                        "peers_count": 0,
+                                        "service_registered": False,
+                                        "service_id": None,
+                                        "service_name": None,
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
             },
         )
         async def get_consul_status_endpoint() -> ConsulStatusResponse:
@@ -181,9 +232,126 @@ class ConsulController:
             summary="Discover Service Instances",
             description="Discover and retrieve information about service instances registered in Consul by service name.",  # noqa: E501
             responses={
+                status.HTTP_503_SERVICE_UNAVAILABLE: {
+                    "description": "Consul is not enabled or not available",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "consul_disabled": {
+                                    "summary": "Consul disabled",
+                                    "description": "Example response when Consul is disabled for service discovery",
+                                    "value": {
+                                        "error": "Service Unavailable",
+                                        "detail": "Consul service discovery is not enabled",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                                "consul_unavailable": {
+                                    "summary": "Consul unavailable",
+                                    "description": "Example response when Consul service is unavailable",
+                                    "value": {
+                                        "error": "Service Unavailable",
+                                        "detail": "Consul service is temporarily unavailable",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                status.HTTP_500_INTERNAL_SERVER_ERROR: {
+                    "description": "Internal server error during service discovery",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "service_discovery_error": {
+                                    "summary": "Service discovery error",
+                                    "description": "Example response when service discovery encounters an internal error",  # noqa: E501
+                                    "value": {
+                                        "error": "Internal Server Error",
+                                        "detail": "An Unexpected Error Occurred",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                status.HTTP_429_TOO_MANY_REQUESTS: {
+                    "description": "Rate limit exceeded",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "rate_limit_exceeded": {
+                                    "summary": "Rate limit exceeded",
+                                    "description": "Example response when client exceeds rate limit",
+                                    "value": {
+                                        "error": "Too Many Requests",
+                                        "detail": "Rate limit exceeded. Try again in 30 seconds.",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window",
+                            "schema": {"type": "string", "example": "0"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                        "Retry-After": {
+                            "description": "Seconds to wait before retrying",
+                            "schema": {"type": "string", "example": "30"},
+                        },
+                    },
+                },
+                status.HTTP_422_UNPROCESSABLE_ENTITY: {
+                    "description": "Validation error in path parameters",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "validation_error": {
+                                    "summary": "Parameter validation error",
+                                    "description": "Example response when service name parameter fails validation",
+                                    "value": {
+                                        "error": "Validation Error",
+                                        "detail": "Input validation failed",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
                 status.HTTP_200_OK: {
                     "description": "Service discovery completed successfully",
                     "model": ConsulServiceDiscoveryResponse,
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "59"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                    },
                     "content": {
                         "application/json": {
                             "examples": {
@@ -238,14 +406,6 @@ class ConsulController:
                         },
                     },
                 },
-                status.HTTP_503_SERVICE_UNAVAILABLE: {
-                    "description": "Consul is not enabled or not available",
-                    "model": ErrorResponse,
-                },
-                status.HTTP_500_INTERNAL_SERVER_ERROR: {
-                    "description": "Internal server error during service discovery",
-                    "model": ErrorResponse,
-                },
             },
         )
         async def discover_service_endpoint(
@@ -279,9 +439,126 @@ class ConsulController:
             summary="Get Service Health",
             description="Get detailed health information for a specific service including all instances and their health checks.",  # noqa: E501
             responses={
+                status.HTTP_503_SERVICE_UNAVAILABLE: {
+                    "description": "Consul is not enabled or not available",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "consul_disabled": {
+                                    "summary": "Consul disabled",
+                                    "description": "Example response when Consul is disabled for health checks",
+                                    "value": {
+                                        "error": "Service Unavailable",
+                                        "detail": "Consul service discovery is not enabled",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                                "consul_unavailable": {
+                                    "summary": "Consul unavailable",
+                                    "description": "Example response when Consul service is unavailable for health checks",  # noqa: E501
+                                    "value": {
+                                        "error": "Service Unavailable",
+                                        "detail": "Consul service is temporarily unavailable",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                status.HTTP_500_INTERNAL_SERVER_ERROR: {
+                    "description": "Internal server error during health check retrieval",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "health_check_error": {
+                                    "summary": "Health check retrieval error",
+                                    "description": "Example response when health check retrieval encounters an internal error",  # noqa: E501
+                                    "value": {
+                                        "error": "Internal Server Error",
+                                        "detail": "An Unexpected Error Occurred",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                status.HTTP_429_TOO_MANY_REQUESTS: {
+                    "description": "Rate limit exceeded",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "rate_limit_exceeded": {
+                                    "summary": "Rate limit exceeded",
+                                    "description": "Example response when client exceeds rate limit",
+                                    "value": {
+                                        "error": "Too Many Requests",
+                                        "detail": "Rate limit exceeded. Try again in 30 seconds.",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window",
+                            "schema": {"type": "string", "example": "0"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                        "Retry-After": {
+                            "description": "Seconds to wait before retrying",
+                            "schema": {"type": "string", "example": "30"},
+                        },
+                    },
+                },
+                status.HTTP_422_UNPROCESSABLE_ENTITY: {
+                    "description": "Validation error in path parameters",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "validation_error": {
+                                    "summary": "Parameter validation error",
+                                    "description": "Example response when service name parameter fails validation",
+                                    "value": {
+                                        "error": "Validation Error",
+                                        "detail": "Input validation failed",
+                                        "timestamp": "2025-01-01T12:34:56Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
                 status.HTTP_200_OK: {
                     "description": "Service health information retrieved successfully",
                     "model": ConsulServiceHealth,
+                    "headers": {
+                        "X-RateLimit-Limit": {
+                            "description": "Request limit per window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "60"},
+                        },
+                        "X-RateLimit-Remaining": {
+                            "description": "Remaining requests in current window (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "59"},
+                        },
+                        "X-RateLimit-Reset": {
+                            "description": "Window reset time as Unix timestamp (when rate limiting enabled)",
+                            "schema": {"type": "string", "example": "1704110100"},
+                        },
+                    },
                     "content": {
                         "application/json": {
                             "examples": {
@@ -350,14 +627,6 @@ class ConsulController:
                             },
                         },
                     },
-                },
-                status.HTTP_503_SERVICE_UNAVAILABLE: {
-                    "description": "Consul is not enabled or not available",
-                    "model": ErrorResponse,
-                },
-                status.HTTP_500_INTERNAL_SERVER_ERROR: {
-                    "description": "Internal server error during health check retrieval",
-                    "model": ErrorResponse,
                 },
             },
         )

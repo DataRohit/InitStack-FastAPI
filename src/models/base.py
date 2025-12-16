@@ -25,37 +25,6 @@ class ErrorResponse(BaseModel):
 
     model_config: ConfigDict = ConfigDict(
         json_encoders={datetime: lambda v: v.isoformat()},
-        json_schema_extra={
-            "examples": [
-                {
-                    "error": "Not Found",
-                    "detail": "HTTP 404",
-                    "timestamp": "2025-01-01T12:34:56Z",
-                },
-                {
-                    "error": "Unauthorized",
-                    "detail": "HTTP 401",
-                    "timestamp": "2025-01-01T12:34:56Z",
-                },
-                {
-                    "error": "Forbidden",
-                    "detail": "HTTP 403",
-                    "timestamp": "2025-01-01T12:34:56Z",
-                },
-                {
-                    "error": "Validation Error",
-                    "detail": (
-                        "1 validation error for Request\nbody -> name\n  Field required (type=value_error.missing)"
-                    ),
-                    "timestamp": "2025-01-01T12:34:56Z",
-                },
-                {
-                    "error": "Internal Server Error",
-                    "detail": "An Unexpected Error Occurred",
-                    "timestamp": "2025-01-01T12:34:56Z",
-                },
-            ],
-        },
     )
 
     error: str = Field(

@@ -15,11 +15,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from config.adapters import ConsulAdapter
+from config.adapters import RedisAdapter
 from config.adapters import initialize_consul
+from config.adapters import initialize_redis
 from config.adapters import shutdown_consul
+from config.adapters import shutdown_redis
 from config.logger import LoggerManager
 from config.logger import get_logger
 from config.middlewares import LoggingMiddleware
+from config.middlewares import RateLimitMiddleware
 from config.middlewares import RequestSizeLimitMiddleware
 from config.routes import create_api_router
 from config.settings import settings
@@ -64,6 +68,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     startup_logger: logging.Logger = get_logger(name="server.startup")
     startup_logger.info(msg="Application startup initiated")
 
+    redis_adapter = None
+    if settings.redis_enabled:
+        startup_logger.info(msg="Initializing Redis connection")
+        redis_adapter: RedisAdapter | None = await initialize_redis()
+        if redis_adapter:
+            startup_logger.info(
+                msg="Redis connection established",
+                extra={
+                    "redis_host": settings.redis_host,
+                    "redis_port": settings.redis_port,
+                    "redis_database": settings.redis_database,
+                },
+            )
+        else:
+            startup_logger.warning(msg="Redis connection failed")
+
     consul_adapter = None
     if settings.consul_enabled:
         startup_logger.info(msg="Initializing Consul service registration")
@@ -90,6 +110,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         shutdown_logger.info(msg="Shutting down Consul service registration")
         await shutdown_consul()
         shutdown_logger.info(msg="Consul service deregistration completed")
+
+    if settings.redis_enabled:
+        shutdown_logger.info(msg="Shutting down Redis connection")
+        await shutdown_redis()
+        shutdown_logger.info(msg="Redis connection closed")
 
     shutdown_logger.info(msg="Application shutdown completed")
 
@@ -133,6 +158,10 @@ def create_app() -> FastAPI:
 
     logger.info(msg="Adding logging middleware")
     app.add_middleware(middleware_class=LoggingMiddleware)  # ty:ignore[invalid-argument-type]
+
+    if settings.rate_limit_enabled:
+        logger.info(msg="Adding rate limiting middleware")
+        app.add_middleware(middleware_class=RateLimitMiddleware)  # ty:ignore[invalid-argument-type]
 
     logger.info(msg="Adding CORS middleware")
     app.add_middleware(

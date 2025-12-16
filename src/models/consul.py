@@ -27,25 +27,7 @@ class ConsulServiceInstance(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "service_id": "initstack-fastapi-service-172.18.0.23-8000-07173d81",
-                    "service_name": "initstack-fastapi-service",
-                    "address": "172.18.0.23",
-                    "port": 8000,
-                    "tags": ["fastapi", "api", "web"],
-                    "meta": {
-                        "debug": "true",
-                        "description": "Professional FastAPI Server For Development.",
-                        "environment": "development",
-                        "version": "0.1.0",
-                    },
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     service_id: str = Field(
         default=...,
@@ -107,22 +89,7 @@ class ConsulHealthCheck(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "name": "Serf Health Status",
-                    "status": "passing",
-                    "output": "Agent alive and reachable",
-                },
-                {
-                    "name": "Service 'initstack-fastapi-service' check",
-                    "status": "passing",
-                    "output": 'HTTP GET http://172.18.0.23:8000/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08,"system":{"platform":"Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.41","architecture":"x86_64","hostname":"5d8db61b6289","python_version":"3.14.2"},"cpu":{"count":8,"usage_percent":45.8,"frequency_mhz":3094.1},"memory":{"total_bytes":12543295488,"available_bytes":4014882816,"used_bytes":8528412672,"usage_percent":68.0},"disk":{"total_bytes":1081101176832,"used_bytes":23849172992,"free_bytes":1002259648512,"usage_percent":2.21},"process":{"pid":11,"memory_usage_bytes":76193792,"cpu_usage_percent":0.0,"threads_count":5,"open_files_count":0},"additional_info":{"version":"0.1.0","environment":"development","debug_mode":true}}',  # noqa: E501
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     name: str = Field(
         default=...,
@@ -164,69 +131,7 @@ class ConsulServiceHealth(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "service_name": "initstack-fastapi-service",
-                    "instances_count": 2,
-                    "healthy_instances": 2,
-                    "instances": [
-                        {
-                            "service_id": "initstack-fastapi-service-172.18.0.23-8000-07173d81",
-                            "address": "172.18.0.23",
-                            "port": 8000,
-                            "tags": ["fastapi", "api", "web"],
-                            "meta": {
-                                "debug": "true",
-                                "description": "Professional FastAPI Server For Development.",
-                                "environment": "development",
-                                "version": "0.1.0",
-                            },
-                            "health_status": "passing",
-                            "checks": [
-                                {
-                                    "name": "Serf Health Status",
-                                    "status": "passing",
-                                    "output": "Agent alive and reachable",
-                                },
-                                {
-                                    "name": "Service 'initstack-fastapi-service' check",
-                                    "status": "passing",
-                                    "output": 'HTTP GET http://172.18.0.23:8000/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
-                                },
-                            ],
-                        },
-                        {
-                            "service_id": "initstack-fastapi-service-172.18.0.23-8000-5e2c97f0",
-                            "address": "172.18.0.23",
-                            "port": 8000,
-                            "tags": ["fastapi", "api", "web"],
-                            "meta": {
-                                "debug": "true",
-                                "description": "Professional FastAPI Server For Development.",
-                                "environment": "development",
-                                "version": "0.1.0",
-                            },
-                            "health_status": "passing",
-                            "checks": [
-                                {
-                                    "name": "Serf Health Status",
-                                    "status": "passing",
-                                    "output": "Agent alive and reachable",
-                                },
-                                {
-                                    "name": "Service 'initstack-fastapi-service' check",
-                                    "status": "passing",
-                                    "output": 'HTTP GET http://172.18.0.23:8000/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:36:21.261676+00:00","uptime_seconds":10.45,"system":{"platform":"Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.41","architecture":"x86_64","hostname":"c91016bde156","python_version":"3.14.2"},"cpu":{"count":8,"usage_percent":35.5,"frequency_mhz":3094.1},"memory":{"total_bytes":12543295488,"available_bytes":4017254400,"used_bytes":8526041088,"usage_percent":68.0},"disk":{"total_bytes":1081101176832,"used_bytes":23772839936,"free_bytes":1002335981568,"usage_percent":2.2},"process":{"pid":294,"memory_usage_bytes":79020032,"cpu_usage_percent":0.0,"threads_count":5,"open_files_count":0},"additional_info":{"version":"0.1.0","environment":"development","debug_mode":true}}',  # noqa: E501
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     service_name: str = Field(
         default=...,
@@ -273,37 +178,7 @@ class ConsulServiceInstanceHealth(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "service_id": "initstack-fastapi-service-172.18.0.23-8000-07173d81",
-                    "address": "172.18.0.23",
-                    "port": 8000,
-                    "tags": ["fastapi", "api", "web"],
-                    "meta": {
-                        "debug": "true",
-                        "description": "Professional FastAPI Server For Development.",
-                        "environment": "development",
-                        "version": "0.1.0",
-                    },
-                    "health_status": "passing",
-                    "checks": [
-                        {
-                            "name": "Serf Health Status",
-                            "status": "passing",
-                            "output": "Agent alive and reachable",
-                        },
-                        {
-                            "name": "Service 'initstack-fastapi-service' check",
-                            "status": "passing",
-                            "output": 'HTTP GET http://172.18.0.23:8000/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08,"system":{"platform":"Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.41","architecture":"x86_64","hostname":"5d8db61b6289","python_version":"3.14.2"},"cpu":{"count":8,"usage_percent":45.8,"frequency_mhz":3094.1},"memory":{"total_bytes":12543295488,"available_bytes":4014882816,"used_bytes":8528412672,"usage_percent":68.0},"disk":{"total_bytes":1081101176832,"used_bytes":23849172992,"free_bytes":1002259648512,"usage_percent":2.21},"process":{"pid":11,"memory_usage_bytes":76193792,"cpu_usage_percent":0.0,"threads_count":5,"open_files_count":0},"additional_info":{"version":"0.1.0","environment":"development","debug_mode":true}}',  # noqa: E501
-                        },
-                    ],
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     service_id: str = Field(
         default=...,
@@ -374,19 +249,6 @@ class ConsulStatusResponse(BaseModel):
 
     model_config: ConfigDict = ConfigDict(
         json_encoders={datetime: lambda v: v.isoformat()},
-        json_schema_extra={
-            "examples": [
-                {
-                    "consul_healthy": True,
-                    "leader": "172.18.0.10:8300",
-                    "peers_count": 1,
-                    "service_registered": True,
-                    "service_id": "initstack-fastapi-service-172.18.0.19-8000-402f4c44",
-                    "service_name": "initstack-fastapi-service",
-                    "timestamp": "2025-01-01T12:34:56Z",
-                },
-            ],
-        },
     )
 
     consul_healthy: bool = Field(
@@ -448,43 +310,6 @@ class ConsulServiceDiscoveryResponse(BaseModel):
 
     model_config: ConfigDict = ConfigDict(
         json_encoders={datetime: lambda v: v.isoformat()},
-        json_schema_extra={
-            "examples": [
-                {
-                    "service_name": "initstack-fastapi-service",
-                    "instances_found": 2,
-                    "instances": [
-                        {
-                            "service_id": "initstack-fastapi-service-172.18.0.23-8000-07173d81",
-                            "service_name": "initstack-fastapi-service",
-                            "address": "172.18.0.23",
-                            "port": 8000,
-                            "tags": ["fastapi", "api", "web"],
-                            "meta": {
-                                "debug": "true",
-                                "description": "Professional FastAPI Server For Development.",
-                                "environment": "development",
-                                "version": "0.1.0",
-                            },
-                        },
-                        {
-                            "service_id": "initstack-fastapi-service-172.18.0.23-8000-5e2c97f0",
-                            "service_name": "initstack-fastapi-service",
-                            "address": "172.18.0.23",
-                            "port": 8000,
-                            "tags": ["fastapi", "api", "web"],
-                            "meta": {
-                                "debug": "true",
-                                "description": "Professional FastAPI Server For Development.",
-                                "environment": "development",
-                                "version": "0.1.0",
-                            },
-                        },
-                    ],
-                    "timestamp": "2025-12-16T12:38:58.386953+00:00",
-                },
-            ],
-        },
     )
 
     service_name: str = Field(

@@ -25,18 +25,7 @@ class SystemInfo(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "platform": "Windows-10-10.0.19045-SP0",
-                    "architecture": "AMD64",
-                    "hostname": "DESKTOP-ABC123",
-                    "python_version": "3.11.5",
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     platform: str = Field(
         default=...,
@@ -78,17 +67,7 @@ class CPUInfo(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "count": 8,
-                    "usage_percent": 25.4,
-                    "frequency_mhz": 2400.0,
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     count: int = Field(
         default=...,
@@ -130,18 +109,7 @@ class MemoryInfo(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "total_bytes": 17179869184,
-                    "available_bytes": 8589934592,
-                    "used_bytes": 8589934592,
-                    "usage_percent": 50.0,
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     total_bytes: int = Field(
         default=...,
@@ -189,18 +157,7 @@ class DiskInfo(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "total_bytes": 1099511627776,
-                    "used_bytes": 549755813888,
-                    "free_bytes": 549755813888,
-                    "usage_percent": 50.0,
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     total_bytes: int = Field(
         default=...,
@@ -249,19 +206,7 @@ class ProcessInfo(BaseModel):
         None
     """
 
-    model_config: ConfigDict = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "pid": 12345,
-                    "memory_usage_bytes": 134217728,
-                    "cpu_usage_percent": 2.5,
-                    "threads_count": 8,
-                    "open_files_count": 25,
-                },
-            ],
-        },
-    )
+    model_config: ConfigDict = ConfigDict()
 
     pid: int = Field(
         default=...,
@@ -321,49 +266,6 @@ class HealthResponse(BaseModel):
 
     model_config: ConfigDict = ConfigDict(
         json_encoders={datetime: lambda v: v.isoformat()},
-        json_schema_extra={
-            "examples": [
-                {
-                    "status": "healthy",
-                    "timestamp": "2025-01-01T12:34:56Z",
-                    "uptime_seconds": 3600.5,
-                    "system": {
-                        "platform": "Windows-10-10.0.19045-SP0",
-                        "architecture": "AMD64",
-                        "hostname": "DESKTOP-ABC123",
-                        "python_version": "3.11.5",
-                    },
-                    "cpu": {
-                        "count": 8,
-                        "usage_percent": 25.4,
-                        "frequency_mhz": 2400.0,
-                    },
-                    "memory": {
-                        "total_bytes": 17179869184,
-                        "available_bytes": 8589934592,
-                        "used_bytes": 8589934592,
-                        "usage_percent": 50.0,
-                    },
-                    "disk": {
-                        "total_bytes": 1099511627776,
-                        "used_bytes": 549755813888,
-                        "free_bytes": 549755813888,
-                        "usage_percent": 50.0,
-                    },
-                    "process": {
-                        "pid": 12345,
-                        "memory_usage_bytes": 134217728,
-                        "cpu_usage_percent": 2.5,
-                        "threads_count": 8,
-                        "open_files_count": 25,
-                    },
-                    "additional_info": {
-                        "version": "0.1.0",
-                        "environment": "development",
-                    },
-                },
-            ],
-        },
     )
 
     status: str = Field(
