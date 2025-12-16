@@ -32,6 +32,10 @@ class Settings(BaseSettings):
         log_level (str): Logging level.
         log_format (str): Logging format.
         workers (int): Number of server workers.
+        proxy_headers_enabled (bool): Enable proxy headers middleware.
+        proxy_headers_trusted_hosts (list[str]): Trusted hosts for proxy headers.
+        max_request_size (int): Maximum request body size in bytes.
+        max_upload_size (int): Maximum upload file size in bytes.
 
     Properties:
         None
@@ -40,6 +44,7 @@ class Settings(BaseSettings):
         parse_cors_origins: Parse CORS origins from env input.
         parse_cors_methods: Parse CORS methods from env input.
         parse_cors_headers: Parse CORS headers from env input.
+        parse_proxy_headers_trusted_hosts: Parse proxy headers trusted hosts from env input.
     """
 
     app_name: str = "InitStack FastAPI Development Server"
@@ -70,6 +75,14 @@ class Settings(BaseSettings):
     log_format: str = "standard"
 
     workers: int = 1
+
+    proxy_headers_enabled: bool = False
+    proxy_headers_trusted_hosts: list[str] = Field(
+        default_factory=lambda: ["*"],
+    )
+
+    max_request_size: int = 16777216
+    max_upload_size: int = 104857600
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -135,6 +148,28 @@ class Settings(BaseSettings):
                 return json.loads(s=v)
             except json.JSONDecodeError:
                 return [header.strip() for header in v.split(",")]
+        return v
+
+    @field_validator("proxy_headers_trusted_hosts", mode="before")
+    @classmethod
+    def parse_proxy_headers_trusted_hosts(cls, v: Any) -> Any:
+        """Parse Proxy Headers Trusted Hosts From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed value, typically a list of strings.
+
+        Raises:
+            None
+        """
+
+        if isinstance(v, str):
+            try:
+                return json.loads(s=v)
+            except json.JSONDecodeError:
+                return [host.strip() for host in v.split(",")]
         return v
 
     class Config:
