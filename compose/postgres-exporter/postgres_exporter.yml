@@ -1,8 +1,0 @@
-auth_modules:
-    default:
-        type: userpass
-        userpass:
-            username: Kx9mP2nQ7vR8sT4w
-            password: Zy3kL6mN9pQ2rS5v
-        options:
-            sslmode: disable

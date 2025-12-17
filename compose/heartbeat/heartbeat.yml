@@ -26,14 +26,6 @@ heartbeat.monitors:
   password: "${KIBANA_PASSWORD}"
 
 - type: http
-  id: postgres-exporter-health
-  name: PostgreSQL Exporter Health Check
-  urls: ["http://initstack-postgres-exporter-service:9187/metrics"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
-
-- type: http
   id: redis-exporter-health
   name: Redis Exporter Health Check
   urls: ["http://initstack-redis-exporter-service:9121/metrics"]
@@ -59,13 +51,7 @@ heartbeat.monitors:
   username: "${RABBITMQ_USER}"
   password: "${RABBITMQ_PASSWORD}"
 
-- type: http
-  id: sonarqube-health
-  name: SonarQube Health Check
-  urls: ["http://initstack-sonarqube-service:9000/api/system/status"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+
 
 - type: http
   id: consul-health
@@ -123,12 +109,7 @@ heartbeat.monitors:
   timeout: 10s
   check.response.status: [200]
 
-- type: tcp
-  id: postgres-tcp
-  name: PostgreSQL TCP Check
-  hosts: ["initstack-postgres-service:5432"]
-  schedule: '@every 30s'
-  timeout: 10s
+
 
 - type: tcp
   id: redis-tcp
@@ -182,7 +163,7 @@ heartbeat.monitors:
 - type: icmp
   id: docker-network-ping
   name: Docker Network Connectivity
-  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-postgres-service", "initstack-consul-service", "initstack-apm-service", "initstack-fastapi-service"]
+  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-consul-service", "initstack-apm-service", "initstack-fastapi-service"]
   schedule: '@every 60s'
   timeout: 10s
 

@@ -12,13 +12,7 @@ metricbeat.modules:
   metrics_path: /metrics
   namespace: consul_exporter
 
-- module: prometheus
-  metricsets:
-    - collector
-  period: 10s
-  hosts: ["${POSTGRES_EXPORTER_HOST}:${POSTGRES_EXPORTER_PORT}"]
-  metrics_path: /metrics
-  namespace: postgres_exporter
+
 
 - module: prometheus
   metricsets:

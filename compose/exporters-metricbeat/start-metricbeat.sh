@@ -12,8 +12,6 @@ sed -i "s|\${ELASTICSEARCH_PASSWORD}|${ELASTICSEARCH_PASSWORD}|g" /tmp/metricbea
 sed -i "s|\${KIBANA_HOST}|${KIBANA_HOST}|g" /tmp/metricbeat.yml
 sed -i "s|\${CONSUL_EXPORTER_HOST}|${CONSUL_EXPORTER_HOST}|g" /tmp/metricbeat.yml
 sed -i "s|\${CONSUL_EXPORTER_PORT}|${CONSUL_EXPORTER_PORT}|g" /tmp/metricbeat.yml
-sed -i "s|\${POSTGRES_EXPORTER_HOST}|${POSTGRES_EXPORTER_HOST}|g" /tmp/metricbeat.yml
-sed -i "s|\${POSTGRES_EXPORTER_PORT}|${POSTGRES_EXPORTER_PORT}|g" /tmp/metricbeat.yml
 sed -i "s|\${REDIS_EXPORTER_HOST}|${REDIS_EXPORTER_HOST}|g" /tmp/metricbeat.yml
 sed -i "s|\${REDIS_EXPORTER_PORT}|${REDIS_EXPORTER_PORT}|g" /tmp/metricbeat.yml
 sed -i "s|\${ELASTICSEARCH_EXPORTER_HOST}|${ELASTICSEARCH_EXPORTER_HOST}|g" /tmp/metricbeat.yml
@@ -43,13 +41,6 @@ until curl -s "http://${CONSUL_EXPORTER_HOST}:${CONSUL_EXPORTER_PORT}/metrics" >
     sleep 60
 done
 echo "Consul Exporter is available"
-
-echo "Waiting for PostgreSQL Exporter to be available..."
-until curl -s "http://${POSTGRES_EXPORTER_HOST}:${POSTGRES_EXPORTER_PORT}/metrics" > /dev/null; do
-    echo "PostgreSQL Exporter is unavailable - sleeping"
-    sleep 60
-done
-echo "PostgreSQL Exporter is available"
 
 echo "Waiting for Redis Exporter to be available..."
 until curl -s "http://${REDIS_EXPORTER_HOST}:${REDIS_EXPORTER_PORT}/metrics" > /dev/null; do

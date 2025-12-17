@@ -76,7 +76,7 @@ select = [
     "PERF",
     "RUF",
 ]
-ignore = ["BLE001", "G004", "TRY301"]
+ignore = ["BLE001", "G004", "N805", "TRY301"]
 extend-unsafe-fixes = []
 
 [tool.ruff.lint.isort]

@@ -47,48 +47,6 @@ services:
             initstack-consul-service:
                 condition: service_healthy
 
-    initstack-postgres-service:
-        image: postgres:18.1
-        container_name: initstack-postgres-service
-        restart: unless-stopped
-        env_file:
-            - .envs/postgres/.env
-        volumes:
-            - initstack-postgres-data:/var/lib/postgresql
-            - ./compose/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-            - ./compose/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
-            - ./compose/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
-            - ./compose/postgres/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
-        ports:
-            - "5432:5432"
-        networks:
-            - initstack-network
-        healthcheck:
-            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 60s
-
-    initstack-postgres-exporter-service:
-        image: prometheuscommunity/postgres-exporter:v0.18.1
-        container_name: initstack-postgres-exporter-service
-        entrypoint: ["/usr/local/bin/start-exporter.sh"]
-        restart: unless-stopped
-        env_file:
-            - .envs/postgres-exporter/.env
-        volumes:
-            - ./compose/postgres-exporter/postgres_exporter.yml:/etc/postgres_exporter/postgres_exporter.yml:ro
-            - ./compose/postgres-exporter/queries.yml:/etc/postgres_exporter/queries.yml:ro
-            - ./compose/postgres-exporter/start-exporter.sh:/usr/local/bin/start-exporter.sh:ro
-        ports:
-            - "9187:9187"
-        networks:
-            - initstack-network
-        depends_on:
-            initstack-postgres-service:
-                condition: service_healthy
-
     initstack-redis-service:
         image: redis:8.4.0
         container_name: initstack-redis-service
@@ -232,44 +190,6 @@ services:
             retries: 3
             start_period: 120s
 
-    initstack-sonarqube-service:
-        image: sonarqube:25.12.0.117093-community
-        container_name: initstack-sonarqube-service
-        user: "1000:1000"
-        entrypoint: ["/usr/local/bin/start-sonarqube.sh"]
-        restart: unless-stopped
-        env_file:
-            - .envs/sonarqube/.env
-        volumes:
-            - initstack-sonarqube-data:/opt/sonarqube/data
-            - initstack-sonarqube-logs:/opt/sonarqube/logs
-            - initstack-sonarqube-temp:/opt/sonarqube/temp
-            - initstack-sonarqube-extensions:/opt/sonarqube/extensions
-            - ./compose/sonarqube/sonar.properties:/opt/sonarqube/conf/sonar.properties:ro
-            - ./compose/sonarqube/start-sonarqube.sh:/usr/local/bin/start-sonarqube.sh:ro
-            - ./compose/sonarqube/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
-        ports:
-            - "9000:9000"
-        networks:
-            - initstack-network
-        depends_on:
-            initstack-postgres-service:
-                condition: service_healthy
-        healthcheck:
-            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
-            interval: 60s
-            timeout: 30s
-            retries: 5
-            start_period: 120s
-        ulimits:
-            memlock:
-                soft: -1
-                hard: -1
-            nofile:
-                soft: 131072
-                hard: 131072
-            nproc: 8192
-
     initstack-fastapi-service:
         build:
             context: .
@@ -279,8 +199,6 @@ services:
         restart: unless-stopped
         depends_on:
             initstack-consul-service:
-                condition: service_healthy
-            initstack-postgres-service:
                 condition: service_healthy
             initstack-redis-service:
                 condition: service_healthy
@@ -433,41 +351,6 @@ services:
             retries: 3
             start_period: 60s
 
-    initstack-postgres-metricbeat-service:
-        image: elastic/metricbeat:8.19.8
-        container_name: initstack-postgres-metricbeat-service
-        user: root
-        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
-        restart: unless-stopped
-        env_file:
-            - .envs/postgres-metricbeat/.env
-        volumes:
-            - initstack-postgres-metricbeat-data:/usr/share/metricbeat/data
-            - ./compose/postgres-metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-            - ./compose/postgres-metricbeat/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
-            - ./compose/postgres-metricbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
-            - /var/run/docker.sock:/var/run/docker.sock:ro
-            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
-            - /proc:/hostfs/proc:ro
-            - /:/hostfs:ro
-        ports:
-            - "5068:5068"
-        networks:
-            - initstack-network
-        depends_on:
-            initstack-elasticsearch-service:
-                condition: service_healthy
-            initstack-kibana-service:
-                condition: service_healthy
-            initstack-postgres-service:
-                condition: service_healthy
-        healthcheck:
-            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 60s
-
     initstack-redis-metricbeat-service:
         image: elastic/metricbeat:8.19.8
         container_name: initstack-redis-metricbeat-service
@@ -604,41 +487,6 @@ services:
             retries: 3
             start_period: 60s
 
-    initstack-sonarqube-metricbeat-service:
-        image: elastic/metricbeat:8.19.8
-        container_name: initstack-sonarqube-metricbeat-service
-        user: root
-        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
-        restart: unless-stopped
-        env_file:
-            - .envs/sonarqube-metricbeat/.env
-        volumes:
-            - initstack-sonarqube-metricbeat-data:/usr/share/metricbeat/data
-            - ./compose/sonarqube-metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
-            - ./compose/sonarqube-metricbeat/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
-            - ./compose/sonarqube-metricbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
-            - /var/run/docker.sock:/var/run/docker.sock:ro
-            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
-            - /proc:/hostfs/proc:ro
-            - /:/hostfs:ro
-        ports:
-            - "5073:5073"
-        networks:
-            - initstack-network
-        depends_on:
-            initstack-elasticsearch-service:
-                condition: service_healthy
-            initstack-kibana-service:
-                condition: service_healthy
-            initstack-sonarqube-service:
-                condition: service_healthy
-        healthcheck:
-            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 60s
-
     initstack-exporters-metricbeat-service:
         image: elastic/metricbeat:8.19.8
         container_name: initstack-exporters-metricbeat-service
@@ -666,8 +514,6 @@ services:
             initstack-kibana-service:
                 condition: service_healthy
             initstack-consul-exporter-service:
-                condition: service_started
-            initstack-postgres-exporter-service:
                 condition: service_started
             initstack-redis-exporter-service:
                 condition: service_started
@@ -762,13 +608,6 @@ volumes:
             - "com.docker.compose.volume=initstack-consul-data"
             - "environment=development"
 
-    initstack-postgres-data:
-        name: initstack-postgres-data
-        driver: local
-        labels:
-            - "com.docker.compose.volume=initstack-postgres-data"
-            - "environment=development"
-
     initstack-redis-data:
         name: initstack-redis-data
         driver: local
@@ -797,36 +636,11 @@ volumes:
             - "com.docker.compose.volume=initstack-kibana-data"
             - "environment=development"
 
-    initstack-sonarqube-data:
-        name: initstack-sonarqube-data
-        driver: local
-        labels:
-            - "com.docker.compose.volume=initstack-sonarqube-data"
-            - "environment=development"
-
     initstack-filebeat-data:
         name: initstack-filebeat-data
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-filebeat-data"
-            - "environment=development"
-    initstack-sonarqube-logs:
-        name: initstack-sonarqube-logs
-        driver: local
-        labels:
-            - "com.docker.compose.volume=initstack-sonarqube-logs"
-            - "environment=development"
-    initstack-sonarqube-temp:
-        name: initstack-sonarqube-temp
-        driver: local
-        labels:
-            - "com.docker.compose.volume=initstack-sonarqube-temp"
-            - "environment=development"
-    initstack-sonarqube-extensions:
-        name: initstack-sonarqube-extensions
-        driver: local
-        labels:
-            - "com.docker.compose.volume=initstack-sonarqube-extensions"
             - "environment=development"
 
     initstack-apm-data:
@@ -848,13 +662,6 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-consul-metricbeat-data"
-            - "environment=development"
-
-    initstack-postgres-metricbeat-data:
-        name: initstack-postgres-metricbeat-data
-        driver: local
-        labels:
-            - "com.docker.compose.volume=initstack-postgres-metricbeat-data"
             - "environment=development"
 
     initstack-redis-metricbeat-data:
@@ -883,13 +690,6 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-kibana-metricbeat-data"
-            - "environment=development"
-
-    initstack-sonarqube-metricbeat-data:
-        name: initstack-sonarqube-metricbeat-data
-        driver: local
-        labels:
-            - "com.docker.compose.volume=initstack-sonarqube-metricbeat-data"
             - "environment=development"
 
     initstack-exporters-metricbeat-data:
