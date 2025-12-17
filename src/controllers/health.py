@@ -13,13 +13,13 @@ from fastapi import status
 
 from config.logger import get_logger
 from config.settings import settings
-from src.models import CPUInfo
-from src.models import DiskInfo
-from src.models import ErrorResponse
-from src.models import HealthResponse
-from src.models import MemoryInfo
-from src.models import ProcessInfo
-from src.models import SystemInfo
+from src.schemas import CPUInfo
+from src.schemas import DiskInfo
+from src.schemas import ErrorResponse
+from src.schemas import HealthResponse
+from src.schemas import MemoryInfo
+from src.schemas import ProcessInfo
+from src.schemas import SystemInfo
 
 if TYPE_CHECKING:
     import logging

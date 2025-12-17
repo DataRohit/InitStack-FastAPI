@@ -15,12 +15,12 @@ from fastapi import status
 from config.adapters.redis import get_redis_adapter
 from config.logger import get_logger
 from config.settings import settings
-from src.models.base import ErrorResponse
-from src.models.rate_limit import RateLimitConfig
-from src.models.rate_limit import RateLimitStatus
-from src.models.rate_limit import RateLimitStatusResponse
-from src.models.rate_limit import RateLimitTestResponse
-from src.models.rate_limit import RateLimitTestResult
+from src.schemas.base import ErrorResponse
+from src.schemas.rate_limit import RateLimitConfig
+from src.schemas.rate_limit import RateLimitStatus
+from src.schemas.rate_limit import RateLimitStatusResponse
+from src.schemas.rate_limit import RateLimitTestResponse
+from src.schemas.rate_limit import RateLimitTestResult
 
 if TYPE_CHECKING:
     import logging

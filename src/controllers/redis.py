@@ -11,13 +11,13 @@ from fastapi import status
 from config.adapters.redis import get_redis_adapter
 from config.logger import get_logger
 from config.settings import settings
-from src.models.base import ErrorResponse
-from src.models.redis import RedisConnectionInfo
-from src.models.redis import RedisPoolStats
-from src.models.redis import RedisServerInfo
-from src.models.redis import RedisStatusResponse
-from src.models.redis import RedisTestOperation
-from src.models.redis import RedisTestResponse
+from src.schemas.base import ErrorResponse
+from src.schemas.redis import RedisConnectionInfo
+from src.schemas.redis import RedisPoolStats
+from src.schemas.redis import RedisServerInfo
+from src.schemas.redis import RedisStatusResponse
+from src.schemas.redis import RedisTestOperation
+from src.schemas.redis import RedisTestResponse
 
 if TYPE_CHECKING:
     import logging

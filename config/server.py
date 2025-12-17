@@ -27,7 +27,7 @@ from config.middlewares import RateLimitMiddleware
 from config.middlewares import RequestSizeLimitMiddleware
 from config.routes import create_api_router
 from config.settings import settings
-from src.models import ErrorResponse
+from src.schemas import ErrorResponse
 
 if TYPE_CHECKING:
     import logging

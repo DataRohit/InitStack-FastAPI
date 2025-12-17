@@ -11,11 +11,11 @@ from fastapi import status
 from config.adapters.consul import get_consul_adapter
 from config.logger import get_logger
 from config.settings import settings
-from src.models.base import ErrorResponse
-from src.models.consul import ConsulServiceDiscoveryResponse
-from src.models.consul import ConsulServiceHealth
-from src.models.consul import ConsulServiceInstance
-from src.models.consul import ConsulStatusResponse
+from src.schemas.base import ErrorResponse
+from src.schemas.consul import ConsulServiceDiscoveryResponse
+from src.schemas.consul import ConsulServiceHealth
+from src.schemas.consul import ConsulServiceInstance
+from src.schemas.consul import ConsulStatusResponse
 
 if TYPE_CHECKING:
     import logging
