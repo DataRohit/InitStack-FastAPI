@@ -1,4 +1,326 @@
 services:
+    initstack-supabase-vector-service:
+        image: timberio/vector:0.52.0-alpine
+        container_name: initstack-supabase-vector-service
+        command: ["--config", "/etc/vector/vector.yml"]
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+        volumes:
+            - ./compose/supabase/logs/vector.yml:/etc/vector/vector.yml:ro,z
+            - /var/run/docker.sock:/var/run/docker.sock:ro,z
+        networks:
+            - initstack-network
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "--no-verbose",
+                    "--tries=1",
+                    "--spider",
+                    "http://127.0.0.1:9001/health",
+                ]
+            timeout: 5s
+            interval: 5s
+            retries: 3
+        security_opt:
+            - "label=disable"
+
+    initstack-supabase-db-service:
+        image: supabase/postgres:15.14.1.066
+        container_name: initstack-supabase-db-service
+        command:
+            [
+                "postgres",
+                "-c",
+                "config_file=/etc/postgresql/postgresql.conf",
+                "-c",
+                "log_min_messages=fatal",
+            ]
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/db.env
+        volumes:
+            - ./compose/supabase/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+            - ./compose/supabase/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+            - ./compose/supabase/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+            - ./compose/supabase/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+            - initstack-supabase-db-data:/var/lib/postgresql/data:Z
+            - ./compose/supabase/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+            - ./compose/supabase/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+            - ./compose/supabase/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+            - initstack-supabase-db-config:/etc/postgresql-custom
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-vector-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    initstack-supabase-analytics-service:
+        image: supabase/logflare:1.27.3
+        container_name: initstack-supabase-analytics-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/analytics.env
+        ports:
+            - "4000:4000"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "http://127.0.0.1:4000/health"]
+            timeout: 5s
+            interval: 5s
+            retries: 10
+
+    initstack-supabase-postgres-meta-service:
+        image: supabase/postgres-meta:v0.95.1
+        container_name: initstack-supabase-postgres-meta-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/meta.env
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+
+    initstack-supabase-auth-service:
+        image: supabase/gotrue:v2.184.0
+        container_name: initstack-supabase-auth-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/auth.env
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "--no-verbose",
+                    "--tries=1",
+                    "--spider",
+                    "http://127.0.0.1:9999/health",
+                ]
+            timeout: 5s
+            interval: 5s
+            retries: 3
+
+    initstack-supabase-postgrest-service:
+        image: postgrest/postgrest:v14.2
+        container_name: initstack-supabase-postgrest-service
+        command: ["postgrest"]
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/postgrest.env
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+
+    initstack-supabase-realtime-service:
+        image: supabase/realtime:v2.68.0
+        container_name: initstack-supabase-realtime-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/realtime.env
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    'curl -sSfL --head -o /dev/null -H "Authorization: Bearer $${ANON_KEY}" http://127.0.0.1:4000/api/tenants/realtime-dev/health',
+                ]
+            timeout: 5s
+            interval: 5s
+            retries: 3
+
+    initstack-supabase-imgproxy-service:
+        image: darthsim/imgproxy:v3.30.1
+        container_name: initstack-supabase-imgproxy-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/imgproxy.env
+        volumes:
+            - ./compose/supabase/storage:/var/lib/storage:z
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD", "imgproxy", "health"]
+            timeout: 5s
+            interval: 5s
+            retries: 3
+
+    initstack-supabase-storage-service:
+        image: supabase/storage-api:v1.33.1
+        container_name: initstack-supabase-storage-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/storage.env
+        volumes:
+            - ./compose/supabase/storage:/var/lib/storage:z
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+            initstack-supabase-postgrest-service:
+                condition: service_started
+            initstack-supabase-imgproxy-service:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "--no-verbose",
+                    "--tries=1",
+                    "--spider",
+                    "http://127.0.0.1:5000/status",
+                ]
+            timeout: 5s
+            interval: 5s
+            retries: 3
+
+    initstack-supabase-functions-service:
+        image: supabase/edge-runtime:v1.69.28
+        container_name: initstack-supabase-functions-service
+        command: ["start", "--main-service", "/home/deno/functions/main"]
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/functions.env
+        volumes:
+            - ./compose/supabase/functions:/home/deno/functions:Z
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+            initstack-supabase-kong-service:
+                condition: service_started
+
+    initstack-supabase-kong-service:
+        image: kong:3.9.1
+        container_name: initstack-supabase-kong-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/kong.env
+        ports:
+            - 8000:8000/tcp
+            - 8443:8443/tcp
+        volumes:
+            - ./compose/supabase/api/kong.yml:/home/kong/temp.yml:ro,z
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-analytics-service:
+                condition: service_started
+
+    initstack-supabase-supavisor-service:
+        image: supabase/supavisor:2.7.4
+        container_name: initstack-supabase-supavisor-service
+        command:
+            [
+                "/bin/sh",
+                "-c",
+                '/app/bin/migrate && /app/bin/supavisor eval "$$(cat /etc/pooler/pooler.exs)" && /app/bin/server',
+            ]
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/supavisor.env
+        ports:
+            - "5432:5432"
+            - "6543:6543"
+        volumes:
+            - ./compose/supabase/pooler/pooler.exs:/etc/pooler/pooler.exs:ro,z
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-db-service:
+                condition: service_healthy
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "curl",
+                    "-sSfL",
+                    "--head",
+                    "-o",
+                    "/dev/null",
+                    "http://127.0.0.1:4000/api/health",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    initstack-supabase-studio-service:
+        image: supabase/studio:2025.12.17-sha-43f4f7f
+        container_name: initstack-supabase-studio-service
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase/.env
+            - .envs/supabase/studio.env
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+            initstack-supabase-postgres-meta-service:
+                condition: service_started
+            initstack-supabase-kong-service:
+                condition: service_started
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "fetch('http://127.0.0.1:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})",
+                ]
+            timeout: 10s
+            interval: 5s
+            retries: 3
+
     initstack-consul-service:
         image: consul:1.15.4
         container_name: initstack-consul-service
@@ -208,13 +530,15 @@ services:
                 condition: service_healthy
             initstack-apm-service:
                 condition: service_healthy
+            initstack-supabase-studio-service:
+                condition: service_healthy
         env_file:
             - .env
         volumes:
             - .:/app
             - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
         ports:
-            - "8000:8000"
+            - "8080:8080"
         networks:
             - initstack-network
         healthcheck:
@@ -315,6 +639,51 @@ services:
             start_period: 60s
         cap_add:
             - NET_RAW
+
+    initstack-supabase-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-supabase-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/supabase-metricbeat/.env
+        volumes:
+            - initstack-supabase-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/supabase-metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/supabase-metricbeat/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/supabase-metricbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /proc:/hostfs/proc:ro
+            - /:/hostfs:ro
+        ports:
+            - "5077:5077"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-supabase-vector-service:
+                condition: service_healthy
+            initstack-supabase-analytics-service:
+                condition: service_healthy
+            initstack-supabase-auth-service:
+                condition: service_healthy
+            initstack-supabase-supavisor-service:
+                condition: service_healthy
+            initstack-supabase-storage-service:
+                condition: service_healthy
+            initstack-supabase-studio-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
 
     initstack-consul-metricbeat-service:
         image: elastic/metricbeat:8.19.8
@@ -601,6 +970,19 @@ services:
             start_period: 60s
 
 volumes:
+    initstack-supabase-db-data:
+        name: initstack-supabase-db-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-supabase-db-data"
+            - "environment=development"
+    initstack-supabase-db-config:
+        name: initstack-supabase-db-config
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-supabase-db-config"
+            - "environment=development"
+
     initstack-consul-data:
         name: initstack-consul-data
         driver: local
@@ -655,6 +1037,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-heartbeat-data"
+            - "environment=development"
+
+    initstack-supabase-metricbeat-data:
+        name: initstack-supabase-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-supabase-metricbeat-data"
             - "environment=development"
 
     initstack-consul-metricbeat-data:

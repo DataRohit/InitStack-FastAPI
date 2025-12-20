@@ -186,7 +186,7 @@ class ConsulController:
                                         "leader": "172.18.0.10:8300",
                                         "peers_count": 1,
                                         "service_registered": True,
-                                        "service_id": "initstack-fastapi-service-172.18.0.19-8000-402f4c44",
+                                        "service_id": "initstack-fastapi-service-172.18.0.19-8080-402f4c44",
                                         "service_name": "initstack-fastapi-service",
                                         "timestamp": "2025-01-01T12:34:56Z",
                                     },
@@ -363,10 +363,10 @@ class ConsulController:
                                         "instances_found": 2,
                                         "instances": [
                                             {
-                                                "service_id": "initstack-fastapi-service-172.18.0.23-8000-07173d81",
+                                                "service_id": "initstack-fastapi-service-172.18.0.23-8080-07173d81",
                                                 "service_name": "initstack-fastapi-service",
                                                 "address": "172.18.0.23",
-                                                "port": 8000,
+                                                "port": 8080,
                                                 "tags": ["fastapi", "api", "web"],
                                                 "meta": {
                                                     "debug": "true",
@@ -376,10 +376,10 @@ class ConsulController:
                                                 },
                                             },
                                             {
-                                                "service_id": "initstack-fastapi-service-172.18.0.23-8000-5e2c97f0",
+                                                "service_id": "initstack-fastapi-service-172.18.0.23-8080-5e2c97f0",
                                                 "service_name": "initstack-fastapi-service",
                                                 "address": "172.18.0.23",
-                                                "port": 8000,
+                                                "port": 8080,
                                                 "tags": ["fastapi", "api", "web"],
                                                 "meta": {
                                                     "debug": "true",
@@ -571,9 +571,9 @@ class ConsulController:
                                         "healthy_instances": 2,
                                         "instances": [
                                             {
-                                                "service_id": "initstack-fastapi-service-172.18.0.23-8000-07173d81",
+                                                "service_id": "initstack-fastapi-service-172.18.0.23-8080-07173d81",
                                                 "address": "172.18.0.23",
-                                                "port": 8000,
+                                                "port": 8080,
                                                 "tags": ["fastapi", "api", "web"],
                                                 "meta": {
                                                     "debug": "true",
@@ -591,7 +591,7 @@ class ConsulController:
                                                     {
                                                         "name": "Service 'initstack-fastapi-service' check",
                                                         "status": "passing",
-                                                        "output": 'HTTP GET http://172.18.0.23:8000/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
+                                                        "output": 'HTTP GET http://172.18.0.23:8080/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
                                                     },
                                                 ],
                                             },

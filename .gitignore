@@ -77,9 +77,6 @@ node_modules/
 .turbo/
 out/
 
-staticfiles/
-media/
-
 .env
 *.env
 
@@ -117,5 +114,5 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-.scannerwork/
-.sonar/
+!compose/supabase/db/*
+!compose/supabase/logs/

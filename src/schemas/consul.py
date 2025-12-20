@@ -32,7 +32,7 @@ class ConsulServiceInstance(BaseModel):
     service_id: str = Field(
         default=...,
         description="Unique service identifier in Consul.",
-        examples=["initstack-fastapi-service-172.18.0.23-8000-07173d81"],
+        examples=["initstack-fastapi-service-172.18.0.23-8080-07173d81"],
     )
     service_name: str = Field(
         default=...,
@@ -47,7 +47,7 @@ class ConsulServiceInstance(BaseModel):
     port: int = Field(
         default=...,
         description="Service port number.",
-        examples=[8000, 5432, 6379],
+        examples=[8080, 5432, 6379],
         ge=1,
         le=65535,
     )
@@ -106,7 +106,7 @@ class ConsulHealthCheck(BaseModel):
         description="Health check output or error message.",
         examples=[
             "Agent alive and reachable",
-            'HTTP GET http://172.18.0.23:8000/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
+            'HTTP GET http://172.18.0.23:8080/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
             "Connection refused",
         ],
     )
@@ -183,7 +183,7 @@ class ConsulServiceInstanceHealth(BaseModel):
     service_id: str = Field(
         default=...,
         description="Unique service identifier.",
-        examples=["initstack-fastapi-service-172.18.0.23-8000-07173d81"],
+        examples=["initstack-fastapi-service-172.18.0.23-8080-07173d81"],
     )
     address: str = Field(
         default=...,
@@ -193,7 +193,7 @@ class ConsulServiceInstanceHealth(BaseModel):
     port: int = Field(
         default=...,
         description="Service port number.",
-        examples=[8000, 5432, 6379],
+        examples=[8080, 5432, 6379],
         ge=1,
         le=65535,
     )
@@ -275,7 +275,7 @@ class ConsulStatusResponse(BaseModel):
     service_id: str | None = Field(
         default=None,
         description="Current service ID if registered.",
-        examples=["initstack-fastapi-service-172.18.0.19-8000-402f4c44"],
+        examples=["initstack-fastapi-service-172.18.0.19-8080-402f4c44"],
     )
     service_name: str | None = Field(
         default=None,

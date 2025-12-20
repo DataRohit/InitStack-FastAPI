@@ -1,185 +1,244 @@
 heartbeat.config.monitors:
-  path: /usr/share/heartbeat/monitors.d/*.yml
-  reload.enabled: true
-  reload.period: 10s
+    path: /usr/share/heartbeat/monitors.d/*.yml
+    reload.enabled: true
+    reload.period: 10s
 
 heartbeat.monitors:
-- type: http
-  id: elasticsearch-health
-  name: Elasticsearch Health Check
-  urls: ["http://initstack-elasticsearch-service:9200/_cluster/health"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
-  check.response.body: ["green", "yellow"]
-  username: "${ELASTICSEARCH_USERNAME}"
-  password: "${ELASTICSEARCH_PASSWORD}"
+    - type: http
+      id: elasticsearch-health
+      name: Elasticsearch Health Check
+      urls: ["http://initstack-elasticsearch-service:9200/_cluster/health"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+      check.response.body: ["green", "yellow"]
+      username: "${ELASTICSEARCH_USERNAME}"
+      password: "${ELASTICSEARCH_PASSWORD}"
 
-- type: http
-  id: kibana-health
-  name: Kibana Health Check
-  urls: ["http://initstack-kibana-service:5601/api/status"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
-  username: "${KIBANA_USERNAME}"
-  password: "${KIBANA_PASSWORD}"
+    - type: http
+      id: kibana-health
+      name: Kibana Health Check
+      urls: ["http://initstack-kibana-service:5601/api/status"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+      username: "${KIBANA_USERNAME}"
+      password: "${KIBANA_PASSWORD}"
 
-- type: http
-  id: redis-exporter-health
-  name: Redis Exporter Health Check
-  urls: ["http://initstack-redis-exporter-service:9121/metrics"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: redis-exporter-health
+      name: Redis Exporter Health Check
+      urls: ["http://initstack-redis-exporter-service:9121/metrics"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: elasticsearch-exporter-health
-  name: Elasticsearch Exporter Health Check
-  urls: ["http://initstack-elasticsearch-exporter-service:9114/metrics"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: elasticsearch-exporter-health
+      name: Elasticsearch Exporter Health Check
+      urls: ["http://initstack-elasticsearch-exporter-service:9114/metrics"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: rabbitmq-management-health
-  name: RabbitMQ Management Health Check
-  urls: ["http://initstack-rabbitmq-service:15672/api/overview"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
-  username: "${RABBITMQ_USER}"
-  password: "${RABBITMQ_PASSWORD}"
+    - type: http
+      id: rabbitmq-management-health
+      name: RabbitMQ Management Health Check
+      urls: ["http://initstack-rabbitmq-service:15672/api/overview"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+      username: "${RABBITMQ_USER}"
+      password: "${RABBITMQ_PASSWORD}"
 
+    - type: http
+      id: consul-health
+      name: Consul Health Check
+      urls: ["http://initstack-consul-service:8500/v1/status/leader"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
+    - type: http
+      id: consul-ui-health
+      name: Consul UI Health Check
+      urls: ["http://initstack-consul-service:8500/ui/"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: consul-health
-  name: Consul Health Check
-  urls: ["http://initstack-consul-service:8500/v1/status/leader"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: consul-exporter-health
+      name: Consul Exporter Health Check
+      urls: ["http://initstack-consul-exporter-service:9107/metrics"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: consul-ui-health
-  name: Consul UI Health Check
-  urls: ["http://initstack-consul-service:8500/ui/"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: apm-health
+      name: APM Server Health Check
+      urls: ["http://initstack-apm-service:8200/"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: consul-exporter-health
-  name: Consul Exporter Health Check
-  urls: ["http://initstack-consul-exporter-service:9107/metrics"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: fastapi-docs
+      name: FastAPI Documentation Health Check
+      urls: ["http://initstack-fastapi-service:8080/docs"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: apm-health
-  name: APM Server Health Check
-  urls: ["http://initstack-apm-service:8200/"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: fastapi-openapi
+      name: FastAPI OpenAPI Schema Check
+      urls: ["http://initstack-fastapi-service:8080/openapi.json"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: fastapi-docs
-  name: FastAPI Documentation Health Check
-  urls: ["http://initstack-fastapi-service:8000/docs"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: fastapi-redoc
+      name: FastAPI ReDoc Documentation Check
+      urls: ["http://initstack-fastapi-service:8080/redoc"]
+      schedule: "@every 60s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: fastapi-openapi
-  name: FastAPI OpenAPI Schema Check
-  urls: ["http://initstack-fastapi-service:8000/openapi.json"]
-  schedule: '@every 30s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: supabase-vector-health
+      name: Supabase Vector Health
+      urls: ["http://initstack-supabase-vector-service:9001/health"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: http
-  id: fastapi-redoc
-  name: FastAPI ReDoc Documentation Check
-  urls: ["http://initstack-fastapi-service:8000/redoc"]
-  schedule: '@every 60s'
-  timeout: 10s
-  check.response.status: [200]
+    - type: http
+      id: supabase-analytics-health
+      name: Supabase Analytics (Logflare) Health
+      urls: ["http://initstack-supabase-analytics-service:4000/health"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
+    - type: http
+      id: supabase-auth-health
+      name: Supabase Auth Health
+      urls: ["http://initstack-supabase-auth-service:9999/health"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
+    - type: http
+      id: supabase-supavisor-health
+      name: Supabase Supavisor Health
+      urls: ["http://initstack-supabase-supavisor-service:4000/api/health"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: tcp
-  id: redis-tcp
-  name: Redis TCP Check
-  hosts: ["initstack-redis-service:6379"]
-  schedule: '@every 30s'
-  timeout: 10s
+    - type: http
+      id: supabase-storage-health
+      name: Supabase Storage Health
+      urls: ["http://initstack-supabase-storage-service:5000/status"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: tcp
-  id: rabbitmq-tcp
-  name: RabbitMQ TCP Check
-  hosts: ["initstack-rabbitmq-service:5672"]
-  schedule: '@every 30s'
-  timeout: 10s
+    - type: http
+      id: supabase-studio-health
+      name: Supabase Studio Health
+      urls:
+          ["http://initstack-supabase-studio-service:3000/api/platform/profile"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
 
-- type: tcp
-  id: elasticsearch-tcp
-  name: Elasticsearch TCP Check
-  hosts: ["initstack-elasticsearch-service:9200"]
-  schedule: '@every 30s'
-  timeout: 10s
+    - type: tcp
+      id: supabase-db-tcp
+      name: Supabase Postgres TCP Check
+      hosts: ["initstack-supabase-db-service:5432"]
+      schedule: "@every 30s"
+      timeout: 10s
 
-- type: tcp
-  id: kibana-tcp
-  name: Kibana TCP Check
-  hosts: ["initstack-kibana-service:5601"]
-  schedule: '@every 30s'
-  timeout: 10s
+    - type: tcp
+      id: redis-tcp
+      name: Redis TCP Check
+      hosts: ["initstack-redis-service:6379"]
+      schedule: "@every 30s"
+      timeout: 10s
 
-- type: tcp
-  id: consul-tcp
-  name: Consul TCP Check
-  hosts: ["initstack-consul-service:8500"]
-  schedule: '@every 30s'
-  timeout: 10s
+    - type: tcp
+      id: rabbitmq-tcp
+      name: RabbitMQ TCP Check
+      hosts: ["initstack-rabbitmq-service:5672"]
+      schedule: "@every 30s"
+      timeout: 10s
 
-- type: tcp
-  id: apm-tcp
-  name: APM Server TCP Check
-  hosts: ["initstack-apm-service:8200"]
-  schedule: '@every 30s'
-  timeout: 10s
+    - type: tcp
+      id: elasticsearch-tcp
+      name: Elasticsearch TCP Check
+      hosts: ["initstack-elasticsearch-service:9200"]
+      schedule: "@every 30s"
+      timeout: 10s
 
-- type: tcp
-  id: fastapi-tcp
-  name: FastAPI Application TCP Check
-  hosts: ["initstack-fastapi-service:8000"]
-  schedule: '@every 30s'
-  timeout: 10s
+    - type: tcp
+      id: kibana-tcp
+      name: Kibana TCP Check
+      hosts: ["initstack-kibana-service:5601"]
+      schedule: "@every 30s"
+      timeout: 10s
 
-- type: icmp
-  id: docker-network-ping
-  name: Docker Network Connectivity
-  hosts: ["initstack-elasticsearch-service", "initstack-kibana-service", "initstack-consul-service", "initstack-apm-service", "initstack-fastapi-service"]
-  schedule: '@every 60s'
-  timeout: 10s
+    - type: tcp
+      id: consul-tcp
+      name: Consul TCP Check
+      hosts: ["initstack-consul-service:8500"]
+      schedule: "@every 30s"
+      timeout: 10s
+
+    - type: tcp
+      id: apm-tcp
+      name: APM Server TCP Check
+      hosts: ["initstack-apm-service:8200"]
+      schedule: "@every 30s"
+      timeout: 10s
+
+    - type: tcp
+      id: fastapi-tcp
+      name: FastAPI Application TCP Check
+      hosts: ["initstack-fastapi-service:8080"]
+      schedule: "@every 30s"
+      timeout: 10s
+
+    - type: icmp
+      id: docker-network-ping
+      name: Docker Network Connectivity
+      hosts:
+          [
+              "initstack-elasticsearch-service",
+              "initstack-kibana-service",
+              "initstack-consul-service",
+              "initstack-apm-service",
+              "initstack-fastapi-service",
+          ]
+      schedule: "@every 60s"
+      timeout: 10s
 
 output.elasticsearch:
-  hosts: ["${ELASTICSEARCH_HOSTS}"]
-  username: "${ELASTICSEARCH_USERNAME}"
-  password: "${ELASTICSEARCH_PASSWORD}"
+    hosts: ["${ELASTICSEARCH_HOSTS}"]
+    username: "${ELASTICSEARCH_USERNAME}"
+    password: "${ELASTICSEARCH_PASSWORD}"
 
 setup.kibana:
-  host: "${KIBANA_HOST}"
-  username: "${KIBANA_USERNAME}"
-  password: "${KIBANA_PASSWORD}"
+    host: "${KIBANA_HOST}"
+    username: "${KIBANA_USERNAME}"
+    password: "${KIBANA_PASSWORD}"
 
 setup.template.settings:
-  index.number_of_shards: 1
-  index.codec: best_compression
+    index.number_of_shards: 1
+    index.codec: best_compression
 
 setup.ilm.enabled: true
 setup.ilm.rollover_alias: "heartbeat"
@@ -194,11 +253,11 @@ http.port: 5065
 logging.level: ${HEARTBEAT_LOG_LEVEL}
 logging.to_files: true
 logging.files:
-  path: /var/log/heartbeat
-  name: heartbeat
-  keepfiles: 7
-  permissions: 0644
+    path: /var/log/heartbeat
+    name: heartbeat
+    keepfiles: 7
+    permissions: 0644
 
 processors:
-  - add_cloud_metadata: ~
-  - add_docker_metadata: ~
+    - add_cloud_metadata: ~
+    - add_docker_metadata: ~

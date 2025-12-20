@@ -1,174 +1,188 @@
 filebeat.inputs:
-- type: container
-  paths:
-    - '/var/lib/docker/containers/*/*.log'
-  processors:
-    - add_docker_metadata:
-        host: "unix:///var/run/docker.sock"
-    - decode_json_fields:
-        fields: ["message"]
-        target: ""
-        overwrite_keys: true
-        add_error_key: true
-    - add_host_metadata:
-        when.not.contains.tags: forwarded
-    - add_cloud_metadata: ~
-    - add_kubernetes_metadata: ~
+    - type: container
+      paths:
+          - "/var/lib/docker/containers/*/*.log"
+      processors:
+          - add_docker_metadata:
+                host: "unix:///var/run/docker.sock"
+          - decode_json_fields:
+                fields: ["message"]
+                target: ""
+                overwrite_keys: true
+                add_error_key: true
+          - add_host_metadata:
+                when.not.contains.tags: forwarded
+          - add_cloud_metadata: ~
+          - add_kubernetes_metadata: ~
 
 filebeat.autodiscover:
-  providers:
-    - type: docker
-      host: "unix:///var/run/docker.sock"
-      templates:
+    providers:
+        - type: docker
+          host: "unix:///var/run/docker.sock"
+          templates:
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-redis-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-rabbitmq-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-elasticsearch-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-kibana-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
 
-        - condition:
-            contains:
-              docker.container.name: "initstack-redis-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-        - condition:
-            contains:
-              docker.container.name: "initstack-rabbitmq-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-        - condition:
-            contains:
-              docker.container.name: "initstack-elasticsearch-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-        - condition:
-            contains:
-              docker.container.name: "initstack-kibana-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-
-        - condition:
-            contains:
-              docker.container.name: "initstack-consul-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-        - condition:
-            contains:
-              docker.container.name: "initstack-consul-exporter-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-        - condition:
-            contains:
-              docker.container.name: "initstack-apm-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-        - condition:
-            contains:
-              docker.container.name: "initstack-fastapi-service"
-          config:
-            - type: container
-              paths:
-                - /var/lib/docker/containers/*/*.log
-              processors:
-                - add_docker_metadata:
-                    host: "unix:///var/run/docker.sock"
-                - decode_json_fields:
-                    fields: ["message"]
-                    target: ""
-                    overwrite_keys: true
-                    add_error_key: true
-                - timestamp:
-                    field: "@timestamp"
-                    layouts:
-                      - '2006-01-02T15:04:05.000Z'
-                      - '2006-01-02 15:04:05'
-                - drop_fields:
-                    fields: ["agent", "ecs", "input", "log.file"]
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-consul-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-consul-exporter-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-apm-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-fastapi-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - timestamp:
+                                field: "@timestamp"
+                                layouts:
+                                    - "2006-01-02T15:04:05.000Z"
+                                    - "2006-01-02 15:04:05"
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-supabase-"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
 
 processors:
-  - add_host_metadata:
-      when.not.contains.tags: forwarded
-  - add_cloud_metadata: ~
-  - add_docker_metadata: ~
-  - add_kubernetes_metadata: ~
+    - add_host_metadata:
+          when.not.contains.tags: forwarded
+    - add_cloud_metadata: ~
+    - add_docker_metadata: ~
+    - add_kubernetes_metadata: ~
 
 output.elasticsearch:
-  hosts: ["${ELASTICSEARCH_HOSTS}"]
-  username: "${ELASTICSEARCH_USERNAME}"
-  password: "${ELASTICSEARCH_PASSWORD}"
-  protocol: "http"
-  compression_level: 1
-  bulk_max_size: 1600
-  worker: 2
+    hosts: ["${ELASTICSEARCH_HOSTS}"]
+    username: "${ELASTICSEARCH_USERNAME}"
+    password: "${ELASTICSEARCH_PASSWORD}"
+    protocol: "http"
+    compression_level: 1
+    bulk_max_size: 1600
+    worker: 2
 
 setup.kibana:
-  host: "${KIBANA_HOST}"
-  username: "${KIBANA_USERNAME}"
-  password: "${KIBANA_PASSWORD}"
+    host: "${KIBANA_HOST}"
+    username: "${KIBANA_USERNAME}"
+    password: "${KIBANA_PASSWORD}"
 
 setup.template.enabled: true
 setup.template.settings:
-  index.number_of_shards: 1
-  index.number_of_replicas: 0
-  index.refresh_interval: 5s
+    index.number_of_shards: 1
+    index.number_of_replicas: 0
+    index.refresh_interval: 5s
 
 setup.ilm.enabled: true
 setup.ilm.rollover_alias: "filebeat"
@@ -182,9 +196,9 @@ setup.dashboards.retry.maximum: 5
 
 monitoring.enabled: true
 monitoring.elasticsearch:
-  hosts: ["${ELASTICSEARCH_HOSTS}"]
-  username: "${ELASTICSEARCH_USERNAME}"
-  password: "${ELASTICSEARCH_PASSWORD}"
+    hosts: ["${ELASTICSEARCH_HOSTS}"]
+    username: "${ELASTICSEARCH_USERNAME}"
+    password: "${ELASTICSEARCH_PASSWORD}"
 
 logging.level: "${FILEBEAT_LOG_LEVEL}"
 logging.to_files: false

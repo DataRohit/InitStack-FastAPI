@@ -306,7 +306,7 @@ class HealthController:
         """
 
         @self.router.get(
-            path="/",
+            path="",
             response_model=HealthResponse,
             status_code=status.HTTP_200_OK,
             summary="System Health Check",

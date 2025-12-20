@@ -1,0 +1,128 @@
+metricbeat.config.modules:
+    path: /usr/share/metricbeat/modules.d/*.yml
+    reload.enabled: true
+    reload.period: 10s
+
+metricbeat.modules:
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["${SUPABASE_VECTOR_HOST}:${SUPABASE_VECTOR_PORT}"]
+      path: "/health"
+      namespace: "supabase_vector"
+
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["${SUPABASE_ANALYTICS_HOST}:${SUPABASE_ANALYTICS_PORT}"]
+      path: "/health"
+      namespace: "supabase_analytics"
+
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["${SUPABASE_AUTH_HOST}:${SUPABASE_AUTH_PORT}"]
+      path: "/health"
+      namespace: "supabase_auth"
+
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["${SUPABASE_SUPAVISOR_HOST}:${SUPABASE_SUPAVISOR_PORT}"]
+      path: "/api/health"
+      namespace: "supabase_supavisor"
+
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["${SUPABASE_STORAGE_HOST}:${SUPABASE_STORAGE_PORT}"]
+      path: "/status"
+      namespace: "supabase_storage"
+
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["${SUPABASE_STUDIO_HOST}:${SUPABASE_STUDIO_PORT}"]
+      path: "/api/platform/profile"
+      namespace: "supabase_studio"
+
+    - module: system
+      metricsets:
+          - cpu
+          - load
+          - memory
+          - network
+          - process
+          - process_summary
+          - socket_summary
+          - filesystem
+          - fsstat
+      period: 10s
+      processes: [".*"]
+      process.include_top_n:
+          by_cpu: 5
+          by_memory: 5
+
+    - module: docker
+      metricsets:
+          - container
+          - cpu
+          - diskio
+          - healthcheck
+          - info
+          - memory
+          - network
+      period: 10s
+      hosts:
+          - "unix:///var/run/docker.sock"
+      condition:
+          contains:
+              docker.container.name: "initstack-supabase-"
+
+name: ${METRICBEAT_NAME}
+agent.id: ${METRICBEAT_NAME}-${METRICBEAT_FIELDS_DATACENTER}
+
+output.elasticsearch:
+    hosts: ["${ELASTICSEARCH_HOSTS}"]
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
+
+setup.kibana:
+    host: "${KIBANA_HOST}"
+
+setup.dashboards.enabled: false
+
+setup.template.settings:
+    index.number_of_shards: 1
+    index.codec: best_compression
+
+setup.ilm.enabled: true
+setup.ilm.rollover_alias: "metricbeat"
+setup.ilm.pattern: "{now/d}-000001"
+
+logging.level: ${METRICBEAT_LOG_LEVEL}
+logging.to_files: true
+logging.files:
+    path: /var/log/metricbeat
+    name: metricbeat
+    keepfiles: 7
+    permissions: 0644
+
+monitoring.enabled: ${METRICBEAT_MONITORING_ENABLED}
+
+http.enabled: true
+http.host: 0.0.0.0
+http.port: ${METRICBEAT_HTTP_PORT}
+
+processors:
+    - add_host_metadata:
+          when.not.contains.tags: forwarded
+    - add_cloud_metadata: ~
+    - add_docker_metadata: ~
+    - add_kubernetes_metadata: ~

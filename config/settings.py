@@ -100,7 +100,7 @@ class Settings(BaseSettings):
     environment: str = "development"
 
     host: str = "0.0.0.0"  # noqa: S104
-    port: int = 8000
+    port: int = 8080
     reload: bool = True
 
     cors_origins: list[str] = Field(
