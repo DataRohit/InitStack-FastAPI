@@ -24,7 +24,9 @@ cssbeautifier==1.15.4
 deprecation==2.1.0
 djlint==1.36.4
 dnspython==2.8.0
+ecs-logging==2.2.0
 editorconfig==0.17.1
+elastic-apm==6.24.0
 elastic-transport==9.2.0
 elasticsearch==9.2.0
 email-validator==2.3.0
@@ -126,4 +128,5 @@ wait-for-it==2.3.0
 watchfiles==1.1.1
 wcwidth==0.2.14
 websockets==15.0.1
+wrapt==2.0.1
 yarl==1.22.0

@@ -1,17 +1,115 @@
 apm-server:
-  host: "0.0.0.0:8200"
-  secret_token: "${APM_SERVER_SECRET_TOKEN}"
+    host: "${APM_SERVER_HOST}:${APM_SERVER_PORT}"
+    secret_token: "${APM_SERVER_SECRET_TOKEN}"
+    rum:
+        enabled: true
+        allow_origins: ["*"]
+        allow_headers: ["*"]
+    max_event_size: ${APM_SERVER_MAX_EVENT_SIZE}
+    max_header_size: ${APM_SERVER_MAX_HEADER_SIZE}
+    read_timeout: ${APM_SERVER_READ_TIMEOUT}
+    write_timeout: ${APM_SERVER_WRITE_TIMEOUT}
+    shutdown_timeout: ${APM_SERVER_SHUTDOWN_TIMEOUT}
+    max_connections: ${APM_SERVER_MAX_CONNECTIONS}
+    response_headers:
+        Access-Control-Allow-Origin: "*"
+    capture_personal_data: true
+
+queue.mem:
+    events: ${QUEUE_MEM_EVENTS}
+    flush.min_events: ${QUEUE_MEM_FLUSH_MIN_EVENTS}
+    flush.timeout: ${QUEUE_MEM_FLUSH_TIMEOUT}
 
 output.elasticsearch:
-  hosts: ["${OUTPUT_ELASTICSEARCH_HOSTS}"]
-  username: "${OUTPUT_ELASTICSEARCH_USERNAME}"
-  password: "${OUTPUT_ELASTICSEARCH_PASSWORD}"
+    hosts: ["${OUTPUT_ELASTICSEARCH_HOSTS}"]
+    username: "${OUTPUT_ELASTICSEARCH_USERNAME}"
+    password: "${OUTPUT_ELASTICSEARCH_PASSWORD}"
+    protocol: "${OUTPUT_ELASTICSEARCH_PROTOCOL}"
+    timeout: ${OUTPUT_ELASTICSEARCH_TIMEOUT}
+    max_retries: ${OUTPUT_ELASTICSEARCH_MAX_RETRIES}
+    backoff.init: ${OUTPUT_ELASTICSEARCH_BACKOFF_INIT}
+    backoff.max: ${OUTPUT_ELASTICSEARCH_BACKOFF_MAX}
+    bulk_max_size: ${OUTPUT_ELASTICSEARCH_BULK_MAX_SIZE}
+    worker: ${OUTPUT_ELASTICSEARCH_WORKER}
+    compression_level: 5
+    escape_html: false
+    pipeline: ""
+    index: "apm-%{[observer.version]}-%{+yyyy.MM.dd}"
+    indices:
+        - index: "apm-%{[observer.version]}-sourcemap"
+          when.contains:
+              processor.event: "sourcemap"
+        - index: "apm-%{[observer.version]}-error-%{+yyyy.MM.dd}"
+          when.contains:
+              processor.event: "error"
+        - index: "apm-%{[observer.version]}-transaction-%{+yyyy.MM.dd}"
+          when.contains:
+              processor.event: "transaction"
+        - index: "apm-%{[observer.version]}-span-%{+yyyy.MM.dd}"
+          when.contains:
+              processor.event: "span"
+        - index: "apm-%{[observer.version]}-metric-%{+yyyy.MM.dd}"
+          when.contains:
+              processor.event: "metric"
+        - index: "apm-%{[observer.version]}-profile-%{+yyyy.MM.dd}"
+          when.contains:
+              processor.event: "profile"
+
+setup.template:
+    enabled: ${OUTPUT_ELASTICSEARCH_TEMPLATE_ENABLED}
+    name: "apm"
+    pattern: "${OUTPUT_ELASTICSEARCH_TEMPLATE_PATTERN}"
+    settings:
+        index:
+            number_of_shards: ${OUTPUT_ELASTICSEARCH_TEMPLATE_SETTINGS_INDEX_NUMBER_OF_SHARDS}
+            number_of_replicas: ${OUTPUT_ELASTICSEARCH_TEMPLATE_SETTINGS_INDEX_NUMBER_OF_REPLICAS}
+            codec: ${OUTPUT_ELASTICSEARCH_TEMPLATE_SETTINGS_INDEX_CODEC}
+            mapping.total_fields.limit: 2000
+            refresh_interval: 5s
 
 setup.kibana:
-  host: "${KIBANA_HOST}"
-  username: "${KIBANA_USERNAME}"
-  password: "${KIBANA_PASSWORD}"
+    host: "${KIBANA_HOST}"
+    username: "${KIBANA_USERNAME}"
+    password: "${KIBANA_PASSWORD}"
+    protocol: "${KIBANA_PROTOCOL}"
+    path: "${KIBANA_PATH}"
+    space.id: "${KIBANA_SPACE_ID}"
+    enabled: ${SETUP_KIBANA_ENABLED}
+
+setup.dashboards:
+    enabled: ${SETUP_DASHBOARDS_ENABLED}
+
+setup.ilm:
+    enabled: ${SETUP_ILM_ENABLED}
+    rollover_alias: "${SETUP_ILM_ROLLOVER_ALIAS}"
+    pattern: "${SETUP_ILM_PATTERN}"
+    policy_name: "${SETUP_ILM_POLICY}"
+    check_exists: true
+    overwrite: false
+
+monitoring:
+    enabled: ${MONITORING_ENABLED}
+    elasticsearch:
+        hosts: ["${MONITORING_ELASTICSEARCH_HOSTS}"]
+        username: "${MONITORING_ELASTICSEARCH_USERNAME}"
+        password: "${MONITORING_ELASTICSEARCH_PASSWORD}"
+    cluster_uuid: ""
 
 logging:
-  level: info
-  to_stderr: true
+    level: ${LOGGING_LEVEL}
+    to_files: ${LOGGING_TO_FILES}
+    to_syslog: ${LOGGING_TO_SYSLOG}
+    json: ${LOGGING_JSON}
+    metrics:
+        enabled: ${LOGGING_METRICS_ENABLED}
+        period: ${LOGGING_METRICS_PERIOD}
+
+http:
+    enabled: ${HTTP_ENABLED}
+    host: "${HTTP_HOST}"
+    port: ${HTTP_PORT}
+
+instrumentation:
+    enabled: ${INSTRUMENTATION_ENABLED}
+    environment: "${INSTRUMENTATION_ENVIRONMENT}"
+    hosts: ["${INSTRUMENTATION_HOSTS}"]

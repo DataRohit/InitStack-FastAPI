@@ -18,6 +18,7 @@ from config.adapters import ConsulAdapter
 from config.adapters import RedisAdapter
 from config.adapters import initialize_consul
 from config.adapters import initialize_redis
+from config.adapters import setup_telemetry
 from config.adapters import shutdown_consul
 from config.adapters import shutdown_redis
 from config.logger import LoggerManager
@@ -192,6 +193,10 @@ def create_app() -> FastAPI:
             middleware_class=TrustedHostMiddleware,  # ty:ignore[invalid-argument-type]
             allowed_hosts=["*"],
         )
+
+    if settings.telemetry_enabled:
+        logger.info(msg="Initializing telemetry instrumentation")
+        setup_telemetry(app=app)
 
     @app.exception_handler(exc_class_or_status_code=StarletteHTTPException)
     async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:

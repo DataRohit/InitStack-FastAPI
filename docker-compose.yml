@@ -594,6 +594,7 @@ services:
             - ./compose/apm/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
             - /var/run/docker.sock:/var/run/docker.sock:ro
         ports:
+            - "5068:5068"
             - "8200:8200"
         networks:
             - initstack-network

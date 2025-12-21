@@ -74,6 +74,12 @@ class Settings(BaseSettings):
         rate_limit_exempt_ips (list[str]): IP addresses exempt from rate limiting.
         rate_limit_header_enabled (bool): Include rate limit headers in responses.
         rate_limit_retry_after_header (bool): Include Retry-After header when rate limited.
+        telemetry_enabled (bool): Enable OpenTelemetry export.
+        telemetry_service_name (str): Telemetry service name override.
+        telemetry_endpoint (str): OTLP endpoint for traces and metrics.
+        telemetry_timeout (int): Telemetry exporter timeout in seconds.
+        telemetry_headers (dict[str, Any]): Additional OTLP request headers.
+        telemetry_metrics_interval (int): Metrics export interval in seconds.
 
     Properties:
         None
@@ -86,6 +92,7 @@ class Settings(BaseSettings):
         parse_consul_service_tags: Parse Consul service tags from env input.
         parse_redis_socket_keepalive_options: Parse Redis socket keepalive options from env input.
         parse_rate_limit_exempt_ips: Parse rate limit exempt IPs from env input.
+        parse_telemetry_headers: Parse telemetry headers from env input.
     """
 
     app_name: str = "InitStack FastAPI Development Server"
@@ -165,6 +172,13 @@ class Settings(BaseSettings):
     rate_limit_exempt_ips: list[str] = Field(default_factory=list)
     rate_limit_header_enabled: bool = True
     rate_limit_retry_after_header: bool = True
+
+    telemetry_enabled: bool = True
+    telemetry_service_name: str = "initstack-fastapi-service"
+    telemetry_endpoint: str = "http://initstack-apm-service:8200"
+    telemetry_timeout: int = 10
+    telemetry_headers: dict[str, Any] = Field(default_factory=dict)
+    telemetry_metrics_interval: int = 30
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -318,6 +332,28 @@ class Settings(BaseSettings):
                 return json.loads(s=v)
             except json.JSONDecodeError:
                 return [ip.strip() for ip in v.split(",")]
+        return v
+
+    @field_validator("telemetry_headers", mode="before")
+    @classmethod
+    def parse_telemetry_headers(cls, v: Any) -> Any:
+        """Parse Telemetry Headers From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed value, typically a dictionary.
+
+        Raises:
+            None
+        """
+
+        if isinstance(v, str):
+            try:
+                return json.loads(s=v)
+            except json.JSONDecodeError:
+                return {}
         return v
 
     class Config:
