@@ -519,7 +519,18 @@ services:
         image: initstack-fastapi-service:latest
         container_name: initstack-fastapi-service
         restart: unless-stopped
+        env_file:
+            - .env
+        volumes:
+            - .:/app
+            - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "8080:8080"
+        networks:
+            - initstack-network
         depends_on:
+            initstack-supabase-studio-service:
+                condition: service_healthy
             initstack-consul-service:
                 condition: service_healthy
             initstack-redis-service:
@@ -530,17 +541,6 @@ services:
                 condition: service_healthy
             initstack-apm-service:
                 condition: service_healthy
-            initstack-supabase-studio-service:
-                condition: service_healthy
-        env_file:
-            - .env
-        volumes:
-            - .:/app
-            - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
-        ports:
-            - "8080:8080"
-        networks:
-            - initstack-network
         healthcheck:
             test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
             interval: 30s
