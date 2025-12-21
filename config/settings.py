@@ -80,6 +80,20 @@ class Settings(BaseSettings):
         telemetry_timeout (int): Telemetry exporter timeout in seconds.
         telemetry_headers (dict[str, Any]): Additional OTLP request headers.
         telemetry_metrics_interval (int): Metrics export interval in seconds.
+        rabbitmq_enabled (bool): Enable RabbitMQ connection.
+        rabbitmq_host (str): RabbitMQ server host.
+        rabbitmq_port (int): RabbitMQ server port.
+        rabbitmq_username (str): RabbitMQ username.
+        rabbitmq_password (str): RabbitMQ password.
+        rabbitmq_vhost (str): RabbitMQ virtual host.
+        rabbitmq_ssl (bool): Enable SSL for RabbitMQ connection.
+        rabbitmq_ssl_verify (bool): Verify SSL certificates for RabbitMQ.
+        rabbitmq_connection_timeout (int): RabbitMQ connection timeout in seconds.
+        rabbitmq_heartbeat (int): RabbitMQ heartbeat interval in seconds.
+        rabbitmq_blocked_connection_timeout (int): RabbitMQ blocked connection timeout in seconds.
+        rabbitmq_max_channels (int): Maximum RabbitMQ channels per connection.
+        rabbitmq_prefetch_count (int): RabbitMQ prefetch count for consumers.
+        rabbitmq_connection_name (str): RabbitMQ connection name.
 
     Properties:
         None
@@ -179,6 +193,21 @@ class Settings(BaseSettings):
     telemetry_timeout: int = 10
     telemetry_headers: dict[str, Any] = Field(default_factory=dict)
     telemetry_metrics_interval: int = 30
+
+    rabbitmq_enabled: bool = True
+    rabbitmq_host: str = "initstack-rabbitmq-service"
+    rabbitmq_port: int = 5672
+    rabbitmq_username: str = "Qw8rT5nM3xZ9pL2v"
+    rabbitmq_password: str = "Hj6kN4mB8vC1sF7q"  # noqa: S105
+    rabbitmq_vhost: str = "initstack_vhost"
+    rabbitmq_ssl: bool = False
+    rabbitmq_ssl_verify: bool = True
+    rabbitmq_connection_timeout: int = 10
+    rabbitmq_heartbeat: int = 30
+    rabbitmq_blocked_connection_timeout: int = 300
+    rabbitmq_max_channels: int = 2047
+    rabbitmq_prefetch_count: int = 10
+    rabbitmq_connection_name: str = "initstack-fastapi-service"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

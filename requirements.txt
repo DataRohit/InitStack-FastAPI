@@ -1,5 +1,7 @@
+aio-pika==9.5.8
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.2
+aiormq==6.9.2
 aiosignal==1.4.0
 aiosmtplib==5.0.0
 amqp==5.3.1
@@ -64,6 +66,7 @@ mmh3==5.2.0
 multidict==6.7.0
 orjson==3.11.5
 packaging==25.0
+pamqp==3.3.0
 pathspec==0.12.1
 pluggy==1.6.0
 postgrest==2.27.0

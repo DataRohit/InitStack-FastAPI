@@ -15,11 +15,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from config.adapters import ConsulAdapter
+from config.adapters import RabbitMQAdapter
 from config.adapters import RedisAdapter
 from config.adapters import initialize_consul
+from config.adapters import initialize_rabbitmq
 from config.adapters import initialize_redis
 from config.adapters import setup_telemetry
 from config.adapters import shutdown_consul
+from config.adapters import shutdown_rabbitmq
 from config.adapters import shutdown_redis
 from config.logger import LoggerManager
 from config.logger import get_logger
@@ -85,6 +88,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         else:
             startup_logger.warning(msg="Redis connection failed")
 
+    rabbitmq_adapter = None
+    if settings.rabbitmq_enabled:
+        startup_logger.info(msg="Initializing RabbitMQ connection")
+        rabbitmq_adapter: RabbitMQAdapter | None = await initialize_rabbitmq()
+        if rabbitmq_adapter:
+            startup_logger.info(
+                msg="RabbitMQ connection established",
+                extra={
+                    "rabbitmq_host": settings.rabbitmq_host,
+                    "rabbitmq_port": settings.rabbitmq_port,
+                    "rabbitmq_vhost": settings.rabbitmq_vhost,
+                },
+            )
+        else:
+            startup_logger.warning(msg="RabbitMQ connection failed")
+
     consul_adapter = None
     if settings.consul_enabled:
         startup_logger.info(msg="Initializing Consul service registration")
@@ -116,6 +135,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         shutdown_logger.info(msg="Shutting down Redis connection")
         await shutdown_redis()
         shutdown_logger.info(msg="Redis connection closed")
+
+    if settings.rabbitmq_enabled:
+        shutdown_logger.info(msg="Shutting down RabbitMQ connection")
+        await shutdown_rabbitmq()
+        shutdown_logger.info(msg="RabbitMQ connection closed")
 
     shutdown_logger.info(msg="Application shutdown completed")
 

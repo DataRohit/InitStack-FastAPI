@@ -11,6 +11,12 @@ from src.schemas.health import HealthResponse
 from src.schemas.health import MemoryInfo
 from src.schemas.health import ProcessInfo
 from src.schemas.health import SystemInfo
+from src.schemas.rabbitmq import RabbitMQChannelInfo
+from src.schemas.rabbitmq import RabbitMQConnectionInfo
+from src.schemas.rabbitmq import RabbitMQQueueInfo
+from src.schemas.rabbitmq import RabbitMQStatusResponse
+from src.schemas.rabbitmq import RabbitMQTestOperation
+from src.schemas.rabbitmq import RabbitMQTestResponse
 
 __all__: list[str] = [
     "CPUInfo",
@@ -25,5 +31,11 @@ __all__: list[str] = [
     "HealthResponse",
     "MemoryInfo",
     "ProcessInfo",
+    "RabbitMQChannelInfo",
+    "RabbitMQConnectionInfo",
+    "RabbitMQQueueInfo",
+    "RabbitMQStatusResponse",
+    "RabbitMQTestOperation",
+    "RabbitMQTestResponse",
     "SystemInfo",
 ]
