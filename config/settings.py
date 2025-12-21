@@ -94,6 +94,16 @@ class Settings(BaseSettings):
         rabbitmq_max_channels (int): Maximum RabbitMQ channels per connection.
         rabbitmq_prefetch_count (int): RabbitMQ prefetch count for consumers.
         rabbitmq_connection_name (str): RabbitMQ connection name.
+        elasticsearch_enabled (bool): Enable Elasticsearch connection.
+        elasticsearch_hosts (list[str]): Elasticsearch server hosts.
+        elasticsearch_username (str): Elasticsearch username.
+        elasticsearch_password (str): Elasticsearch password.
+        elasticsearch_ssl (bool): Enable SSL for Elasticsearch connection.
+        elasticsearch_ssl_verify (bool): Verify SSL certificates for Elasticsearch.
+        elasticsearch_connection_timeout (int): Elasticsearch connection timeout in seconds.
+        elasticsearch_request_timeout (int): Elasticsearch request timeout in seconds.
+        elasticsearch_max_retries (int): Maximum Elasticsearch retry attempts.
+        elasticsearch_retry_on_timeout (bool): Retry Elasticsearch requests on timeout.
 
     Properties:
         None
@@ -208,6 +218,17 @@ class Settings(BaseSettings):
     rabbitmq_max_channels: int = 2047
     rabbitmq_prefetch_count: int = 10
     rabbitmq_connection_name: str = "initstack-fastapi-service"
+
+    elasticsearch_enabled: bool = True
+    elasticsearch_hosts: list[str] = Field(default_factory=lambda: ["http://initstack-elasticsearch-service:9200"])
+    elasticsearch_username: str = "elastic"
+    elasticsearch_password: str = "Mx7nQ4wR8vK2sL9p"  # noqa: S105
+    elasticsearch_ssl: bool = False
+    elasticsearch_ssl_verify: bool = True
+    elasticsearch_connection_timeout: int = 10
+    elasticsearch_request_timeout: int = 30
+    elasticsearch_max_retries: int = 3
+    elasticsearch_retry_on_timeout: bool = True
 
     @field_validator("cors_origins", mode="before")
     @classmethod

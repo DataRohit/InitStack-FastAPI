@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from src.controllers import consul_controller
+from src.controllers import elasticsearch_controller
 from src.controllers import health_controller
 from src.controllers import rabbitmq_controller
 from src.controllers import rate_limit_controller
@@ -24,6 +25,7 @@ def create_api_router() -> APIRouter:
 
     main_router.include_router(router=health_controller.router)
     main_router.include_router(router=consul_controller.router)
+    main_router.include_router(router=elasticsearch_controller.router)
     main_router.include_router(router=redis_controller.router)
     main_router.include_router(router=rabbitmq_controller.router)
     main_router.include_router(router=rate_limit_controller.router)

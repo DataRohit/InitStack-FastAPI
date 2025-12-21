@@ -5,6 +5,12 @@ from src.schemas.consul import ConsulServiceHealth
 from src.schemas.consul import ConsulServiceInstance
 from src.schemas.consul import ConsulServiceInstanceHealth
 from src.schemas.consul import ConsulStatusResponse
+from src.schemas.elasticsearch import ElasticsearchClusterInfo
+from src.schemas.elasticsearch import ElasticsearchConnectionInfo
+from src.schemas.elasticsearch import ElasticsearchIndexInfo
+from src.schemas.elasticsearch import ElasticsearchStatusResponse
+from src.schemas.elasticsearch import ElasticsearchTestOperation
+from src.schemas.elasticsearch import ElasticsearchTestResponse
 from src.schemas.health import CPUInfo
 from src.schemas.health import DiskInfo
 from src.schemas.health import HealthResponse
@@ -27,6 +33,12 @@ __all__: list[str] = [
     "ConsulServiceInstanceHealth",
     "ConsulStatusResponse",
     "DiskInfo",
+    "ElasticsearchClusterInfo",
+    "ElasticsearchConnectionInfo",
+    "ElasticsearchIndexInfo",
+    "ElasticsearchStatusResponse",
+    "ElasticsearchTestOperation",
+    "ElasticsearchTestResponse",
     "ErrorResponse",
     "HealthResponse",
     "MemoryInfo",

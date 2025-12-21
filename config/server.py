@@ -15,13 +15,16 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from config.adapters import ConsulAdapter
+from config.adapters import ElasticsearchAdapter
 from config.adapters import RabbitMQAdapter
 from config.adapters import RedisAdapter
 from config.adapters import initialize_consul
+from config.adapters import initialize_elasticsearch
 from config.adapters import initialize_rabbitmq
 from config.adapters import initialize_redis
 from config.adapters import setup_telemetry
 from config.adapters import shutdown_consul
+from config.adapters import shutdown_elasticsearch
 from config.adapters import shutdown_rabbitmq
 from config.adapters import shutdown_redis
 from config.logger import LoggerManager
@@ -56,7 +59,7 @@ def setup_logging():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912, PLR0915
     """Handle Application Lifespan Events.
 
     Arguments:
@@ -119,6 +122,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         else:
             startup_logger.warning(msg="Consul service registration failed")
 
+    elasticsearch_adapter = None
+    if settings.elasticsearch_enabled:
+        startup_logger.info(msg="Initializing Elasticsearch connection")
+        elasticsearch_adapter: ElasticsearchAdapter | None = await initialize_elasticsearch()
+        if elasticsearch_adapter:
+            startup_logger.info(
+                msg="Elasticsearch connection established",
+                extra={
+                    "elasticsearch_hosts": settings.elasticsearch_hosts,
+                },
+            )
+        else:
+            startup_logger.warning(msg="Elasticsearch connection failed")
+
     startup_logger.info(msg="Application startup completed")
 
     yield
@@ -140,6 +157,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         shutdown_logger.info(msg="Shutting down RabbitMQ connection")
         await shutdown_rabbitmq()
         shutdown_logger.info(msg="RabbitMQ connection closed")
+
+    if settings.elasticsearch_enabled:
+        shutdown_logger.info(msg="Shutting down Elasticsearch connection")
+        await shutdown_elasticsearch()
+        shutdown_logger.info(msg="Elasticsearch connection closed")
 
     shutdown_logger.info(msg="Application shutdown completed")
 
