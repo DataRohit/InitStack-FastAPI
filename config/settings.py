@@ -104,6 +104,15 @@ class Settings(BaseSettings):
         elasticsearch_request_timeout (int): Elasticsearch request timeout in seconds.
         elasticsearch_max_retries (int): Maximum Elasticsearch retry attempts.
         elasticsearch_retry_on_timeout (bool): Retry Elasticsearch requests on timeout.
+        supabase_enabled (bool): Enable Supabase connection.
+        supabase_url (str): Supabase API URL.
+        supabase_key (str): Supabase anonymous API key.
+        supabase_service_role_key (str): Supabase service role key.
+        supabase_schema (str): Supabase database schema.
+        supabase_connection_timeout (int): Supabase connection timeout in seconds.
+        supabase_request_timeout (int): Supabase request timeout in seconds.
+        supabase_max_retries (int): Maximum Supabase retry attempts.
+        supabase_retry_on_timeout (bool): Retry Supabase requests on timeout.
 
     Properties:
         None
@@ -229,6 +238,16 @@ class Settings(BaseSettings):
     elasticsearch_request_timeout: int = 30
     elasticsearch_max_retries: int = 3
     elasticsearch_retry_on_timeout: bool = True
+
+    supabase_enabled: bool = True
+    supabase_url: str = "http://initstack-supabase-kong-service:8000"
+    supabase_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzY2MDgyNjAwLCJleHAiOjE5MjM4NDkwMDB9.1ykkqR_lyZiBdjycdY0g7CAPf2LlFFhXEss4yQfIhmk"  # noqa: E501
+    supabase_service_role_key: str = ""
+    supabase_schema: str = "public"
+    supabase_connection_timeout: int = 10
+    supabase_request_timeout: int = 30
+    supabase_max_retries: int = 3
+    supabase_retry_on_timeout: bool = True
 
     @field_validator("cors_origins", mode="before")
     @classmethod
