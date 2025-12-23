@@ -16,15 +16,18 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from config.adapters import ConsulAdapter
 from config.adapters import ElasticsearchAdapter
+from config.adapters import EmailAdapter
 from config.adapters import RabbitMQAdapter
 from config.adapters import RedisAdapter
 from config.adapters import initialize_consul
 from config.adapters import initialize_elasticsearch
+from config.adapters import initialize_email
 from config.adapters import initialize_rabbitmq
 from config.adapters import initialize_redis
 from config.adapters import setup_telemetry
 from config.adapters import shutdown_consul
 from config.adapters import shutdown_elasticsearch
+from config.adapters import shutdown_email
 from config.adapters import shutdown_rabbitmq
 from config.adapters import shutdown_redis
 from config.logger import LoggerManager
@@ -136,6 +139,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
         else:
             startup_logger.warning(msg="Elasticsearch connection failed")
 
+    email_adapter = None
+    if settings.smtp_enabled:
+        startup_logger.info(msg="Initializing Email SMTP connection")
+        email_adapter: EmailAdapter | None = await initialize_email()
+        if email_adapter:
+            startup_logger.info(
+                msg="Email SMTP connection established",
+                extra={
+                    "smtp_host": settings.smtp_host,
+                    "smtp_port": settings.smtp_port,
+                    "smtp_from_email": settings.smtp_from_email,
+                },
+            )
+        else:
+            startup_logger.warning(msg="Email SMTP connection failed")
+
     startup_logger.info(msg="Application startup completed")
 
     yield
@@ -162,6 +181,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
         shutdown_logger.info(msg="Shutting down Elasticsearch connection")
         await shutdown_elasticsearch()
         shutdown_logger.info(msg="Elasticsearch connection closed")
+
+    if settings.smtp_enabled:
+        shutdown_logger.info(msg="Shutting down Email SMTP connection")
+        await shutdown_email()
+        shutdown_logger.info(msg="Email SMTP connection closed")
 
     shutdown_logger.info(msg="Application shutdown completed")
 

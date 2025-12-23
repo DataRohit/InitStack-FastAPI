@@ -115,6 +115,28 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-mailpit-service:
+        image: axllent/mailpit:v1.22.3
+        container_name: initstack-mailpit-service
+        entrypoint: ["/usr/local/bin/start-mailpit.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/mailpit/.env
+        volumes:
+            - ./compose/mailpit/start-mailpit.sh:/usr/local/bin/start-mailpit.sh:ro
+            - ./compose/mailpit/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "1025:1025"
+            - "8025:8025"
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+
     initstack-elasticsearch-service:
         image: elasticsearch:8.19.8
         container_name: initstack-elasticsearch-service
@@ -212,6 +234,8 @@ services:
             initstack-redis-service:
                 condition: service_healthy
             initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-mailpit-service:
                 condition: service_healthy
             initstack-elasticsearch-service:
                 condition: service_healthy

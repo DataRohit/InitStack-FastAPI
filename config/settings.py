@@ -230,6 +230,17 @@ class Settings(BaseSettings):
     elasticsearch_max_retries: int = 3
     elasticsearch_retry_on_timeout: bool = True
 
+    smtp_enabled: bool = True
+    smtp_host: str = "initstack-mailpit-service"
+    smtp_port: int = 1025
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = False
+    smtp_use_ssl: bool = False
+    smtp_timeout: int = 10
+    smtp_from_email: str = "noreply@initstack.local"
+    smtp_from_name: str = "InitStack"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Any) -> Any:

@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . .
 
-CMD ["python", "-m", "watchfiles", "python main.py", "."]
+CMD ["sh", "-c", "sleep 60 && python -m watchfiles 'python main.py' ."]
