@@ -17,17 +17,20 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from config.adapters import ConsulAdapter
 from config.adapters import ElasticsearchAdapter
 from config.adapters import EmailAdapter
+from config.adapters import MinIOAdapter
 from config.adapters import RabbitMQAdapter
 from config.adapters import RedisAdapter
 from config.adapters import initialize_consul
 from config.adapters import initialize_elasticsearch
 from config.adapters import initialize_email
+from config.adapters import initialize_minio
 from config.adapters import initialize_rabbitmq
 from config.adapters import initialize_redis
 from config.adapters import setup_telemetry
 from config.adapters import shutdown_consul
 from config.adapters import shutdown_elasticsearch
 from config.adapters import shutdown_email
+from config.adapters import shutdown_minio
 from config.adapters import shutdown_rabbitmq
 from config.adapters import shutdown_redis
 from config.logger import LoggerManager
@@ -155,6 +158,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
         else:
             startup_logger.warning(msg="Email SMTP connection failed")
 
+    minio_adapter = None
+    if settings.minio_enabled:
+        startup_logger.info(msg="Initializing MinIO connection")
+        minio_adapter: MinIOAdapter | None = await initialize_minio()
+        if minio_adapter:
+            startup_logger.info(
+                msg="MinIO connection established",
+                extra={
+                    "minio_endpoint": settings.minio_endpoint,
+                    "minio_bucket": settings.minio_bucket_name,
+                },
+            )
+        else:
+            startup_logger.warning(msg="MinIO connection failed")
+
     startup_logger.info(msg="Application startup completed")
 
     yield
@@ -186,6 +204,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
         shutdown_logger.info(msg="Shutting down Email SMTP connection")
         await shutdown_email()
         shutdown_logger.info(msg="Email SMTP connection closed")
+
+    if settings.minio_enabled:
+        shutdown_logger.info(msg="Shutting down MinIO connection")
+        await shutdown_minio()
+        shutdown_logger.info(msg="MinIO connection closed")
 
     shutdown_logger.info(msg="Application shutdown completed")
 

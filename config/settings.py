@@ -104,6 +104,23 @@ class Settings(BaseSettings):
         elasticsearch_request_timeout (int): Elasticsearch request timeout in seconds.
         elasticsearch_max_retries (int): Maximum Elasticsearch retry attempts.
         elasticsearch_retry_on_timeout (bool): Retry Elasticsearch requests on timeout.
+        smtp_enabled (bool): Enable SMTP mail transport.
+        smtp_host (str): SMTP server host.
+        smtp_port (int): SMTP server port.
+        smtp_username (str): SMTP username.
+        smtp_password (str): SMTP password.
+        smtp_use_tls (bool): Use TLS for SMTP connection.
+        smtp_use_ssl (bool): Use SSL for SMTP connection.
+        smtp_timeout (int): SMTP connection timeout in seconds.
+        smtp_from_email (str): Default sender email address.
+        smtp_from_name (str): Default sender display name.
+        minio_enabled (bool): Enable MinIO object storage.
+        minio_endpoint (str): MinIO server endpoint.
+        minio_access_key (str): MinIO access key.
+        minio_secret_key (str): MinIO secret key.
+        minio_bucket_name (str): MinIO bucket name.
+        minio_secure (bool): Use secure (HTTPS) connection to MinIO.
+        minio_region (str): MinIO bucket region.
 
     Properties:
         None
@@ -240,6 +257,14 @@ class Settings(BaseSettings):
     smtp_timeout: int = 10
     smtp_from_email: str = "noreply@initstack.local"
     smtp_from_name: str = "InitStack"
+
+    minio_enabled: bool = True
+    minio_endpoint: str = "initstack-minio-service:9000"
+    minio_access_key: str = "qHxw14DQ1zVmO80H4AFj"
+    minio_secret_key: str = "38dw8Dh6x5c0kO3DjVGZMlioi6EGnMgR89UH0Tko"  # noqa: S105
+    minio_bucket_name: str = "initstack"
+    minio_secure: bool = False
+    minio_region: str = "us-east-1"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
