@@ -2,11 +2,11 @@
 
 set -e
 
-echo "Sleeping for 30 seconds before starting Kibana..."
-sleep 30
+echo "Sleeping for 60 seconds before starting Kibana..."
+sleep 60
 
 echo "Waiting for Elasticsearch to be ready..."
-until curl -s -f -u elastic:$ELASTIC_PASSWORD $ELASTICSEARCH_HOSTS/_cluster/health?wait_for_status=yellow&timeout=30s > /dev/null; do
+until curl -s -f -u elastic:$ELASTIC_PASSWORD $ELASTICSEARCH_HOSTS/_cluster/health?wait_for_status=yellow&timeout=60s > /dev/null; do
     echo "Elasticsearch is unavailable - sleeping"
     sleep 5
 done
