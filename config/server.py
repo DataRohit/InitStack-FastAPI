@@ -18,18 +18,15 @@ from config.adapters import ConsulAdapter
 from config.adapters import ElasticsearchAdapter
 from config.adapters import RabbitMQAdapter
 from config.adapters import RedisAdapter
-from config.adapters import SupabaseAdapter
 from config.adapters import initialize_consul
 from config.adapters import initialize_elasticsearch
 from config.adapters import initialize_rabbitmq
 from config.adapters import initialize_redis
-from config.adapters import initialize_supabase
 from config.adapters import setup_telemetry
 from config.adapters import shutdown_consul
 from config.adapters import shutdown_elasticsearch
 from config.adapters import shutdown_rabbitmq
 from config.adapters import shutdown_redis
-from config.adapters import shutdown_supabase
 from config.logger import LoggerManager
 from config.logger import get_logger
 from config.middlewares import LoggingMiddleware
@@ -139,21 +136,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
         else:
             startup_logger.warning(msg="Elasticsearch connection failed")
 
-    supabase_adapter = None
-    if settings.supabase_enabled:
-        startup_logger.info(msg="Initializing Supabase connection")
-        supabase_adapter: SupabaseAdapter | None = await initialize_supabase()
-        if supabase_adapter:
-            startup_logger.info(
-                msg="Supabase connection established",
-                extra={
-                    "supabase_url": settings.supabase_url,
-                    "supabase_schema": settings.supabase_schema,
-                },
-            )
-        else:
-            startup_logger.warning(msg="Supabase connection failed")
-
     startup_logger.info(msg="Application startup completed")
 
     yield
@@ -180,11 +162,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
         shutdown_logger.info(msg="Shutting down Elasticsearch connection")
         await shutdown_elasticsearch()
         shutdown_logger.info(msg="Elasticsearch connection closed")
-
-    if settings.supabase_enabled:
-        shutdown_logger.info(msg="Shutting down Supabase connection")
-        await shutdown_supabase()
-        shutdown_logger.info(msg="Supabase connection closed")
 
     shutdown_logger.info(msg="Application shutdown completed")
 

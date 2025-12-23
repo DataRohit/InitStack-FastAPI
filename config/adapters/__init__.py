@@ -14,10 +14,6 @@ from config.adapters.redis import RedisAdapter
 from config.adapters.redis import get_redis_adapter
 from config.adapters.redis import initialize_redis
 from config.adapters.redis import shutdown_redis
-from config.adapters.supabase import SupabaseAdapter
-from config.adapters.supabase import get_supabase_adapter
-from config.adapters.supabase import initialize_supabase
-from config.adapters.supabase import shutdown_supabase
 from config.adapters.telemetry import build_apm_config
 from config.adapters.telemetry import setup_telemetry
 
@@ -26,22 +22,18 @@ __all__: list[str] = [
     "ElasticsearchAdapter",
     "RabbitMQAdapter",
     "RedisAdapter",
-    "SupabaseAdapter",
     "build_apm_config",
     "get_consul_adapter",
     "get_elasticsearch_adapter",
     "get_rabbitmq_adapter",
     "get_redis_adapter",
-    "get_supabase_adapter",
     "initialize_consul",
     "initialize_elasticsearch",
     "initialize_rabbitmq",
     "initialize_redis",
-    "initialize_supabase",
     "setup_telemetry",
     "shutdown_consul",
     "shutdown_elasticsearch",
     "shutdown_rabbitmq",
     "shutdown_redis",
-    "shutdown_supabase",
 ]

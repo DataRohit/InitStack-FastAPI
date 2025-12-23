@@ -113,6 +113,3 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
-!compose/supabase/db/*
-!compose/supabase/logs/
