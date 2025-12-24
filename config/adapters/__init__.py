@@ -14,6 +14,10 @@ from config.adapters.minio import MinIOAdapter
 from config.adapters.minio import get_minio_adapter
 from config.adapters.minio import initialize_minio
 from config.adapters.minio import shutdown_minio
+from config.adapters.postgresql import PostgreSQLAdapter
+from config.adapters.postgresql import get_postgresql_adapter
+from config.adapters.postgresql import initialize_postgresql
+from config.adapters.postgresql import shutdown_postgresql
 from config.adapters.rabbitmq import RabbitMQAdapter
 from config.adapters.rabbitmq import get_rabbitmq_adapter
 from config.adapters.rabbitmq import initialize_rabbitmq
@@ -30,6 +34,7 @@ __all__: list[str] = [
     "ElasticsearchAdapter",
     "EmailAdapter",
     "MinIOAdapter",
+    "PostgreSQLAdapter",
     "RabbitMQAdapter",
     "RedisAdapter",
     "build_apm_config",
@@ -37,12 +42,14 @@ __all__: list[str] = [
     "get_elasticsearch_adapter",
     "get_email_adapter",
     "get_minio_adapter",
+    "get_postgresql_adapter",
     "get_rabbitmq_adapter",
     "get_redis_adapter",
     "initialize_consul",
     "initialize_elasticsearch",
     "initialize_email",
     "initialize_minio",
+    "initialize_postgresql",
     "initialize_rabbitmq",
     "initialize_redis",
     "setup_telemetry",
@@ -50,6 +57,7 @@ __all__: list[str] = [
     "shutdown_elasticsearch",
     "shutdown_email",
     "shutdown_minio",
+    "shutdown_postgresql",
     "shutdown_rabbitmq",
     "shutdown_redis",
 ]

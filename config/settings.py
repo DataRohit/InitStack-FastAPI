@@ -160,6 +160,20 @@ class Settings(BaseSettings):
         celery_flower_enable_events (bool): Enable Celery events in Flower.
         celery_flower_auto_refresh (bool): Enable auto-refresh in Flower.
         celery_flower_refresh_interval (int): Flower refresh interval in milliseconds.
+        postgresql_enabled (bool): Enable PostgreSQL connection.
+        postgresql_host (str): PostgreSQL server host.
+        postgresql_port (int): PostgreSQL server port.
+        postgresql_username (str): PostgreSQL username.
+        postgresql_password (str): PostgreSQL password.
+        postgresql_database (str): PostgreSQL database name.
+        postgresql_pool_size (int): PostgreSQL connection pool size.
+        postgresql_max_overflow (int): Maximum overflow connections in pool.
+        postgresql_pool_timeout (int): Connection pool timeout in seconds.
+        postgresql_pool_recycle (int): Connection recycle time in seconds.
+        postgresql_pool_pre_ping (bool): Enable connection pre-ping.
+        postgresql_echo (bool): Enable SQL statement logging.
+        postgresql_echo_pool (bool): Enable connection pool logging.
+        postgresql_ssl_mode (str): PostgreSQL SSL mode.
 
     Properties:
         None
@@ -344,6 +358,21 @@ class Settings(BaseSettings):
     celery_flower_enable_events: bool = True
     celery_flower_auto_refresh: bool = True
     celery_flower_refresh_interval: int = 5000
+
+    postgresql_enabled: bool = True
+    postgresql_host: str = "initstack-postgresql-service"
+    postgresql_port: int = 5432
+    postgresql_username: str = "G4qoziOrpaVsfa8A"
+    postgresql_password: str = "Kx9mP2nQ7wR5tY8uVb3cX8nM1qW6eR9t"  # noqa: S105
+    postgresql_database: str = "initstack_db"
+    postgresql_pool_size: int = 20
+    postgresql_max_overflow: int = 10
+    postgresql_pool_timeout: int = 30
+    postgresql_pool_recycle: int = 3600
+    postgresql_pool_pre_ping: bool = True
+    postgresql_echo: bool = False
+    postgresql_echo_pool: bool = False
+    postgresql_ssl_mode: str = "disable"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

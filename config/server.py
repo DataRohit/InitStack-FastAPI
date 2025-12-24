@@ -18,12 +18,14 @@ from config.adapters import ConsulAdapter
 from config.adapters import ElasticsearchAdapter
 from config.adapters import EmailAdapter
 from config.adapters import MinIOAdapter
+from config.adapters import PostgreSQLAdapter
 from config.adapters import RabbitMQAdapter
 from config.adapters import RedisAdapter
 from config.adapters import initialize_consul
 from config.adapters import initialize_elasticsearch
 from config.adapters import initialize_email
 from config.adapters import initialize_minio
+from config.adapters import initialize_postgresql
 from config.adapters import initialize_rabbitmq
 from config.adapters import initialize_redis
 from config.adapters import setup_telemetry
@@ -31,6 +33,7 @@ from config.adapters import shutdown_consul
 from config.adapters import shutdown_elasticsearch
 from config.adapters import shutdown_email
 from config.adapters import shutdown_minio
+from config.adapters import shutdown_postgresql
 from config.adapters import shutdown_rabbitmq
 from config.adapters import shutdown_redis
 from config.logger import LoggerManager
@@ -96,6 +99,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
             )
         else:
             startup_logger.warning(msg="Redis connection failed")
+
+    postgresql_adapter = None
+    if settings.postgresql_enabled:
+        startup_logger.info(msg="Initializing PostgreSQL connection")
+        postgresql_adapter: PostgreSQLAdapter | None = await initialize_postgresql()
+        if postgresql_adapter:
+            startup_logger.info(
+                msg="PostgreSQL connection established",
+                extra={
+                    "postgresql_host": settings.postgresql_host,
+                    "postgresql_port": settings.postgresql_port,
+                    "postgresql_database": settings.postgresql_database,
+                },
+            )
+        else:
+            startup_logger.warning(msg="PostgreSQL connection failed")
 
     rabbitmq_adapter = None
     if settings.rabbitmq_enabled:
@@ -189,6 +208,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
         shutdown_logger.info(msg="Shutting down Redis connection")
         await shutdown_redis()
         shutdown_logger.info(msg="Redis connection closed")
+
+    if settings.postgresql_enabled:
+        shutdown_logger.info(msg="Shutting down PostgreSQL connection")
+        await shutdown_postgresql()
+        shutdown_logger.info(msg="PostgreSQL connection closed")
 
     if settings.rabbitmq_enabled:
         shutdown_logger.info(msg="Shutting down RabbitMQ connection")
