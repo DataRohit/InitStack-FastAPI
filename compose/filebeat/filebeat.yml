@@ -188,6 +188,132 @@ filebeat.autodiscover:
                           - drop_fields:
                                 fields: ["agent", "ecs", "input", "log.file"]
 
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-celery-worker-1"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-celery-worker-2"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-celery-worker-3"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-celery-beat-1"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-celery-beat-2"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-celery-beat-3"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-celery-flower-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
 processors:
     - add_host_metadata:
           when.not.contains.tags: forwarded

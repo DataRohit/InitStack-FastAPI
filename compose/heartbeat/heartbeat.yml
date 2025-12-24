@@ -218,6 +218,14 @@ heartbeat.monitors:
       schedule: "@every 30s"
       timeout: 10s
 
+    - type: http
+      id: flower-dashboard
+      name: Flower Monitoring Dashboard Check
+      urls: ["http://initstack-celery-flower-service:5555/"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+
     - type: icmp
       id: docker-network-ping
       name: Docker Network Connectivity
@@ -230,6 +238,13 @@ heartbeat.monitors:
               "initstack-fastapi-service-1",
               "initstack-fastapi-service-2",
               "initstack-fastapi-service-3",
+              "initstack-celery-worker-1",
+              "initstack-celery-worker-2",
+              "initstack-celery-worker-3",
+              "initstack-celery-beat-1",
+              "initstack-celery-beat-2",
+              "initstack-celery-beat-3",
+              "initstack-celery-flower-service",
           ]
       schedule: "@every 60s"
       timeout: 10s

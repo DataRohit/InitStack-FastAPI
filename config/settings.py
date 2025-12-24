@@ -121,6 +121,45 @@ class Settings(BaseSettings):
         minio_bucket_name (str): MinIO bucket name.
         minio_secure (bool): Use secure (HTTPS) connection to MinIO.
         minio_region (str): MinIO bucket region.
+        celery_broker_url (str): Celery broker connection URL.
+        celery_result_backend (str): Celery result backend URL.
+        celery_worker_name (str): Celery worker name.
+        celery_worker_concurrency (int): Number of concurrent worker processes.
+        celery_worker_prefetch_multiplier (int): Worker prefetch multiplier.
+        celery_worker_max_tasks_per_child (int): Maximum tasks per worker child process.
+        celery_worker_log_level (str): Worker logging level.
+        celery_task_serializer (str): Task serialization format.
+        celery_result_serializer (str): Result serialization format.
+        celery_accept_content (list[str]): Accepted content types.
+        celery_timezone (str): Celery timezone.
+        celery_enable_utc (bool): Enable UTC timezone.
+        celery_task_track_started (bool): Track when tasks start.
+        celery_task_time_limit (int): Hard task time limit in seconds.
+        celery_task_soft_time_limit (int): Soft task time limit in seconds.
+        celery_task_acks_late (bool): Acknowledge tasks after completion.
+        celery_task_reject_on_worker_lost (bool): Reject tasks on worker loss.
+        celery_result_expires (int): Result expiration time in seconds.
+        celery_result_persistent (bool): Persist results.
+        celery_result_compression (str): Result compression algorithm.
+        celery_broker_connection_retry (bool): Retry broker connections.
+        celery_broker_connection_retry_on_startup (bool): Retry connections on startup.
+        celery_broker_connection_max_retries (int): Maximum connection retry attempts.
+        celery_elasticsearch_index_prefix (str): Elasticsearch index prefix for results.
+        celery_elasticsearch_doc_type (str): Elasticsearch document type.
+        celery_beat_scheduler (str): Beat scheduler class.
+        celery_beat_schedule_filename (str): Beat schedule file path.
+        celery_beat_log_level (str): Beat scheduler logging level.
+        celery_flower_port (int): Flower monitoring port.
+        celery_flower_address (str): Flower bind address.
+        celery_flower_log_level (str): Flower logging level.
+        celery_flower_basic_auth (str): Flower basic authentication credentials.
+        celery_flower_url_prefix (str): Flower URL prefix.
+        celery_flower_max_tasks (int): Maximum tasks to display in Flower.
+        celery_flower_persistent (bool): Enable Flower persistence.
+        celery_flower_db (str): Flower database file path.
+        celery_flower_enable_events (bool): Enable Celery events in Flower.
+        celery_flower_auto_refresh (bool): Enable auto-refresh in Flower.
+        celery_flower_refresh_interval (int): Flower refresh interval in milliseconds.
 
     Properties:
         None
@@ -265,6 +304,46 @@ class Settings(BaseSettings):
     minio_bucket_name: str = "initstack"
     minio_secure: bool = False
     minio_region: str = "us-east-1"
+
+    celery_broker_url: str = "amqp://Qw8rT5nM3xZ9pL2v:Hj6kN4mB8vC1sF7q@initstack-rabbitmq-service:5672/initstack_vhost"
+    celery_result_backend: str = "elasticsearch://elastic:Mx7nQ4wR8vK2sL9p@initstack-elasticsearch-service:9200"
+    celery_worker_name: str = "initstack-celery-worker"
+    celery_worker_concurrency: int = 4
+    celery_worker_prefetch_multiplier: int = 4
+    celery_worker_max_tasks_per_child: int = 1000
+    celery_worker_log_level: str = "INFO"
+    celery_task_serializer: str = "json"
+    celery_result_serializer: str = "json"
+    celery_accept_content: list[str] = Field(default_factory=lambda: ["json"])
+    celery_timezone: str = "UTC"
+    celery_enable_utc: bool = True
+    celery_task_track_started: bool = True
+    celery_task_time_limit: int = 3600
+    celery_task_soft_time_limit: int = 3000
+    celery_task_acks_late: bool = True
+    celery_task_reject_on_worker_lost: bool = True
+    celery_result_expires: int = 86400
+    celery_result_persistent: bool = True
+    celery_result_compression: str = "gzip"
+    celery_broker_connection_retry: bool = True
+    celery_broker_connection_retry_on_startup: bool = True
+    celery_broker_connection_max_retries: int = 10
+    celery_elasticsearch_index_prefix: str = "celery"
+    celery_elasticsearch_doc_type: str = "_doc"
+    celery_beat_scheduler: str = "celery.beat:PersistentScheduler"
+    celery_beat_schedule_filename: str = "/var/lib/celery/celerybeat-schedule"
+    celery_beat_log_level: str = "INFO"
+    celery_flower_port: int = 5555
+    celery_flower_address: str = "0.0.0.0"  # noqa: S104
+    celery_flower_log_level: str = "INFO"
+    celery_flower_basic_auth: str = "admin:Zx7kP9mN3qW8rT5yHj2vB6nC4sF1dG8a"
+    celery_flower_url_prefix: str = ""
+    celery_flower_max_tasks: int = 10000
+    celery_flower_persistent: bool = True
+    celery_flower_db: str = "/var/lib/flower/flower.db"
+    celery_flower_enable_events: bool = True
+    celery_flower_auto_refresh: bool = True
+    celery_flower_refresh_interval: int = 5000
 
     @field_validator("cors_origins", mode="before")
     @classmethod

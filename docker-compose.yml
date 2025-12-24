@@ -756,6 +756,233 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-celery-worker-1:
+        image: initstack-fastapi-service:latest
+        container_name: initstack-celery-worker-1
+        entrypoint: ["/usr/local/bin/start-celery-worker.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-worker/.env
+        volumes:
+            - ./compose/celery-worker/start-celery-worker.sh:/usr/local/bin/start-celery-worker.sh:ro
+            - ./compose/celery-worker/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-celery-worker-2:
+        image: initstack-fastapi-service:latest
+        container_name: initstack-celery-worker-2
+        entrypoint: ["/usr/local/bin/start-celery-worker.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-worker/.env
+        volumes:
+            - ./compose/celery-worker/start-celery-worker.sh:/usr/local/bin/start-celery-worker.sh:ro
+            - ./compose/celery-worker/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-celery-worker-3:
+        image: initstack-fastapi-service:latest
+        container_name: initstack-celery-worker-3
+        entrypoint: ["/usr/local/bin/start-celery-worker.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-worker/.env
+        volumes:
+            - ./compose/celery-worker/start-celery-worker.sh:/usr/local/bin/start-celery-worker.sh:ro
+            - ./compose/celery-worker/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-celery-beat-1:
+        image: initstack-fastapi-service:latest
+        container_name: initstack-celery-beat-1
+        entrypoint: ["/usr/local/bin/start-celery-beat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-beat/.env
+        volumes:
+            - initstack-celery-beat-1-data:/var/lib/celery
+            - ./compose/celery-beat/start-celery-beat.sh:/usr/local/bin/start-celery-beat.sh:ro
+            - ./compose/celery-beat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-celery-beat-2:
+        image: initstack-fastapi-service:latest
+        container_name: initstack-celery-beat-2
+        entrypoint: ["/usr/local/bin/start-celery-beat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-beat/.env
+        volumes:
+            - initstack-celery-beat-2-data:/var/lib/celery
+            - ./compose/celery-beat/start-celery-beat.sh:/usr/local/bin/start-celery-beat.sh:ro
+            - ./compose/celery-beat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-celery-beat-3:
+        image: initstack-fastapi-service:latest
+        container_name: initstack-celery-beat-3
+        entrypoint: ["/usr/local/bin/start-celery-beat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-beat/.env
+        volumes:
+            - initstack-celery-beat-3-data:/var/lib/celery
+            - ./compose/celery-beat/start-celery-beat.sh:/usr/local/bin/start-celery-beat.sh:ro
+            - ./compose/celery-beat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-celery-flower-service:
+        image: initstack-fastapi-service:latest
+        container_name: initstack-celery-flower-service
+        entrypoint: ["/usr/local/bin/start-celery-flower.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-flower/.env
+        volumes:
+            - initstack-celery-flower-data:/var/lib/flower
+            - ./compose/celery-flower/start-celery-flower.sh:/usr/local/bin/start-celery-flower.sh:ro
+            - ./compose/celery-flower/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "5555:5555"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-celery-worker-1:
+                condition: service_healthy
+            initstack-celery-worker-2:
+                condition: service_healthy
+            initstack-celery-worker-3:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
+    initstack-celery-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-celery-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/celery-metricbeat/.env
+        volumes:
+            - initstack-celery-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/celery-metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/celery-metricbeat/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/celery-metricbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /proc:/hostfs/proc:ro
+            - /:/hostfs:ro
+        ports:
+            - "5077:5077"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-celery-worker-1:
+                condition: service_healthy
+            initstack-celery-worker-2:
+                condition: service_healthy
+            initstack-celery-worker-3:
+                condition: service_healthy
+            initstack-celery-beat-1:
+                condition: service_healthy
+            initstack-celery-beat-2:
+                condition: service_healthy
+            initstack-celery-beat-3:
+                condition: service_healthy
+            initstack-celery-flower-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
 volumes:
     initstack-consul-data:
         name: initstack-consul-data
@@ -874,6 +1101,41 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-fastapi-metricbeat-data"
+            - "environment=development"
+
+    initstack-celery-beat-1-data:
+        name: initstack-celery-beat-1-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-celery-beat-1-data"
+            - "environment=development"
+
+    initstack-celery-beat-2-data:
+        name: initstack-celery-beat-2-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-celery-beat-2-data"
+            - "environment=development"
+
+    initstack-celery-beat-3-data:
+        name: initstack-celery-beat-3-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-celery-beat-3-data"
+            - "environment=development"
+
+    initstack-celery-flower-data:
+        name: initstack-celery-flower-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-celery-flower-data"
+            - "environment=development"
+
+    initstack-celery-metricbeat-data:
+        name: initstack-celery-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-celery-metricbeat-data"
             - "environment=development"
 
 networks:
