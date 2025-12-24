@@ -149,7 +149,6 @@ services:
             - ./compose/minio/start-minio.sh:/usr/local/bin/start-minio.sh:ro
             - ./compose/minio/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
         ports:
-            - "9000:9000"
             - "9001:9001"
         networks:
             - initstack-network
@@ -235,20 +234,18 @@ services:
             retries: 3
             start_period: 120s
 
-    initstack-fastapi-service:
+    initstack-fastapi-service-1:
         build:
             context: .
             dockerfile: dockerfile
         image: initstack-fastapi-service:latest
-        container_name: initstack-fastapi-service
+        container_name: initstack-fastapi-service-1
         restart: unless-stopped
         env_file:
             - .env
         volumes:
             - .:/app
             - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
-        ports:
-            - "8080:8080"
         networks:
             - initstack-network
         depends_on:
@@ -272,6 +269,111 @@ services:
             timeout: 10s
             retries: 3
             start_period: 30s
+
+    initstack-fastapi-service-2:
+        build:
+            context: .
+            dockerfile: dockerfile
+        image: initstack-fastapi-service:latest
+        container_name: initstack-fastapi-service-2
+        restart: unless-stopped
+        env_file:
+            - .env
+        volumes:
+            - .:/app
+            - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-consul-service:
+                condition: service_healthy
+            initstack-redis-service:
+                condition: service_healthy
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-mailpit-service:
+                condition: service_healthy
+            initstack-minio-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-apm-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-fastapi-service-3:
+        build:
+            context: .
+            dockerfile: dockerfile
+        image: initstack-fastapi-service:latest
+        container_name: initstack-fastapi-service-3
+        restart: unless-stopped
+        env_file:
+            - .env
+        volumes:
+            - .:/app
+            - ./healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-consul-service:
+                condition: service_healthy
+            initstack-redis-service:
+                condition: service_healthy
+            initstack-rabbitmq-service:
+                condition: service_healthy
+            initstack-mailpit-service:
+                condition: service_healthy
+            initstack-minio-service:
+                condition: service_healthy
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-apm-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    initstack-haproxy-service:
+        image: haproxy:3.3.1
+        container_name: initstack-haproxy-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-haproxy.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/haproxy/.env
+        volumes:
+            - ./compose/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg.template:ro
+            - ./compose/haproxy/start-haproxy.sh:/usr/local/bin/start-haproxy.sh:ro
+            - ./compose/haproxy/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+        ports:
+            - "8000:8000"
+            - "8404:8404"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-fastapi-service-1:
+                condition: service_healthy
+            initstack-fastapi-service-2:
+                condition: service_healthy
+            initstack-fastapi-service-3:
+                condition: service_healthy
+            initstack-minio-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
 
     initstack-filebeat-service:
         image: elastic/filebeat:8.19.8
@@ -641,7 +743,11 @@ services:
                 condition: service_healthy
             initstack-kibana-service:
                 condition: service_healthy
-            initstack-fastapi-service:
+            initstack-fastapi-service-1:
+                condition: service_healthy
+            initstack-fastapi-service-2:
+                condition: service_healthy
+            initstack-fastapi-service-3:
                 condition: service_healthy
         healthcheck:
             test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]

@@ -84,25 +84,73 @@ heartbeat.monitors:
       check.response.status: [200]
 
     - type: http
-      id: fastapi-docs
-      name: FastAPI Documentation Health Check
-      urls: ["http://initstack-fastapi-service:8080/docs"]
+      id: fastapi-1-docs
+      name: FastAPI Service 1 Documentation Health Check
+      urls: ["http://initstack-fastapi-service-1:8080/docs"]
       schedule: "@every 30s"
       timeout: 10s
       check.response.status: [200]
 
     - type: http
-      id: fastapi-openapi
-      name: FastAPI OpenAPI Schema Check
-      urls: ["http://initstack-fastapi-service:8080/openapi.json"]
+      id: fastapi-1-openapi
+      name: FastAPI Service 1 OpenAPI Schema Check
+      urls: ["http://initstack-fastapi-service-1:8080/openapi.json"]
       schedule: "@every 30s"
       timeout: 10s
       check.response.status: [200]
 
     - type: http
-      id: fastapi-redoc
-      name: FastAPI ReDoc Documentation Check
-      urls: ["http://initstack-fastapi-service:8080/redoc"]
+      id: fastapi-1-redoc
+      name: FastAPI Service 1 ReDoc Documentation Check
+      urls: ["http://initstack-fastapi-service-1:8080/redoc"]
+      schedule: "@every 60s"
+      timeout: 10s
+      check.response.status: [200]
+
+    - type: http
+      id: fastapi-2-docs
+      name: FastAPI Service 2 Documentation Health Check
+      urls: ["http://initstack-fastapi-service-2:8080/docs"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+
+    - type: http
+      id: fastapi-2-openapi
+      name: FastAPI Service 2 OpenAPI Schema Check
+      urls: ["http://initstack-fastapi-service-2:8080/openapi.json"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+
+    - type: http
+      id: fastapi-2-redoc
+      name: FastAPI Service 2 ReDoc Documentation Check
+      urls: ["http://initstack-fastapi-service-2:8080/redoc"]
+      schedule: "@every 60s"
+      timeout: 10s
+      check.response.status: [200]
+
+    - type: http
+      id: fastapi-3-docs
+      name: FastAPI Service 3 Documentation Health Check
+      urls: ["http://initstack-fastapi-service-3:8080/docs"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+
+    - type: http
+      id: fastapi-3-openapi
+      name: FastAPI Service 3 OpenAPI Schema Check
+      urls: ["http://initstack-fastapi-service-3:8080/openapi.json"]
+      schedule: "@every 30s"
+      timeout: 10s
+      check.response.status: [200]
+
+    - type: http
+      id: fastapi-3-redoc
+      name: FastAPI Service 3 ReDoc Documentation Check
+      urls: ["http://initstack-fastapi-service-3:8080/redoc"]
       schedule: "@every 60s"
       timeout: 10s
       check.response.status: [200]
@@ -150,9 +198,23 @@ heartbeat.monitors:
       timeout: 10s
 
     - type: tcp
-      id: fastapi-tcp
-      name: FastAPI Application TCP Check
-      hosts: ["initstack-fastapi-service:8080"]
+      id: fastapi-1-tcp
+      name: FastAPI Service 1 TCP Check
+      hosts: ["initstack-fastapi-service-1:8080"]
+      schedule: "@every 30s"
+      timeout: 10s
+
+    - type: tcp
+      id: fastapi-2-tcp
+      name: FastAPI Service 2 TCP Check
+      hosts: ["initstack-fastapi-service-2:8080"]
+      schedule: "@every 30s"
+      timeout: 10s
+
+    - type: tcp
+      id: fastapi-3-tcp
+      name: FastAPI Service 3 TCP Check
+      hosts: ["initstack-fastapi-service-3:8080"]
       schedule: "@every 30s"
       timeout: 10s
 
@@ -165,7 +227,9 @@ heartbeat.monitors:
               "initstack-kibana-service",
               "initstack-consul-service",
               "initstack-apm-service",
-              "initstack-fastapi-service",
+              "initstack-fastapi-service-1",
+              "initstack-fastapi-service-2",
+              "initstack-fastapi-service-3",
           ]
       schedule: "@every 60s"
       timeout: 10s

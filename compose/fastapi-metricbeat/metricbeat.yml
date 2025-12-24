@@ -1,74 +1,111 @@
 metricbeat.config.modules:
-  path: /usr/share/metricbeat/modules.d/*.yml
-  reload.enabled: true
-  reload.period: 10s
+    path: /usr/share/metricbeat/modules.d/*.yml
+    reload.enabled: true
+    reload.period: 10s
 
 metricbeat.modules:
-- module: http
-  metricsets:
-    - json
-  period: 10s
-  hosts: ["${FASTAPI_HOST}:${FASTAPI_PORT}"]
-  path: "/docs"
-  namespace: "fastapi_docs"
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["initstack-fastapi-service-1:8080"]
+      path: "/docs"
+      namespace: "fastapi_1_docs"
 
-- module: http
-  metricsets:
-    - json
-  period: 10s
-  hosts: ["${FASTAPI_HOST}:${FASTAPI_PORT}"]
-  path: "/openapi.json"
-  namespace: "fastapi_openapi"
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["initstack-fastapi-service-1:8080"]
+      path: "/openapi.json"
+      namespace: "fastapi_1_openapi"
 
-- module: system
-  metricsets:
-    - cpu
-    - load
-    - memory
-    - network
-    - process
-    - process_summary
-    - socket_summary
-    - filesystem
-    - fsstat
-  period: 10s
-  processes: ['.*']
-  process.include_top_n:
-    by_cpu: 5
-    by_memory: 5
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["initstack-fastapi-service-2:8080"]
+      path: "/docs"
+      namespace: "fastapi_2_docs"
 
-- module: docker
-  metricsets:
-    - container
-    - cpu
-    - diskio
-    - healthcheck
-    - info
-    - memory
-    - network
-  period: 10s
-  hosts:
-    - "unix:///var/run/docker.sock"
-  condition:
-    contains:
-      docker.container.name: "fastapi"
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["initstack-fastapi-service-2:8080"]
+      path: "/openapi.json"
+      namespace: "fastapi_2_openapi"
+
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["initstack-fastapi-service-3:8080"]
+      path: "/docs"
+      namespace: "fastapi_3_docs"
+
+    - module: http
+      metricsets:
+          - json
+      period: 10s
+      hosts: ["initstack-fastapi-service-3:8080"]
+      path: "/openapi.json"
+      namespace: "fastapi_3_openapi"
+
+    - module: system
+      metricsets:
+          - cpu
+          - load
+          - memory
+          - network
+          - process
+          - process_summary
+          - socket_summary
+          - filesystem
+          - fsstat
+      period: 10s
+      processes: [".*"]
+      process.include_top_n:
+          by_cpu: 5
+          by_memory: 5
+
+    - module: docker
+      metricsets:
+          - container
+          - cpu
+          - diskio
+          - healthcheck
+          - info
+          - memory
+          - network
+      period: 10s
+      hosts:
+          - "unix:///var/run/docker.sock"
+      condition:
+          or:
+              - contains:
+                    docker.container.name: "initstack-fastapi-service-1"
+              - contains:
+                    docker.container.name: "initstack-fastapi-service-2"
+              - contains:
+                    docker.container.name: "initstack-fastapi-service-3"
 
 name: ${METRICBEAT_NAME}
 agent.id: ${METRICBEAT_NAME}-${METRICBEAT_FIELDS_DATACENTER}
 
 output.elasticsearch:
-  hosts: ["${ELASTICSEARCH_HOSTS}"]
-  username: ${ELASTICSEARCH_USERNAME}
-  password: ${ELASTICSEARCH_PASSWORD}
+    hosts: ["${ELASTICSEARCH_HOSTS}"]
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
 
 setup.kibana:
-  host: "${KIBANA_HOST}"
+    host: "${KIBANA_HOST}"
 
 setup.dashboards.enabled: false
 
 setup.template.settings:
-  index.number_of_shards: 1
-  index.codec: best_compression
+    index.number_of_shards: 1
+    index.codec: best_compression
 
 setup.ilm.enabled: true
 setup.ilm.rollover_alias: "metricbeat"
@@ -77,10 +114,10 @@ setup.ilm.pattern: "{now/d}-000001"
 logging.level: ${METRICBEAT_LOG_LEVEL}
 logging.to_files: true
 logging.files:
-  path: /var/log/metricbeat
-  name: metricbeat
-  keepfiles: 7
-  permissions: 0644
+    path: /var/log/metricbeat
+    name: metricbeat
+    keepfiles: 7
+    permissions: 0644
 
 monitoring.enabled: ${METRICBEAT_MONITORING_ENABLED}
 
@@ -89,8 +126,8 @@ http.host: 0.0.0.0
 http.port: 5076
 
 processors:
-  - add_host_metadata:
-      when.not.contains.tags: forwarded
-  - add_cloud_metadata: ~
-  - add_docker_metadata: ~
-  - add_kubernetes_metadata: ~
+    - add_host_metadata:
+          when.not.contains.tags: forwarded
+    - add_cloud_metadata: ~
+    - add_docker_metadata: ~
+    - add_kubernetes_metadata: ~

@@ -121,7 +121,53 @@ filebeat.autodiscover:
                                 overwrite_keys: true
               - condition:
                     contains:
-                        docker.container.name: "initstack-fastapi-service"
+                        docker.container.name: "initstack-fastapi-service-1"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - timestamp:
+                                field: "@timestamp"
+                                layouts:
+                                    - "2006-01-02T15:04:05.000Z"
+                                    - "2006-01-02 15:04:05"
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-fastapi-service-2"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+                                add_error_key: true
+                          - timestamp:
+                                field: "@timestamp"
+                                layouts:
+                                    - "2006-01-02T15:04:05.000Z"
+                                    - "2006-01-02 15:04:05"
+                          - drop_fields:
+                                fields: ["agent", "ecs", "input", "log.file"]
+
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-fastapi-service-3"
                 config:
                     - type: container
                       paths:
