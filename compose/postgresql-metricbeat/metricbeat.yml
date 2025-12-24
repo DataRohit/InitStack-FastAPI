@@ -4,37 +4,17 @@ metricbeat.config.modules:
     reload.period: 10s
 
 metricbeat.modules:
-    - module: prometheus
+    - module: postgresql
       metricsets:
-          - collector
+          - database
+          - bgwriter
+          - activity
+          - statement
       period: 10s
-      hosts: ["${CONSUL_EXPORTER_HOST}:${CONSUL_EXPORTER_PORT}"]
-      metrics_path: /metrics
-      namespace: consul_exporter
-
-    - module: prometheus
-      metricsets:
-          - collector
-      period: 10s
-      hosts: ["${REDIS_EXPORTER_HOST}:${REDIS_EXPORTER_PORT}"]
-      metrics_path: /metrics
-      namespace: redis_exporter
-
-    - module: prometheus
-      metricsets:
-          - collector
-      period: 10s
-      hosts: ["${POSTGRES_EXPORTER_HOST}:${POSTGRES_EXPORTER_PORT}"]
-      metrics_path: /metrics
-      namespace: postgres_exporter
-
-    - module: prometheus
-      metricsets:
-          - collector
-      period: 10s
-      hosts: ["${ELASTICSEARCH_EXPORTER_HOST}:${ELASTICSEARCH_EXPORTER_PORT}"]
-      metrics_path: /metrics
-      namespace: elasticsearch_exporter
+      hosts:
+          [
+              "postgres://${POSTGRESQL_USERNAME}:${POSTGRESQL_PASSWORD}@${POSTGRESQL_HOST}:${POSTGRESQL_PORT}/${POSTGRES_DB}?sslmode=disable",
+          ]
 
     - module: system
       metricsets:
@@ -67,7 +47,7 @@ metricbeat.modules:
           - "unix:///var/run/docker.sock"
       condition:
           contains:
-              docker.container.name: "exporter"
+              docker.container.name: "postgresql"
 
 name: ${METRICBEAT_NAME}
 agent.id: ${METRICBEAT_NAME}-${METRICBEAT_FIELDS_DATACENTER}
@@ -102,7 +82,7 @@ monitoring.enabled: ${METRICBEAT_MONITORING_ENABLED}
 
 http.enabled: true
 http.host: 0.0.0.0
-http.port: 5074
+http.port: 5073
 
 processors:
     - add_host_metadata:

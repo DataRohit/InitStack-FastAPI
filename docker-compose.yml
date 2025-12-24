@@ -115,6 +115,50 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-postgresql-service:
+        image: postgres:18.1
+        container_name: initstack-postgresql-service
+        entrypoint: ["/usr/local/bin/start-postgresql.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/postgresql/.env
+        volumes:
+            - initstack-postgresql-data:/var/lib/postgresql
+            - ./compose/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+            - ./compose/postgresql/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+            - ./compose/postgresql/start-postgresql.sh:/usr/local/bin/start-postgresql.sh:ro
+            - ./compose/postgresql/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - ./compose/postgresql/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+        ports:
+            - "5432:5432"
+        networks:
+            - initstack-network
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+        shm_size: 256mb
+
+    initstack-postgresql-exporter-service:
+        image: prometheuscommunity/postgres-exporter:v0.18.1
+        container_name: initstack-postgresql-exporter-service
+        user: root
+        entrypoint: ["/bin/sh", "/start-postgresql-exporter.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/postgresql-exporter/.env
+        volumes:
+            - ./compose/postgresql-exporter/start-postgresql-exporter.sh:/start-postgresql-exporter.sh:ro
+        ports:
+            - "9187:9187"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-postgresql-service:
+                condition: service_healthy
+
     initstack-mailpit-service:
         image: axllent/mailpit:v1.22.3
         container_name: initstack-mailpit-service
@@ -251,6 +295,8 @@ services:
         depends_on:
             initstack-consul-service:
                 condition: service_healthy
+            initstack-postgresql-service:
+                condition: service_healthy
             initstack-redis-service:
                 condition: service_healthy
             initstack-rabbitmq-service:
@@ -287,6 +333,8 @@ services:
         depends_on:
             initstack-consul-service:
                 condition: service_healthy
+            initstack-postgresql-service:
+                condition: service_healthy
             initstack-redis-service:
                 condition: service_healthy
             initstack-rabbitmq-service:
@@ -322,6 +370,8 @@ services:
             - initstack-network
         depends_on:
             initstack-consul-service:
+                condition: service_healthy
+            initstack-postgresql-service:
                 condition: service_healthy
             initstack-redis-service:
                 condition: service_healthy
@@ -399,6 +449,8 @@ services:
                 condition: service_healthy
             initstack-kibana-service:
                 condition: service_healthy
+            initstack-postgresql-service:
+                condition: service_healthy
         healthcheck:
             test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
             interval: 30s
@@ -458,6 +510,8 @@ services:
             initstack-elasticsearch-service:
                 condition: service_healthy
             initstack-kibana-service:
+                condition: service_healthy
+            initstack-postgresql-service:
                 condition: service_healthy
         healthcheck:
             test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
@@ -573,6 +627,41 @@ services:
             retries: 3
             start_period: 60s
 
+    initstack-postgresql-metricbeat-service:
+        image: elastic/metricbeat:8.19.8
+        container_name: initstack-postgresql-metricbeat-service
+        user: root
+        entrypoint: ["/usr/local/bin/start-metricbeat.sh"]
+        restart: unless-stopped
+        env_file:
+            - .envs/postgresql-metricbeat/.env
+        volumes:
+            - initstack-postgresql-metricbeat-data:/usr/share/metricbeat/data
+            - ./compose/postgresql-metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+            - ./compose/postgresql-metricbeat/start-metricbeat.sh:/usr/local/bin/start-metricbeat.sh:ro
+            - ./compose/postgresql-metricbeat/healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+            - /proc:/hostfs/proc:ro
+            - /:/hostfs:ro
+        ports:
+            - "5073:5073"
+        networks:
+            - initstack-network
+        depends_on:
+            initstack-elasticsearch-service:
+                condition: service_healthy
+            initstack-kibana-service:
+                condition: service_healthy
+            initstack-postgresql-service:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
+
     initstack-elasticsearch-metricbeat-service:
         image: elastic/metricbeat:8.19.8
         container_name: initstack-elasticsearch-metricbeat-service
@@ -668,6 +757,8 @@ services:
             initstack-consul-exporter-service:
                 condition: service_started
             initstack-redis-exporter-service:
+                condition: service_started
+            initstack-postgresql-exporter-service:
                 condition: service_started
             initstack-elasticsearch-exporter-service:
                 condition: service_started
@@ -1005,6 +1096,13 @@ volumes:
             - "com.docker.compose.volume=initstack-rabbitmq-data"
             - "environment=development"
 
+    initstack-postgresql-data:
+        name: initstack-postgresql-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-postgresql-data"
+            - "environment=development"
+
     initstack-minio-data:
         name: initstack-minio-data
         driver: local
@@ -1066,6 +1164,13 @@ volumes:
         driver: local
         labels:
             - "com.docker.compose.volume=initstack-rabbitmq-metricbeat-data"
+            - "environment=development"
+
+    initstack-postgresql-metricbeat-data:
+        name: initstack-postgresql-metricbeat-data
+        driver: local
+        labels:
+            - "com.docker.compose.volume=initstack-postgresql-metricbeat-data"
             - "environment=development"
 
     initstack-elasticsearch-metricbeat-data:

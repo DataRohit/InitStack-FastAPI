@@ -79,6 +79,21 @@ filebeat.autodiscover:
 
               - condition:
                     contains:
+                        docker.container.name: "initstack-postgresql-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+
+              - condition:
+                    contains:
                         docker.container.name: "initstack-consul-service"
                 config:
                     - type: container
@@ -94,6 +109,20 @@ filebeat.autodiscover:
               - condition:
                     contains:
                         docker.container.name: "initstack-consul-exporter-service"
+                config:
+                    - type: container
+                      paths:
+                          - /var/lib/docker/containers/*/*.log
+                      processors:
+                          - add_docker_metadata:
+                                host: "unix:///var/run/docker.sock"
+                          - decode_json_fields:
+                                fields: ["message"]
+                                target: ""
+                                overwrite_keys: true
+              - condition:
+                    contains:
+                        docker.container.name: "initstack-postgresql-exporter-service"
                 config:
                     - type: container
                       paths:
