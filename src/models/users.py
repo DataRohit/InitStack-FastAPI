@@ -337,7 +337,7 @@ class OAuthAccount(TimestampedModel):
 
         value: str = value.lower()
 
-        email_pattern: str = r"^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$"
+        email_pattern: str = r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
         if not re.match(pattern=email_pattern, string=value):
             msg = "Invalid email format"
             raise ValueError(msg)

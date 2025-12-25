@@ -6,6 +6,7 @@ from src.schemas.auth.login import LoginRequest
 from src.schemas.auth.login import LoginResponse
 from src.schemas.auth.logout import LogoutResponse
 from src.schemas.auth.me import MeResponse
+from src.schemas.auth.oauth import OAuthLoginResponse
 from src.schemas.auth.password_reset import ForgotPasswordRequest
 from src.schemas.auth.password_reset import MessageResponse
 from src.schemas.auth.password_reset import ResetPasswordRequest
@@ -24,6 +25,7 @@ __all__: list[str] = [
     "LogoutResponse",
     "MeResponse",
     "MessageResponse",
+    "OAuthLoginResponse",
     "ReactivateAccountRequest",
     "ReloginRequest",
     "ReloginResponse",

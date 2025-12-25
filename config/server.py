@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from config.adapters import ConsulAdapter
@@ -295,6 +296,12 @@ def create_app() -> FastAPI:  # noqa: C901, PLR0915
 
     logger.info(msg="Adding logging middleware")
     app.add_middleware(middleware_class=LoggingMiddleware)  # ty:ignore[invalid-argument-type]
+
+    logger.info(msg="Adding session middleware for OAuth")
+    app.add_middleware(
+        middleware_class=SessionMiddleware,  # ty:ignore[invalid-argument-type]
+        secret_key=settings.oauth_session_secret,
+    )
 
     if settings.rate_limit_enabled:
         logger.info(msg="Adding rate limiting middleware")

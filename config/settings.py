@@ -243,6 +243,12 @@ class Settings(BaseSettings):
         deactivate_token_expiry_seconds (int): Deactivate token expiry time in seconds.
         reactivate_token_secret (str): Secret key used to sign reactivate tokens.
         reactivate_token_expiry_seconds (int): Reactivate token expiry time in seconds.
+        oauth_google_client_id (str): Google OAuth client ID.
+        oauth_google_client_secret (str): Google OAuth client secret.
+        oauth_github_client_id (str): GitHub OAuth client ID.
+        oauth_github_client_secret (str): GitHub OAuth client secret.
+        oauth_session_secret (str): Secret key for OAuth session middleware.
+        oauth_redirect_base_url (str | None): Base URL for OAuth callbacks.
 
     Properties:
         None
@@ -473,6 +479,13 @@ class Settings(BaseSettings):
 
     reactivate_token_secret: str = "b7e3d9f2c5a8e1d4b6f9c2a7e4d1b8f5"  # noqa: S105
     reactivate_token_expiry_seconds: int = Field(default=900, validation_alias="REACTIVATE_TOKEN_EXPIRY")
+
+    oauth_google_client_id: str = ""
+    oauth_google_client_secret: str = ""
+    oauth_github_client_id: str = ""
+    oauth_github_client_secret: str = ""
+    oauth_session_secret: str = "d8f3e9a2c7b4f1e6d9c3a8f5b2e7d4a1"  # noqa: S105
+    oauth_redirect_base_url: str | None = None
 
     @field_validator("cors_origins", mode="before")
     @classmethod

@@ -12,6 +12,8 @@ from src.controllers.auth.forgot_password import register_forgot_password_routes
 from src.controllers.auth.login import register_login_routes
 from src.controllers.auth.logout import register_logout_routes
 from src.controllers.auth.me import register_me_routes
+from src.controllers.auth.oauth_github import register_github_oauth_routes
+from src.controllers.auth.oauth_google import register_google_oauth_routes
 from src.controllers.auth.reactivate import register_reactivate_routes
 from src.controllers.auth.relogin import register_relogin_routes
 from src.controllers.auth.reset_password import register_reset_password_routes
@@ -110,6 +112,18 @@ class AuthController:
         register_deactivate_routes(
             router=self.router,
             logger=self._logger,
+        )
+
+        register_google_oauth_routes(
+            router=self.router,
+            logger=self._logger,
+            password_hasher=self._password_hasher,
+        )
+
+        register_github_oauth_routes(
+            router=self.router,
+            logger=self._logger,
+            password_hasher=self._password_hasher,
         )
 
         register_reactivate_routes(
