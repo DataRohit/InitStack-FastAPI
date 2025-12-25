@@ -248,6 +248,66 @@ async def get_or_create_login_tokens(*, user_id: str) -> dict[str, str]:
     }
 
 
+async def get_or_create_relogin_tokens(*, user_id: str, refresh_token: str) -> dict[str, str]:
+    """Get Or Create Relogin Tokens For User.
+
+    Arguments:
+        user_id (str): User identifier.
+        refresh_token (str): Presented refresh token.
+
+    Returns:
+        dict[str, str]: Dictionary containing access_token and refresh_token.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        RuntimeError: If token secrets are not configured.
+        Exception: For Redis or token generation errors.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    access_key: str = f"access_token:{user_id}"
+    refresh_key: str = f"refresh_token:{user_id}"
+
+    cached_access: str | None = await token_cache_adapter.get(key=access_key)
+    cached_refresh: str | None = await token_cache_adapter.get(key=refresh_key)
+
+    if cached_access is not None and cached_refresh is not None and cached_refresh == refresh_token:
+        access_status: str
+        refresh_status: str
+        access_status, _ = await validate_access_token(token=cached_access)
+        refresh_status, _ = await validate_refresh_token(token=cached_refresh)
+
+        if access_status == "valid" and refresh_status == "valid":
+            return {
+                "access_token": cached_access,
+                "refresh_token": cached_refresh,
+                "reused": "true",
+            }
+
+    access_token: str = await generate_access_token(user_id=user_id)
+    new_refresh_token: str = await generate_refresh_token(user_id=user_id)
+
+    await token_cache_adapter.set(
+        key=access_key,
+        value=access_token,
+        ex=settings.access_token_expiry_seconds,
+    )
+    await token_cache_adapter.set(
+        key=refresh_key,
+        value=new_refresh_token,
+        ex=settings.refresh_token_expiry_seconds,
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": new_refresh_token,
+        "reused": "false",
+    }
+
+
 async def generate_activation_token(user_id: str) -> str:
     """Generate JWT Activation Token For User Signup.
 

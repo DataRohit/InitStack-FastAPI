@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from config.logger import get_logger
 from src.controllers.auth.activate import register_activation_routes
 from src.controllers.auth.login import register_login_routes
+from src.controllers.auth.relogin import register_relogin_routes
 from src.controllers.auth.signup import register_signup_routes
 
 
@@ -77,6 +78,11 @@ class AuthController:
             router=self.router,
             logger=self._logger,
             password_hasher=self._password_hasher,
+        )
+
+        register_relogin_routes(
+            router=self.router,
+            logger=self._logger,
         )
 
 
