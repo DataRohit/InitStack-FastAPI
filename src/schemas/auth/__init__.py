@@ -1,6 +1,7 @@
 from src.schemas.auth.activate import ActivateAccountResponse
 from src.schemas.auth.login import LoginRequest
 from src.schemas.auth.login import LoginResponse
+from src.schemas.auth.me import MeResponse
 from src.schemas.auth.relogin import ReloginRequest
 from src.schemas.auth.relogin import ReloginResponse
 from src.schemas.auth.signup import SignUpRequest
@@ -10,6 +11,7 @@ __all__: list[str] = [
     "ActivateAccountResponse",
     "LoginRequest",
     "LoginResponse",
+    "MeResponse",
     "ReloginRequest",
     "ReloginResponse",
     "SignUpRequest",

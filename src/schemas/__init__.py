@@ -1,6 +1,7 @@
 from src.schemas.auth import ActivateAccountResponse
 from src.schemas.auth import LoginRequest
 from src.schemas.auth import LoginResponse
+from src.schemas.auth import MeResponse
 from src.schemas.auth import ReloginRequest
 from src.schemas.auth import ReloginResponse
 from src.schemas.auth import SignUpRequest
@@ -53,6 +54,7 @@ __all__: list[str] = [
     "HealthResponse",
     "LoginRequest",
     "LoginResponse",
+    "MeResponse",
     "MemoryInfo",
     "ProcessInfo",
     "RabbitMQChannelInfo",
