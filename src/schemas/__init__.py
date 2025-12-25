@@ -1,9 +1,12 @@
 from src.schemas.auth import ActivateAccountResponse
+from src.schemas.auth import ForgotPasswordRequest
 from src.schemas.auth import LoginRequest
 from src.schemas.auth import LoginResponse
 from src.schemas.auth import MeResponse
+from src.schemas.auth import MessageResponse
 from src.schemas.auth import ReloginRequest
 from src.schemas.auth import ReloginResponse
+from src.schemas.auth import ResetPasswordRequest
 from src.schemas.auth import SignUpRequest
 from src.schemas.auth import SignUpResponse
 from src.schemas.base import ErrorResponse
@@ -51,11 +54,13 @@ __all__: list[str] = [
     "ElasticsearchTestOperation",
     "ElasticsearchTestResponse",
     "ErrorResponse",
+    "ForgotPasswordRequest",
     "HealthResponse",
     "LoginRequest",
     "LoginResponse",
     "MeResponse",
     "MemoryInfo",
+    "MessageResponse",
     "ProcessInfo",
     "RabbitMQChannelInfo",
     "RabbitMQConnectionInfo",
@@ -65,6 +70,7 @@ __all__: list[str] = [
     "RabbitMQTestResponse",
     "ReloginRequest",
     "ReloginResponse",
+    "ResetPasswordRequest",
     "SignUpRequest",
     "SignUpResponse",
     "SystemInfo",

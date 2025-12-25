@@ -231,6 +231,10 @@ class Settings(BaseSettings):
         postgresql_ssl_mode (str): PostgreSQL SSL mode.
         signup_token_secret (str): Secret key used to sign signup tokens.
         signup_token_expiry_seconds (int): Signup token expiry time in seconds.
+        forgot_password_token_secret (str): Secret key used to sign forgot password tokens.
+        forgot_password_token_expiry_seconds (int): Forgot password token expiry time in seconds.
+        reset_password_token_secret (str): Secret key used to sign reset password tokens.
+        reset_password_token_expiry_seconds (int): Reset password token expiry time in seconds.
 
     Properties:
         None
@@ -245,6 +249,8 @@ class Settings(BaseSettings):
         parse_rate_limit_exempt_ips: Parse rate limit exempt IPs from env input.
         parse_telemetry_headers: Parse telemetry headers from env input.
         parse_signup_token_expiry_seconds: Parse signup token expiry from env input.
+        parse_forgot_password_token_expiry_seconds: Parse forgot password token expiry from env input.
+        parse_reset_password_token_expiry_seconds: Parse reset password token expiry from env input.
     """
 
     app_name: str = "InitStack FastAPI Development Server"
@@ -437,6 +443,12 @@ class Settings(BaseSettings):
 
     signup_token_secret: str = ""
     signup_token_expiry_seconds: int = Field(default=900, validation_alias="SIGNUP_TOKEN_EXPIRY")
+
+    forgot_password_token_secret: str = ""
+    forgot_password_token_expiry_seconds: int = Field(default=900, validation_alias="FORGOT_PASSWORD_TOKEN_EXPIRY")
+
+    reset_password_token_secret: str = ""
+    reset_password_token_expiry_seconds: int = Field(default=900, validation_alias="RESET_PASSWORD_TOKEN_EXPIRY")
 
     access_token_secret: str = ""
     access_token_expiry_seconds: int = Field(default=1800, validation_alias="ACCESS_TOKEN_EXPIRY")
@@ -654,6 +666,40 @@ class Settings(BaseSettings):
         """
 
         return _parse_expiry_to_seconds(v=v, env_name="SIGNUP_TOKEN_EXPIRY")
+
+    @field_validator("forgot_password_token_expiry_seconds", mode="before")
+    @classmethod
+    def parse_forgot_password_token_expiry_seconds(cls, v: Any) -> Any:
+        """Parse Forgot Password Token Expiry From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed integer seconds.
+
+        Raises:
+            ValueError: If format is invalid.
+        """
+
+        return _parse_expiry_to_seconds(v=v, env_name="FORGOT_PASSWORD_TOKEN_EXPIRY")
+
+    @field_validator("reset_password_token_expiry_seconds", mode="before")
+    @classmethod
+    def parse_reset_password_token_expiry_seconds(cls, v: Any) -> Any:
+        """Parse Reset Password Token Expiry From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed integer seconds.
+
+        Raises:
+            ValueError: If format is invalid.
+        """
+
+        return _parse_expiry_to_seconds(v=v, env_name="RESET_PASSWORD_TOKEN_EXPIRY")
 
     @field_validator("access_token_expiry_seconds", mode="before")
     @classmethod

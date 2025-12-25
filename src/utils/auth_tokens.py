@@ -188,10 +188,6 @@ async def validate_refresh_token(token: str) -> tuple[str, dict[str, Any] | None
 async def get_or_create_login_tokens(*, user_id: str) -> dict[str, str]:
     """Get Or Create Login Tokens For User.
 
-    Tokens are cached in Redis. If both access and refresh tokens exist and are
-    still valid, they are returned as-is. Otherwise, new tokens are generated
-    and the cache is updated.
-
     Arguments:
         user_id (str): User identifier.
 
@@ -256,7 +252,10 @@ async def get_or_create_relogin_tokens(*, user_id: str, refresh_token: str) -> d
         refresh_token (str): Presented refresh token.
 
     Returns:
-        dict[str, str]: Dictionary containing access_token and refresh_token.
+        dict[str, str]: Dictionary containing:
+            - access_token (str)
+            - refresh_token (str)
+            - reused (str): "true" if tokens were reused else "false".
 
     Raises:
         RuntimeError: If Redis is not enabled.
@@ -306,6 +305,323 @@ async def get_or_create_relogin_tokens(*, user_id: str, refresh_token: str) -> d
         "refresh_token": new_refresh_token,
         "reused": "false",
     }
+
+
+async def generate_forgot_password_token(user_id: str) -> str:
+    """Generate JWT Forgot Password Token.
+
+    Arguments:
+        user_id (str): User ID to encode in token.
+
+    Returns:
+        str: JWT forgot password token string.
+
+    Raises:
+        RuntimeError: If forgot password token secret is not configured.
+        Exception: If token generation fails.
+    """
+
+    secret: str = _require_secret(secret=settings.forgot_password_token_secret, name="FORGOT_PASSWORD_TOKEN_SECRET")
+
+    now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+    expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.forgot_password_token_expiry_seconds)
+
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "type": "forgot_password",
+        "iat": now,
+        "exp": expiry,
+    }
+
+    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+
+
+async def validate_forgot_password_token(token: str) -> tuple[str, dict[str, Any] | None]:
+    """Validate Forgot Password Token And Return A Status.
+
+    Arguments:
+        token (str): JWT token to validate.
+
+    Returns:
+        tuple[str, dict[str, Any] | None]: A tuple of (status, payload).
+
+        Status values:
+            - valid: Token is valid and payload is returned.
+            - expired: Token signature is expired.
+            - invalid: Token cannot be decoded or signature is invalid.
+            - wrong_type: Token decodes but is not a forgot password token.
+            - missing_subject: Token decodes but is missing the subject (sub).
+
+    Raises:
+        RuntimeError: If forgot password token secret is not configured.
+    """
+
+    if not token:
+        return "invalid", None
+
+    secret: str = _require_secret(secret=settings.forgot_password_token_secret, name="FORGOT_PASSWORD_TOKEN_SECRET")
+
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            jwt=token,
+            key=secret,
+            algorithms=["HS256"],
+        )
+    except jwt.ExpiredSignatureError:
+        return "expired", None
+    except jwt.InvalidTokenError:
+        return "invalid", None
+
+    if payload.get("type") != "forgot_password":
+        return "wrong_type", None
+
+    subject: Any = payload.get("sub")
+    if not isinstance(subject, str) or not subject:
+        return "missing_subject", None
+
+    return "valid", payload
+
+
+async def cache_forgot_password_token(*, user_id: str, token: str) -> bool:
+    """Cache Forgot Password Token In Redis With Matching Expiry.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token to cache.
+
+    Returns:
+        bool: True if cached successfully.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        Exception: If Redis operation fails.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"forgot_password_token:{user_id}"
+    await token_cache_adapter.set(
+        key=key,
+        value=token,
+        ex=settings.forgot_password_token_expiry_seconds,
+    )
+    return True
+
+
+async def consume_forgot_password_token(*, user_id: str, token: str) -> tuple[str, bool]:
+    """Consume A Forgot Password Token.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token.
+
+    Returns:
+        tuple[str, bool]: (status, consumed)
+
+        Status values:
+            - consumed: Token existed and was deleted.
+            - already_used: Token does not exist in Redis.
+            - mismatch: Token exists but does not match.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        Exception: For Redis errors.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"forgot_password_token:{user_id}"
+    cached: str | None = await token_cache_adapter.get(key)
+    if cached is None:
+        return "already_used", False
+
+    if cached != token:
+        return "mismatch", False
+
+    deleted_count: int = await token_cache_adapter.delete(key)
+    if deleted_count <= 0:
+        return "already_used", False
+
+    return "consumed", True
+
+
+async def generate_reset_password_token(user_id: str) -> str:
+    """Generate JWT Reset Password Token.
+
+    Arguments:
+        user_id (str): User ID to encode in token.
+
+    Returns:
+        str: JWT reset password token string.
+
+    Raises:
+        RuntimeError: If reset password token secret is not configured.
+        Exception: If token generation fails.
+    """
+
+    secret: str = _require_secret(secret=settings.reset_password_token_secret, name="RESET_PASSWORD_TOKEN_SECRET")
+
+    now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+    expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.reset_password_token_expiry_seconds)
+
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "type": "reset_password",
+        "iat": now,
+        "exp": expiry,
+    }
+
+    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+
+
+async def validate_reset_password_token(token: str) -> tuple[str, dict[str, Any] | None]:
+    """Validate Reset Password Token And Return A Status.
+
+    Arguments:
+        token (str): JWT token to validate.
+
+    Returns:
+        tuple[str, dict[str, Any] | None]: A tuple of (status, payload).
+
+        Status values:
+            - valid: Token is valid and payload is returned.
+            - expired: Token signature is expired.
+            - invalid: Token cannot be decoded or signature is invalid.
+            - wrong_type: Token decodes but is not a reset password token.
+            - missing_subject: Token decodes but is missing the subject (sub).
+
+    Raises:
+        RuntimeError: If reset password token secret is not configured.
+    """
+
+    if not token:
+        return "invalid", None
+
+    secret: str = _require_secret(secret=settings.reset_password_token_secret, name="RESET_PASSWORD_TOKEN_SECRET")
+
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            jwt=token,
+            key=secret,
+            algorithms=["HS256"],
+        )
+    except jwt.ExpiredSignatureError:
+        return "expired", None
+    except jwt.InvalidTokenError:
+        return "invalid", None
+
+    if payload.get("type") != "reset_password":
+        return "wrong_type", None
+
+    subject: Any = payload.get("sub")
+    if not isinstance(subject, str) or not subject:
+        return "missing_subject", None
+
+    return "valid", payload
+
+
+async def cache_reset_password_token(*, user_id: str, token: str) -> bool:
+    """Cache Reset Password Token In Redis With Matching Expiry.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token to cache.
+
+    Returns:
+        bool: True if cached successfully.
+
+    Raises:
+        RuntimeError: If Redis is disabled.
+        Exception: If Redis operation fails.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"reset_password_token:{user_id}"
+
+    await token_cache_adapter.set(
+        key=key,
+        value=token,
+        ex=settings.reset_password_token_expiry_seconds,
+    )
+
+    return True
+
+
+async def consume_reset_password_token(*, user_id: str, token: str) -> tuple[str, bool]:
+    """Consume A Reset Password Token.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token.
+
+    Returns:
+        tuple[str, bool]: (status, consumed)
+
+        Status values:
+            - consumed: Token existed and was deleted.
+            - already_used: Token does not exist in Redis.
+            - mismatch: Token exists but does not match.
+
+    Raises:
+        RuntimeError: If Redis is disabled.
+        Exception: For Redis errors.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"reset_password_token:{user_id}"
+    cached: str | None = await token_cache_adapter.get(key)
+    if cached is None:
+        return "already_used", False
+
+    if cached != token:
+        return "mismatch", False
+
+    deleted_count: int = await token_cache_adapter.delete(key)
+    if deleted_count <= 0:
+        return "already_used", False
+
+    return "consumed", True
+
+
+async def revoke_login_tokens(*, user_id: str) -> bool:
+    """Revoke Cached Login Tokens For User By Deleting Redis Keys.
+
+    This removes both:
+        - access_token:{user_id}
+        - refresh_token:{user_id}
+
+    Arguments:
+        user_id (str): User identifier.
+
+    Returns:
+        bool: True if operation succeeded.
+
+    Raises:
+        RuntimeError: If Redis is disabled.
+        Exception: For Redis errors.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    access_key: str = f"access_token:{user_id}"
+    refresh_key: str = f"refresh_token:{user_id}"
+
+    await token_cache_adapter.delete(access_key)
+    await token_cache_adapter.delete(refresh_key)
+
+    return True
 
 
 async def generate_activation_token(user_id: str) -> str:
@@ -529,9 +845,6 @@ async def consume_activation_token(*, user_id: str, token: str) -> tuple[str, bo
 async def check_token_used(user_id: str) -> bool:
     """Check If Activation Token Has Been Used.
 
-    Token exists in Redis = not used yet.
-    Token does not exist in Redis = already used.
-
     Arguments:
         user_id (str): User ID to check.
 
@@ -595,15 +908,25 @@ async def mark_token_as_used(user_id: str) -> bool:
 
 __all__: list[str] = [
     "cache_activation_token",
+    "cache_forgot_password_token",
+    "cache_reset_password_token",
     "check_token_used",
     "consume_activation_token",
+    "consume_forgot_password_token",
+    "consume_reset_password_token",
     "generate_access_token",
     "generate_activation_token",
+    "generate_forgot_password_token",
     "generate_refresh_token",
+    "generate_reset_password_token",
     "get_or_create_login_tokens",
+    "get_or_create_relogin_tokens",
     "mark_token_as_used",
+    "revoke_login_tokens",
     "validate_access_token",
     "validate_activation_token",
+    "validate_forgot_password_token",
     "validate_refresh_token",
+    "validate_reset_password_token",
     "verify_activation_token",
 ]
