@@ -118,8 +118,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Rate limit exceeded",
                                 "description": "Example response when client exceeds rate limit",
                                 "value": {
-                                    "error": "Too Many Requests",
-                                    "detail": "Rate limit exceeded. Try again in 30 seconds.",
+                                    "error": "Rate limit exceeded. Try again in 30 seconds.",
+                                    "detail": "HTTP 429",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },

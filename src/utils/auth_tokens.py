@@ -4,6 +4,7 @@ from typing import Any
 
 import jwt
 
+from config.adapters.redis import TokenCacheRedisAdapter
 from config.adapters.redis import get_token_cache_redis_adapter
 from config.logger import get_logger
 from config.settings import settings
@@ -11,9 +12,240 @@ from config.settings import settings
 if TYPE_CHECKING:
     import logging
 
-    from config.adapters.redis import TokenCacheRedisAdapter
-
 logger: logging.Logger = get_logger(name="auth.tokens")
+
+
+def _require_secret(*, secret: str, name: str) -> str:
+    """Require Token Secret To Be Configured.
+
+    Arguments:
+        secret (str): Secret value.
+        name (str): Setting name.
+
+    Returns:
+        str: Secret value.
+
+    Raises:
+        RuntimeError: If secret is empty.
+    """
+
+    if not secret:
+        msg = f"{name} is not configured"
+        raise RuntimeError(msg)
+    return secret
+
+
+async def generate_access_token(user_id: str) -> str:
+    """Generate JWT Access Token.
+
+    Arguments:
+        user_id (str): User ID to encode in token.
+
+    Returns:
+        str: JWT access token string.
+
+    Raises:
+        RuntimeError: If access token secret is not configured.
+        Exception: If token generation fails.
+    """
+
+    secret: str = _require_secret(secret=settings.access_token_secret, name="ACCESS_TOKEN_SECRET")
+
+    now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+    expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.access_token_expiry_seconds)
+
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "type": "access",
+        "iat": now,
+        "exp": expiry,
+    }
+
+    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+
+
+async def generate_refresh_token(user_id: str) -> str:
+    """Generate JWT Refresh Token.
+
+    Arguments:
+        user_id (str): User ID to encode in token.
+
+    Returns:
+        str: JWT refresh token string.
+
+    Raises:
+        RuntimeError: If refresh token secret is not configured.
+        Exception: If token generation fails.
+    """
+
+    secret: str = _require_secret(secret=settings.refresh_token_secret, name="REFRESH_TOKEN_SECRET")
+
+    now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+    expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.refresh_token_expiry_seconds)
+
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "type": "refresh",
+        "iat": now,
+        "exp": expiry,
+    }
+
+    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+
+
+async def validate_access_token(token: str) -> tuple[str, dict[str, Any] | None]:
+    """Validate Access Token And Return A Status.
+
+    Arguments:
+        token (str): JWT token to validate.
+
+    Returns:
+        tuple[str, dict[str, Any] | None]: A tuple of (status, payload).
+
+        Status values:
+            - valid: Token is valid and payload is returned.
+            - expired: Token signature is expired.
+            - invalid: Token cannot be decoded or signature is invalid.
+            - wrong_type: Token decodes but is not an access token.
+            - missing_subject: Token decodes but is missing the subject (sub).
+
+    Raises:
+        RuntimeError: If access token secret is not configured.
+    """
+
+    if not token:
+        return "invalid", None
+
+    secret: str = _require_secret(secret=settings.access_token_secret, name="ACCESS_TOKEN_SECRET")
+
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            jwt=token,
+            key=secret,
+            algorithms=["HS256"],
+        )
+    except jwt.ExpiredSignatureError:
+        return "expired", None
+    except jwt.InvalidTokenError:
+        return "invalid", None
+
+    if payload.get("type") != "access":
+        return "wrong_type", None
+
+    subject: Any = payload.get("sub")
+    if not isinstance(subject, str) or not subject:
+        return "missing_subject", None
+
+    return "valid", payload
+
+
+async def validate_refresh_token(token: str) -> tuple[str, dict[str, Any] | None]:
+    """Validate Refresh Token And Return A Status.
+
+    Arguments:
+        token (str): JWT token to validate.
+
+    Returns:
+        tuple[str, dict[str, Any] | None]: A tuple of (status, payload).
+
+        Status values:
+            - valid: Token is valid and payload is returned.
+            - expired: Token signature is expired.
+            - invalid: Token cannot be decoded or signature is invalid.
+            - wrong_type: Token decodes but is not a refresh token.
+            - missing_subject: Token decodes but is missing the subject (sub).
+
+    Raises:
+        RuntimeError: If refresh token secret is not configured.
+    """
+
+    if not token:
+        return "invalid", None
+
+    secret: str = _require_secret(secret=settings.refresh_token_secret, name="REFRESH_TOKEN_SECRET")
+
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            jwt=token,
+            key=secret,
+            algorithms=["HS256"],
+        )
+    except jwt.ExpiredSignatureError:
+        return "expired", None
+    except jwt.InvalidTokenError:
+        return "invalid", None
+
+    if payload.get("type") != "refresh":
+        return "wrong_type", None
+
+    subject: Any = payload.get("sub")
+    if not isinstance(subject, str) or not subject:
+        return "missing_subject", None
+
+    return "valid", payload
+
+
+async def get_or_create_login_tokens(*, user_id: str) -> dict[str, str]:
+    """Get Or Create Login Tokens For User.
+
+    Tokens are cached in Redis. If both access and refresh tokens exist and are
+    still valid, they are returned as-is. Otherwise, new tokens are generated
+    and the cache is updated.
+
+    Arguments:
+        user_id (str): User identifier.
+
+    Returns:
+        dict[str, str]: Dictionary containing access_token and refresh_token.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        RuntimeError: If token secrets are not configured.
+        Exception: For Redis or token generation errors.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    access_key: str = f"access_token:{user_id}"
+    refresh_key: str = f"refresh_token:{user_id}"
+
+    cached_access: str | None = await token_cache_adapter.get(access_key)
+    cached_refresh: str | None = await token_cache_adapter.get(refresh_key)
+
+    if cached_access is not None and cached_refresh is not None:
+        access_status: str
+        refresh_status: str
+        access_status, _ = await validate_access_token(token=cached_access)
+        refresh_status, _ = await validate_refresh_token(token=cached_refresh)
+
+        if access_status == "valid" and refresh_status == "valid":
+            return {
+                "access_token": cached_access,
+                "refresh_token": cached_refresh,
+                "reused": "true",
+            }
+
+    access_token: str = await generate_access_token(user_id=user_id)
+    refresh_token: str = await generate_refresh_token(user_id=user_id)
+
+    await token_cache_adapter.set(
+        key=access_key,
+        value=access_token,
+        ex=settings.access_token_expiry_seconds,
+    )
+    await token_cache_adapter.set(
+        key=refresh_key,
+        value=refresh_token,
+        ex=settings.refresh_token_expiry_seconds,
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "reused": "false",
+    }
 
 
 async def generate_activation_token(user_id: str) -> str:
@@ -305,8 +537,13 @@ __all__: list[str] = [
     "cache_activation_token",
     "check_token_used",
     "consume_activation_token",
+    "generate_access_token",
     "generate_activation_token",
+    "generate_refresh_token",
+    "get_or_create_login_tokens",
     "mark_token_as_used",
+    "validate_access_token",
     "validate_activation_token",
+    "validate_refresh_token",
     "verify_activation_token",
 ]

@@ -116,8 +116,8 @@ def register_signup_routes(
                                 "summary": "Rate limit exceeded",
                                 "description": "Example response when client exceeds rate limit",
                                 "value": {
-                                    "error": "Too Many Requests",
-                                    "detail": "Rate limit exceeded. Try again in 30 seconds.",
+                                    "error": "Rate limit exceeded. Try again in 30 seconds.",
+                                    "detail": "HTTP 429",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -141,7 +141,9 @@ def register_signup_routes(
                                             "path": "body.email",
                                             "message": "Invalid email format",
                                             "type": "value_error",
-                                            "meta": None,
+                                            "meta": {
+                                                "error": "Invalid email format",
+                                            },
                                         },
                                     ],
                                     "timestamp": "2025-01-01T12:34:56Z",
@@ -157,7 +159,9 @@ def register_signup_routes(
                                             "path": "body",
                                             "message": "Value error, Passwords do not match",
                                             "type": "value_error",
-                                            "meta": None,
+                                            "meta": {
+                                                "error": "Passwords do not match",
+                                            },
                                         },
                                     ],
                                     "timestamp": "2025-01-01T12:34:56Z",

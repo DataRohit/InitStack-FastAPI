@@ -10,6 +10,55 @@ from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 
+def _parse_expiry_to_seconds(*, v: Any, env_name: str) -> Any:
+    """Parse Expiry From Env Input.
+
+    Arguments:
+        v (Any): Raw environment value.
+        env_name (str): Environment variable name for error messages.
+
+    Returns:
+        Any: Parsed integer seconds.
+
+    Raises:
+        ValueError: If expiry format is invalid.
+    """
+
+    if isinstance(v, int):
+        return v
+
+    if isinstance(v, str):
+        raw: str = v.strip()
+        if raw.isdigit():
+            return int(raw)
+
+        parts: list[str] = [part.strip() for part in raw.split("/") if part.strip()]
+        if not parts:
+            msg = f"Invalid {env_name} format. Use integer seconds or duration like 15m"
+            raise ValueError(msg)
+
+        def parse_part(part: str) -> int:
+            match: Match[str] | None = re.fullmatch(pattern=r"(?i)(\d+)\s*([smhd])", string=part)
+            if match is None:
+                msg = f"Invalid {env_name} format. Use integer seconds or duration like 15m"
+                raise ValueError(msg)
+
+            amount: int = int(match.group(1))
+            unit: str = match.group(2).lower()
+            multipliers: dict[str, int] = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+            return amount * multipliers[unit]
+
+        primary: int = parse_part(part=parts[0])
+        if len(parts) > 1:
+            secondary: int = parse_part(part=parts[1])
+            if secondary != primary:
+                msg = f"Invalid {env_name} format. Duration parts must match (e.g. 1d/24h)"
+                raise ValueError(msg)
+
+        return primary
+    return v
+
+
 class Settings(BaseSettings):
     """Application Settings For InitStack FastAPI Server.
 
@@ -389,6 +438,12 @@ class Settings(BaseSettings):
     signup_token_secret: str = ""
     signup_token_expiry_seconds: int = Field(default=900, validation_alias="SIGNUP_TOKEN_EXPIRY")
 
+    access_token_secret: str = ""
+    access_token_expiry_seconds: int = Field(default=1800, validation_alias="ACCESS_TOKEN_EXPIRY")
+
+    refresh_token_secret: str = ""
+    refresh_token_expiry_seconds: int = Field(default=86400, validation_alias="REFRESH_TOKEN_EXPIRY")
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Any) -> Any:
@@ -586,23 +641,53 @@ class Settings(BaseSettings):
     @field_validator("signup_token_expiry_seconds", mode="before")
     @classmethod
     def parse_signup_token_expiry_seconds(cls, v: Any) -> Any:
-        if isinstance(v, int):
-            return v
-        if isinstance(v, str):
-            raw: str = v.strip()
-            if raw.isdigit():
-                return int(raw)
+        """Parse Signup Token Expiry From Env Input.
 
-            match: Match[str] | None = re.fullmatch(pattern=r"(?i)(\d+)\s*([smhd])", string=raw)
-            if match is None:
-                msg = "Invalid SIGNUP_TOKEN_EXPIRY format. Use integer seconds or duration like 15m"
-                raise ValueError(msg)
+        Arguments:
+            v (Any): Raw environment value.
 
-            amount: int = int(match.group(1))
-            unit: str = match.group(2).lower()
-            multipliers: dict[str, int] = {"s": 1, "m": 60, "h": 3600, "d": 86400}
-            return amount * multipliers[unit]
-        return v
+        Returns:
+            Any: Parsed integer seconds.
+
+        Raises:
+            ValueError: If format is invalid.
+        """
+
+        return _parse_expiry_to_seconds(v=v, env_name="SIGNUP_TOKEN_EXPIRY")
+
+    @field_validator("access_token_expiry_seconds", mode="before")
+    @classmethod
+    def parse_access_token_expiry_seconds(cls, v: Any) -> Any:
+        """Parse Access Token Expiry From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed integer seconds.
+
+        Raises:
+            ValueError: If format is invalid.
+        """
+
+        return _parse_expiry_to_seconds(v=v, env_name="ACCESS_TOKEN_EXPIRY")
+
+    @field_validator("refresh_token_expiry_seconds", mode="before")
+    @classmethod
+    def parse_refresh_token_expiry_seconds(cls, v: Any) -> Any:
+        """Parse Refresh Token Expiry From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed integer seconds.
+
+        Raises:
+            ValueError: If format is invalid.
+        """
+
+        return _parse_expiry_to_seconds(v=v, env_name="REFRESH_TOKEN_EXPIRY")
 
     @model_validator(mode="after")
     def construct_celery_urls(self) -> Settings:
