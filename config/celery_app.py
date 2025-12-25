@@ -8,7 +8,7 @@ from kombu import Queue
 from config.settings import settings
 
 celery_app: Celery = Celery(
-    "initstack",
+    main="initstack",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
 )
@@ -36,22 +36,22 @@ celery_app.conf.update(
     elasticsearch_timeout=30,
 )
 
-celery_app.conf.task_queues = (
+celery_app.conf.task_queues: tuple[Queue, Queue, Queue] = (
     Queue(
-        "default",
-        Exchange("default", type="direct"),
+        name="default",
+        exchange=Exchange(name="default", type="direct"),
         routing_key="default",
         queue_arguments={"x-max-priority": 10},
     ),
     Queue(
-        "high_priority",
-        Exchange("high_priority", type="direct"),
+        name="high_priority",
+        exchange=Exchange(name="high_priority", type="direct"),
         routing_key="high_priority",
         queue_arguments={"x-max-priority": 10},
     ),
     Queue(
-        "low_priority",
-        Exchange("low_priority", type="direct"),
+        name="low_priority",
+        exchange=Exchange(name="low_priority", type="direct"),
         routing_key="low_priority",
         queue_arguments={"x-max-priority": 10},
     ),
@@ -61,12 +61,13 @@ celery_app.conf.task_default_queue = "default"
 celery_app.conf.task_default_exchange = "default"
 celery_app.conf.task_default_routing_key = "default"
 
-celery_app.conf.task_routes = {
+celery_app.conf.task_routes: dict[str, dict[str, str]] = {
     "src.tasks.email.*": {"queue": "high_priority"},
+    "src.tasks.auth.*": {"queue": "high_priority"},
     "src.tasks.reports.*": {"queue": "low_priority"},
 }
 
-celery_app.conf.beat_schedule = {
+celery_app.conf.beat_schedule: dict[str, dict[str, str]] = {
     "health-check-every-minute": {
         "task": "src.tasks.health.check_system_health",
         "schedule": crontab(minute="*"),
@@ -80,6 +81,7 @@ celery_app.conf.beat_schedule = {
 }
 
 try:
+    import src.tasks.auth.signup
     import src.tasks.health
     import src.tasks.maintenance
 except ImportError:

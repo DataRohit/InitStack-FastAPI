@@ -1,5 +1,7 @@
+# ruff: noqa: TC003
+
 import re
-import uuid  # noqa: TC003
+import uuid
 
 from sqlalchemy import Boolean
 from sqlalchemy import CheckConstraint

@@ -23,7 +23,9 @@ from config.adapters.rabbitmq import get_rabbitmq_adapter
 from config.adapters.rabbitmq import initialize_rabbitmq
 from config.adapters.rabbitmq import shutdown_rabbitmq
 from config.adapters.redis import RedisAdapter
+from config.adapters.redis import TokenCacheRedisAdapter
 from config.adapters.redis import get_redis_adapter
+from config.adapters.redis import get_token_cache_redis_adapter
 from config.adapters.redis import initialize_redis
 from config.adapters.redis import shutdown_redis
 from config.adapters.telemetry import build_apm_config
@@ -37,6 +39,7 @@ __all__: list[str] = [
     "PostgreSQLAdapter",
     "RabbitMQAdapter",
     "RedisAdapter",
+    "TokenCacheRedisAdapter",
     "build_apm_config",
     "get_consul_adapter",
     "get_elasticsearch_adapter",
@@ -45,6 +48,7 @@ __all__: list[str] = [
     "get_postgresql_adapter",
     "get_rabbitmq_adapter",
     "get_redis_adapter",
+    "get_token_cache_redis_adapter",
     "initialize_consul",
     "initialize_elasticsearch",
     "initialize_email",

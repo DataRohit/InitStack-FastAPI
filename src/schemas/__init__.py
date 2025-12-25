@@ -1,4 +1,8 @@
+from src.schemas.auth import SignUpRequest
+from src.schemas.auth import SignUpResponse
 from src.schemas.base import ErrorResponse
+from src.schemas.base import ValidationErrorItem
+from src.schemas.base import ValidationErrorResponse
 from src.schemas.consul import ConsulHealthCheck
 from src.schemas.consul import ConsulServiceDiscoveryResponse
 from src.schemas.consul import ConsulServiceHealth
@@ -49,5 +53,9 @@ __all__: list[str] = [
     "RabbitMQStatusResponse",
     "RabbitMQTestOperation",
     "RabbitMQTestResponse",
+    "SignUpRequest",
+    "SignUpResponse",
     "SystemInfo",
+    "ValidationErrorItem",
+    "ValidationErrorResponse",
 ]

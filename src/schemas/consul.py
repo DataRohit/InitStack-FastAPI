@@ -106,7 +106,7 @@ class ConsulHealthCheck(BaseModel):
         description="Health check output or error message.",
         examples=[
             "Agent alive and reachable",
-            'HTTP GET http://172.18.0.23:8080/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
+            'HTTP GET http://172.18.0.23:8080/api/v1/health: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
             "Connection refused",
         ],
     )

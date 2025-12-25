@@ -64,7 +64,7 @@ class ConsulAdapter:
         self._service_port: int = settings.port
         self._service_name: str = settings.consul_service_name
         self._service_id: str = self._generate_service_id()
-        self._health_check_url: str = f"http://{self._service_address}:{self._service_port}/api/v1/health/"
+        self._health_check_url: str = f"http://{self._service_address}:{self._service_port}/api/v1/health"
         self._is_registered: bool = False
 
         self._client: AsyncConsul = AsyncConsul(

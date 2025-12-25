@@ -1,3 +1,5 @@
+from src.controllers.auth import AuthController
+from src.controllers.auth import auth_controller
 from src.controllers.consul import ConsulController
 from src.controllers.consul import consul_controller
 from src.controllers.elasticsearch import ElasticsearchController
@@ -12,12 +14,14 @@ from src.controllers.redis import RedisController
 from src.controllers.redis import redis_controller
 
 __all__: list[str] = [
+    "AuthController",
     "ConsulController",
     "ElasticsearchController",
     "HealthController",
     "RabbitMQController",
     "RateLimitController",
     "RedisController",
+    "auth_controller",
     "consul_controller",
     "elasticsearch_controller",
     "health_controller",

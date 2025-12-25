@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from src.controllers import auth_controller
 from src.controllers import consul_controller
 from src.controllers import elasticsearch_controller
 from src.controllers import health_controller
@@ -24,6 +25,7 @@ def create_api_router() -> APIRouter:
     main_router: APIRouter = APIRouter(prefix="/api/v1")
 
     main_router.include_router(router=health_controller.router)
+    main_router.include_router(router=auth_controller.router)
     main_router.include_router(router=consul_controller.router)
     main_router.include_router(router=elasticsearch_controller.router)
     main_router.include_router(router=redis_controller.router)

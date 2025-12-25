@@ -137,6 +137,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             None
         """
 
+        if request.url.path in ("/docs", "/redoc", "/openapi.json", "/api/v1/health"):
+            return await call_next(request)
+
         start_time: int | float = time.time()
 
         client_ip: str = request.client.host if request.client else "unknown"

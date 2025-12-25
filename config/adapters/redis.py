@@ -990,17 +990,95 @@ class RedisAdapter:
         return redis_url
 
 
+class TokenCacheRedisAdapter(RedisAdapter):
+    """Redis Adapter For Token Caching With Dedicated Database.
+
+    Inherits:
+        RedisAdapter
+
+    Attributes:
+        Inherits all attributes from RedisAdapter.
+
+    Properties:
+        Inherits all properties from RedisAdapter.
+
+    Methods:
+        Inherits all methods from RedisAdapter.
+    """
+
+    def _create_connection_pool(self) -> ConnectionPool:
+        """Create Redis Connection Pool For Token Cache Database.
+
+        Arguments:
+            None
+
+        Returns:
+            ConnectionPool: Redis connection pool configured for token cache database.
+
+        Raises:
+            None
+        """
+
+        redis_url: str = self._build_redis_url_for_token_cache()
+
+        pool: ConnectionPool = ConnectionPool.from_url(
+            url=redis_url,
+            max_connections=settings.redis_max_connections,
+            retry_on_timeout=settings.redis_retry_on_timeout,
+            socket_keepalive=settings.redis_socket_keepalive,
+            socket_keepalive_options=settings.redis_socket_keepalive_options,
+            health_check_interval=settings.redis_health_check_interval,
+            decode_responses=settings.redis_decode_responses,
+            encoding=settings.redis_encoding,
+        )
+
+        return pool
+
+    def _build_redis_url_for_token_cache(self) -> str:
+        """Build Redis Connection URL For Token Cache Database.
+
+        Arguments:
+            None
+
+        Returns:
+            str: Redis connection URL for token cache database.
+
+        Raises:
+            None
+        """
+
+        scheme: Literal["rediss", "redis"] = "rediss" if settings.redis_ssl else "redis"
+        auth_part = ""
+
+        if settings.redis_username and settings.redis_password:
+            auth_part = f"{settings.redis_username}:{settings.redis_password}@"
+        elif settings.redis_password:
+            auth_part = f":{settings.redis_password}@"
+
+        redis_url = (
+            f"{scheme}://{auth_part}{settings.redis_host}:{settings.redis_port}/{settings.redis_token_cache_db}"
+            f"?socket_connect_timeout={settings.redis_connection_timeout}"
+            f"&socket_timeout={settings.redis_socket_timeout}"
+        )
+
+        if settings.redis_ssl and not settings.redis_ssl_verify:
+            redis_url += "&ssl_cert_reqs=none"
+
+        return redis_url
+
+
 redis_adapter: RedisAdapter | None = None
+token_cache_redis_adapter: TokenCacheRedisAdapter | None = None
 
 
 async def get_redis_adapter() -> RedisAdapter:
-    """Get Redis Adapter Instance.
+    """Get Base Redis Adapter Instance.
 
     Arguments:
         None
 
     Returns:
-        RedisAdapter: Redis adapter instance.
+        RedisAdapter: Redis adapter instance for base database.
 
     Raises:
         RuntimeError: If Redis is not enabled.
@@ -1018,14 +1096,39 @@ async def get_redis_adapter() -> RedisAdapter:
     return redis_adapter
 
 
-async def initialize_redis() -> RedisAdapter | None:
-    """Initialize Redis Connection.
+async def get_token_cache_redis_adapter() -> TokenCacheRedisAdapter:
+    """Get Token Cache Redis Adapter Instance.
 
     Arguments:
         None
 
     Returns:
-        RedisAdapter | None: Redis adapter instance if enabled, None otherwise.
+        TokenCacheRedisAdapter: Redis adapter instance for token cache database.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+    """
+
+    global token_cache_redis_adapter  # noqa: PLW0603
+
+    if not settings.redis_enabled:
+        msg = "Redis is not enabled in settings"
+        raise RuntimeError(msg)
+
+    if token_cache_redis_adapter is None:
+        token_cache_redis_adapter = TokenCacheRedisAdapter()
+
+    return token_cache_redis_adapter
+
+
+async def initialize_redis() -> tuple[RedisAdapter | None, TokenCacheRedisAdapter | None]:
+    """Initialize Redis Connections.
+
+    Arguments:
+        None
+
+    Returns:
+        tuple[RedisAdapter | None, TokenCacheRedisAdapter | None]: Base and token cache adapter instances if enabled.
 
     Raises:
         None
@@ -1034,34 +1137,59 @@ async def initialize_redis() -> RedisAdapter | None:
     if not settings.redis_enabled:
         logger: logging.Logger = get_logger(name="redis.initialize")
         logger.info(msg="Redis is disabled")
-        return None
+        return None, None
 
     logger: logging.Logger = get_logger(name="redis.initialize")
+    base_adapter: RedisAdapter | None = None
+    token_adapter: TokenCacheRedisAdapter | None = None
 
     try:
-        adapter: RedisAdapter = await get_redis_adapter()
-        await adapter.connect()
+        base_adapter: RedisAdapter | None = await get_redis_adapter()
+        await base_adapter.connect()
 
-        is_healthy: bool = await adapter.health_check()
+        is_healthy: bool = await base_adapter.health_check()
         if not is_healthy:
-            logger.warning(msg="Redis health check failed")
-            return None
-
-        logger.info(msg="Redis initialization successful")
+            logger.warning(msg="Base Redis health check failed")
+            base_adapter = None
+        else:
+            logger.info(
+                msg="Base Redis initialization successful",
+                extra={"database": settings.redis_database},
+            )
 
     except Exception as exc:
         logger.warning(
-            msg=f"Failed to initialize Redis (service will continue without Redis): {exc!s}",
+            msg=f"Failed to initialize base Redis: {exc!s}",
             extra={"exception_type": type(exc).__name__},
         )
-        return None
+        base_adapter = None
 
-    else:
-        return adapter
+    try:
+        token_adapter: TokenCacheRedisAdapter | None = await get_token_cache_redis_adapter()
+        await token_adapter.connect()
+
+        is_healthy: bool = await token_adapter.health_check()
+        if not is_healthy:
+            logger.warning(msg="Token cache Redis health check failed")
+            token_adapter = None
+        else:
+            logger.info(
+                msg="Token cache Redis initialization successful",
+                extra={"database": settings.redis_token_cache_db},
+            )
+
+    except Exception as exc:
+        logger.warning(
+            msg=f"Failed to initialize token cache Redis: {exc!s}",
+            extra={"exception_type": type(exc).__name__},
+        )
+        token_adapter = None
+
+    return base_adapter, token_adapter
 
 
 async def shutdown_redis() -> None:
-    """Shutdown Redis Connection.
+    """Shutdown Redis Connections.
 
     Arguments:
         None
@@ -1073,24 +1201,38 @@ async def shutdown_redis() -> None:
         None
     """
 
-    global redis_adapter  # noqa: PLW0603
+    global redis_adapter, token_cache_redis_adapter  # noqa: PLW0603
+
+    logger: logging.Logger = get_logger(name="redis.shutdown")
 
     if redis_adapter is not None:
         try:
             await redis_adapter.disconnect()
+            logger.info(msg="Base Redis connection closed")
             redis_adapter = None
-
         except Exception as exc:
-            logger: logging.Logger = get_logger(name="redis.shutdown")
             logger.warning(
-                msg=f"Error during Redis shutdown: {exc!s}",
+                msg=f"Error during base Redis shutdown: {exc!s}",
+                extra={"exception_type": type(exc).__name__},
+            )
+
+    if token_cache_redis_adapter is not None:
+        try:
+            await token_cache_redis_adapter.disconnect()
+            logger.info(msg="Token cache Redis connection closed")
+            token_cache_redis_adapter = None
+        except Exception as exc:
+            logger.warning(
+                msg=f"Error during token cache Redis shutdown: {exc!s}",
                 extra={"exception_type": type(exc).__name__},
             )
 
 
 __all__: list[str] = [
     "RedisAdapter",
+    "TokenCacheRedisAdapter",
     "get_redis_adapter",
+    "get_token_cache_redis_adapter",
     "initialize_redis",
     "shutdown_redis",
 ]

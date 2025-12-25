@@ -3,10 +3,11 @@ import platform
 from typing import Any
 
 import psutil
-from celery import shared_task
+
+from config.celery_app import celery_app
 
 
-@shared_task(name="src.tasks.health.check_system_health")
+@celery_app.task(name="src.tasks.health.check_system_health")
 def check_system_health() -> dict[str, Any]:
     """
     Check System Health And Return Metrics.

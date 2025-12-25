@@ -731,7 +731,7 @@ class RateLimitController:
         """
 
         base_url = f"{request.url.scheme}://{request.url.netloc}"
-        test_endpoint = f"{base_url}/api/v1/health/"
+        test_endpoint = f"{base_url}/api/v1/health"
 
         semaphore = asyncio.Semaphore(value=5)
 

@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC
 from datetime import datetime
 from typing import TYPE_CHECKING
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import FastAPI
@@ -21,6 +22,7 @@ from config.adapters import MinIOAdapter
 from config.adapters import PostgreSQLAdapter
 from config.adapters import RabbitMQAdapter
 from config.adapters import RedisAdapter
+from config.adapters import TokenCacheRedisAdapter
 from config.adapters import initialize_consul
 from config.adapters import initialize_elasticsearch
 from config.adapters import initialize_email
@@ -44,6 +46,8 @@ from config.middlewares import RequestSizeLimitMiddleware
 from config.routes import create_api_router
 from config.settings import settings
 from src.schemas import ErrorResponse
+from src.schemas import ValidationErrorItem
+from src.schemas import ValidationErrorResponse
 
 if TYPE_CHECKING:
     import logging
@@ -85,12 +89,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
     startup_logger.info(msg="Application startup initiated")
 
     redis_adapter = None
+    token_cache_redis_adapter = None
     if settings.redis_enabled:
-        startup_logger.info(msg="Initializing Redis connection")
-        redis_adapter: RedisAdapter | None = await initialize_redis()
+        startup_logger.info(msg="Initializing Redis connections")
+        redis_adapter: RedisAdapter | None
+        token_cache_redis_adapter: TokenCacheRedisAdapter | None
+        redis_adapter, token_cache_redis_adapter = await initialize_redis()
         if redis_adapter:
             startup_logger.info(
-                msg="Redis connection established",
+                msg="Base Redis connection established",
                 extra={
                     "redis_host": settings.redis_host,
                     "redis_port": settings.redis_port,
@@ -98,7 +105,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
                 },
             )
         else:
-            startup_logger.warning(msg="Redis connection failed")
+            startup_logger.warning(msg="Base Redis connection failed")
+
+        if token_cache_redis_adapter:
+            startup_logger.info(
+                msg="Token cache Redis connection established",
+                extra={
+                    "redis_host": settings.redis_host,
+                    "redis_port": settings.redis_port,
+                    "redis_database": settings.redis_token_cache_db,
+                },
+            )
+        else:
+            startup_logger.warning(msg="Token cache Redis connection failed")
 
     postgresql_adapter = None
     if settings.postgresql_enabled:
@@ -237,7 +256,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:  # noqa: C901, PLR0912
     shutdown_logger.info(msg="Application shutdown completed")
 
 
-def create_app() -> FastAPI:
+def create_app() -> FastAPI:  # noqa: C901, PLR0915
     """Create And Configure FastAPI Application.
 
     Arguments:
@@ -375,11 +394,42 @@ def create_app() -> FastAPI:
             },
         )
 
+        def _sanitize_meta(value: Any) -> Any:
+            if value is None:
+                return None
+            if isinstance(value, (str, int, float, bool)):
+                return value
+            if isinstance(value, (list, tuple)):
+                return [_sanitize_meta(value=v) for v in value]
+            if isinstance(value, dict):
+                return {str(object=k): _sanitize_meta(value=v) for k, v in value.items()}
+            return str(object=value)
+
+        errors: list[ValidationErrorItem] = []
+        for err in exc.errors():
+            loc: Any = err.get("loc")
+            if isinstance(loc, (list, tuple)):
+                loc_str: str = ".".join(str(object=part) for part in loc)
+            else:
+                loc_str: str = str(object=loc) if loc is not None else "unknown"
+
+            ctx: Any = err.get("ctx")
+            meta: Any | None = _sanitize_meta(value=ctx) if isinstance(ctx, dict) else None
+
+            errors.append(
+                ValidationErrorItem(
+                    path=loc_str,
+                    message=str(object=err.get("msg", "Invalid value")),
+                    type=str(object=err.get("type", "validation_error")),
+                    meta=meta,
+                ),
+            )
+
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content=ErrorResponse(
+            content=ValidationErrorResponse(
                 error="Validation Error",
-                detail=str(object=exc),
+                errors=errors,
                 timestamp=datetime.now(tz=UTC),
             ).model_dump(mode="json"),
         )

@@ -591,7 +591,7 @@ class ConsulController:
                                                     {
                                                         "name": "Service 'initstack-fastapi-service' check",
                                                         "status": "passing",
-                                                        "output": 'HTTP GET http://172.18.0.23:8080/api/v1/health/: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
+                                                        "output": 'HTTP GET http://172.18.0.23:8080/api/v1/health: 200 OK Output: {"status":"healthy","timestamp":"2025-12-16T12:38:00.624004+00:00","uptime_seconds":3.08}',  # noqa: E501
                                                     },
                                                 ],
                                             },

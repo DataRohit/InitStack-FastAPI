@@ -84,8 +84,6 @@ class HealthController:
         """
 
         try:
-            self._logger.info(msg="Performing health check")
-
             system_info: SystemInfo = self._get_system_info()
             cpu_info: CPUInfo = self._get_cpu_info()
             memory_info: MemoryInfo = self._get_memory_info()
@@ -114,17 +112,6 @@ class HealthController:
                 disk=disk_info,
                 process=process_info,
                 additional_info=additional_info,
-            )
-
-            self._logger.info(
-                msg=f"Health check completed with status: {status}",
-                extra={
-                    "status": status,
-                    "uptime_seconds": uptime,
-                    "cpu_usage": cpu_info.usage_percent,
-                    "memory_usage": memory_info.usage_percent,
-                    "disk_usage": disk_info.usage_percent,
-                },
             )
 
         except Exception as exc:
@@ -269,7 +256,8 @@ class HealthController:
             None
         """
 
-        return round(number=time.time() - self._start_time, ndigits=2)
+        uptime: float = time.time() - self._start_time
+        return round(number=max(0.0, uptime), ndigits=2)
 
     def _determine_health_status(self, cpu_usage: float, memory_usage: float, disk_usage: float) -> str:
         """Determine Overall Health Status.
@@ -559,13 +547,7 @@ class HealthController:
             """  # noqa: E501
 
             try:
-                self._logger.info(msg="Health check endpoint accessed")
                 health_data: HealthResponse = await self.get_health_status()
-
-                self._logger.info(
-                    msg=f"Health check completed successfully with status: {health_data.status}",
-                    extra={"health_status": health_data.status},
-                )
 
             except Exception as exc:
                 self._logger.exception(

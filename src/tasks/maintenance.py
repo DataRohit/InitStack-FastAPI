@@ -1,13 +1,13 @@
 import datetime
 from typing import Any
 
-from celery import shared_task
 from elasticsearch import Elasticsearch
 
+from config.celery_app import celery_app
 from config.settings import settings
 
 
-@shared_task(name="src.tasks.maintenance.cleanup_old_results")
+@celery_app.task(name="src.tasks.maintenance.cleanup_old_results")
 def cleanup_old_results() -> dict[str, Any]:
     """
     Cleanup Old Celery Results From Elasticsearch.

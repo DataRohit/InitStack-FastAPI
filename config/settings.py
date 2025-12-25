@@ -1,8 +1,12 @@
 import json
+import re
+from re import Match
 from typing import Any
+from typing import LiteralString
 
 from pydantic import Field
 from pydantic import field_validator
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -20,6 +24,7 @@ class Settings(BaseSettings):
         app_contact_email (str): Contact email.
         app_license_name (str): License name.
         app_license_url (str): License URL.
+        api_base_url (str): Base URL for API endpoints.
         debug (bool): Enable debug mode.
         environment (str): Runtime environment name.
         host (str): Host interface to bind.
@@ -54,6 +59,7 @@ class Settings(BaseSettings):
         redis_username (str): Redis username.
         redis_password (str): Redis password.
         redis_database (int): Redis database number.
+        redis_token_cache_db (int): Redis database number used for token caching.
         redis_ssl (bool): Enable SSL for Redis connection.
         redis_ssl_verify (bool): Verify SSL certificates for Redis.
         redis_connection_timeout (int): Redis connection timeout in seconds.
@@ -174,6 +180,8 @@ class Settings(BaseSettings):
         postgresql_echo (bool): Enable SQL statement logging.
         postgresql_echo_pool (bool): Enable connection pool logging.
         postgresql_ssl_mode (str): PostgreSQL SSL mode.
+        signup_token_secret (str): Secret key used to sign signup tokens.
+        signup_token_expiry_seconds (int): Signup token expiry time in seconds.
 
     Properties:
         None
@@ -187,6 +195,7 @@ class Settings(BaseSettings):
         parse_redis_socket_keepalive_options: Parse Redis socket keepalive options from env input.
         parse_rate_limit_exempt_ips: Parse rate limit exempt IPs from env input.
         parse_telemetry_headers: Parse telemetry headers from env input.
+        parse_signup_token_expiry_seconds: Parse signup token expiry from env input.
     """
 
     app_name: str = "InitStack FastAPI Development Server"
@@ -196,6 +205,8 @@ class Settings(BaseSettings):
     app_contact_email: str = "rohit.vilas.ingole@gmail.com"
     app_license_name: str = "MIT"
     app_license_url: str = "https://github.com/DataRohit/InitStack/blob/master/license"
+
+    api_base_url: str = "http://localhost:8000"
 
     debug: bool = True
     environment: str = "development"
@@ -245,6 +256,7 @@ class Settings(BaseSettings):
     redis_username: str = "z2yju1mD0GQxgV6Z"
     redis_password: str = "Bv3cX8nM1qW6eR9t"  # noqa: S105
     redis_database: int = 0
+    redis_token_cache_db: int = 1
     redis_ssl: bool = False
     redis_ssl_verify: bool = True
     redis_connection_timeout: int = 5
@@ -319,8 +331,8 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     minio_region: str = "us-east-1"
 
-    celery_broker_url: str = "amqp://Qw8rT5nM3xZ9pL2v:Hj6kN4mB8vC1sF7q@initstack-rabbitmq-service:5672/initstack_vhost"
-    celery_result_backend: str = "elasticsearch://elastic:Mx7nQ4wR8vK2sL9p@initstack-elasticsearch-service:9200"
+    celery_broker_url: str | None = None
+    celery_result_backend: str | None = None
     celery_worker_name: str = "initstack-celery-worker"
     celery_worker_concurrency: int = 4
     celery_worker_prefetch_multiplier: int = 4
@@ -373,6 +385,9 @@ class Settings(BaseSettings):
     postgresql_echo: bool = False
     postgresql_echo_pool: bool = False
     postgresql_ssl_mode: str = "disable"
+
+    signup_token_secret: str = ""
+    signup_token_expiry_seconds: int = Field(default=900, validation_alias="SIGNUP_TOKEN_EXPIRY")
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -567,6 +582,60 @@ class Settings(BaseSettings):
         """
 
         case_sensitive: bool = False
+
+    @field_validator("signup_token_expiry_seconds", mode="before")
+    @classmethod
+    def parse_signup_token_expiry_seconds(cls, v: Any) -> Any:
+        if isinstance(v, int):
+            return v
+        if isinstance(v, str):
+            raw: str = v.strip()
+            if raw.isdigit():
+                return int(raw)
+
+            match: Match[str] | None = re.fullmatch(pattern=r"(?i)(\d+)\s*([smhd])", string=raw)
+            if match is None:
+                msg = "Invalid SIGNUP_TOKEN_EXPIRY format. Use integer seconds or duration like 15m"
+                raise ValueError(msg)
+
+            amount: int = int(match.group(1))
+            unit: str = match.group(2).lower()
+            multipliers: dict[str, int] = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+            return amount * multipliers[unit]
+        return v
+
+    @model_validator(mode="after")
+    def construct_celery_urls(self) -> Settings:
+        """Construct Celery Broker And Result Backend URLs From Service Settings.
+
+        Arguments:
+            None
+
+        Returns:
+            Settings: Settings instance with constructed URLs.
+
+        Raises:
+            None
+        """
+
+        if not self.celery_broker_url:
+            self.celery_broker_url = (
+                f"amqp://{self.rabbitmq_username}:{self.rabbitmq_password}"
+                f"@{self.rabbitmq_host}:{self.rabbitmq_port}/{self.rabbitmq_vhost}"
+            )
+
+        if not self.celery_result_backend:
+            es_host: LiteralString = (
+                self.elasticsearch_hosts[0]
+                if self.elasticsearch_hosts
+                else "http://initstack-elasticsearch-service:9200"
+            )
+            es_host_without_scheme: LiteralString = es_host.replace("http://", "").replace("https://", "")
+            self.celery_result_backend = (
+                f"elasticsearch://{self.elasticsearch_username}:{self.elasticsearch_password}@{es_host_without_scheme}"
+            )
+
+        return self
 
 
 settings: Settings = Settings()
