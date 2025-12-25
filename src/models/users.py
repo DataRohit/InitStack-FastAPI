@@ -1,8 +1,12 @@
 import re
+import uuid  # noqa: TC003
 
 from sqlalchemy import Boolean
 from sqlalchemy import CheckConstraint
+from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy import UniqueConstraint
+from sqlalchemy import Uuid
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import validates
@@ -255,4 +259,110 @@ class User(TimestampedModel):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
 
 
-__all__: list[str] = ["User"]
+class OAuthAccount(TimestampedModel):
+    """OAuth Account Model For Linking External Provider Accounts.
+
+    Inherits:
+        TimestampedModel
+
+    Attributes:
+        id (Uuid): Primary key UUID (inherited).
+        user_id (Uuid): Foreign key to users.id.
+        provider (str): OAuth provider name.
+        provider_account_id (str): Unique identifier for the account within the provider.
+        email (str | None): Optional email returned by provider.
+        created_at (datetime): Timestamp when record was created (inherited).
+        updated_at (datetime): Timestamp when record was last updated (inherited).
+
+    Properties:
+        None
+
+    Methods:
+        validate_email: Validate email format when provided.
+    """
+
+    __tablename__ = "oauth_accounts"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey(column="users.id"),
+        nullable=False,
+        index=True,
+    )
+
+    provider: Mapped[str] = mapped_column(
+        String(length=50),
+        nullable=False,
+        index=True,
+    )
+
+    provider_account_id: Mapped[str] = mapped_column(
+        String(length=255),
+        nullable=False,
+        index=True,
+    )
+
+    email: Mapped[str | None] = mapped_column(
+        String(length=255),
+        nullable=True,
+    )
+
+    __table_args__: tuple[UniqueConstraint] = (
+        UniqueConstraint(
+            "provider",
+            "provider_account_id",
+            name="uq_oauth_accounts_provider_provider_account_id",
+        ),
+    )
+
+    @validates("email")
+    def validate_email(self, key: str, value: str | None) -> str | None:
+        """Validate Email Format When Provided.
+
+        Arguments:
+            key (str): Field name.
+            value (str | None): Email value.
+
+        Returns:
+            str | None: Validated and normalized email.
+
+        Raises:
+            ValueError: If email format is invalid.
+        """
+
+        if value is None:
+            return None
+
+        value: str = value.lower()
+
+        email_pattern: str = r"^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$"
+        if not re.match(pattern=email_pattern, string=value):
+            msg = "Invalid email format"
+            raise ValueError(msg)
+
+        if len(value) > 255:  # noqa: PLR2004
+            msg = "Email cannot exceed 255 characters"
+            raise ValueError(msg)
+
+        return value
+
+    def __repr__(self) -> str:
+        """String Representation Of OAuthAccount.
+
+        Arguments:
+            None
+
+        Returns:
+            str: String representation.
+
+        Raises:
+            None
+        """
+
+        return (
+            f"<OAuthAccount(id={self.id}, user_id={self.user_id}, provider={self.provider}, "
+            f"provider_account_id={self.provider_account_id})>"
+        )
+
+
+__all__: list[str] = ["OAuthAccount", "User"]
