@@ -2,7 +2,11 @@ import datetime
 from typing import TYPE_CHECKING
 from typing import Any
 
-import jwt
+from joserfc import jwt
+from joserfc.errors import BadSignatureError
+from joserfc.errors import ExpiredTokenError
+from joserfc.errors import JoseError
+from joserfc.jwk import OctKey
 
 from config.adapters.redis import TokenCacheRedisAdapter
 from config.adapters.redis import get_token_cache_redis_adapter
@@ -54,14 +58,16 @@ async def generate_access_token(user_id: str) -> str:
     now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
     expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.access_token_expiry_seconds)
 
-    payload: dict[str, Any] = {
+    header: dict[str, str] = {"alg": "HS256"}
+    claims: dict[str, Any] = {
         "sub": user_id,
         "type": "access",
-        "iat": now,
-        "exp": expiry,
+        "iat": int(now.timestamp()),
+        "exp": int(expiry.timestamp()),
     }
 
-    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+    key: OctKey = OctKey.import_key(secret)
+    return jwt.encode(header, claims, key)
 
 
 async def generate_refresh_token(user_id: str) -> str:
@@ -83,14 +89,16 @@ async def generate_refresh_token(user_id: str) -> str:
     now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
     expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.refresh_token_expiry_seconds)
 
-    payload: dict[str, Any] = {
+    header: dict[str, str] = {"alg": "HS256"}
+    claims: dict[str, Any] = {
         "sub": user_id,
         "type": "refresh",
-        "iat": now,
-        "exp": expiry,
+        "iat": int(now.timestamp()),
+        "exp": int(expiry.timestamp()),
     }
 
-    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+    key: OctKey = OctKey.import_key(secret)
+    return jwt.encode(header, claims, key)
 
 
 async def validate_access_token(token: str) -> tuple[str, dict[str, Any] | None]:
@@ -119,14 +127,12 @@ async def validate_access_token(token: str) -> tuple[str, dict[str, Any] | None]
     secret: str = _require_secret(secret=settings.access_token_secret, name="ACCESS_TOKEN_SECRET")
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=secret,
-            algorithms=["HS256"],
-        )
-    except jwt.ExpiredSignatureError:
+        key: OctKey = OctKey.import_key(secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
+    except ExpiredTokenError:
         return "expired", None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return "invalid", None
 
     if payload.get("type") != "access":
@@ -165,14 +171,12 @@ async def validate_refresh_token(token: str) -> tuple[str, dict[str, Any] | None
     secret: str = _require_secret(secret=settings.refresh_token_secret, name="REFRESH_TOKEN_SECRET")
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=secret,
-            algorithms=["HS256"],
-        )
-    except jwt.ExpiredSignatureError:
+        key: OctKey = OctKey.import_key(secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
+    except ExpiredTokenError:
         return "expired", None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return "invalid", None
 
     if payload.get("type") != "refresh":
@@ -326,14 +330,16 @@ async def generate_forgot_password_token(user_id: str) -> str:
     now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
     expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.forgot_password_token_expiry_seconds)
 
-    payload: dict[str, Any] = {
+    header: dict[str, str] = {"alg": "HS256"}
+    claims: dict[str, Any] = {
         "sub": user_id,
         "type": "forgot_password",
-        "iat": now,
-        "exp": expiry,
+        "iat": int(now.timestamp()),
+        "exp": int(expiry.timestamp()),
     }
 
-    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+    key: OctKey = OctKey.import_key(secret)
+    return jwt.encode(header, claims, key)
 
 
 async def validate_forgot_password_token(token: str) -> tuple[str, dict[str, Any] | None]:
@@ -362,14 +368,12 @@ async def validate_forgot_password_token(token: str) -> tuple[str, dict[str, Any
     secret: str = _require_secret(secret=settings.forgot_password_token_secret, name="FORGOT_PASSWORD_TOKEN_SECRET")
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=secret,
-            algorithms=["HS256"],
-        )
-    except jwt.ExpiredSignatureError:
+        key: OctKey = OctKey.import_key(secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
+    except ExpiredTokenError:
         return "expired", None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return "invalid", None
 
     if payload.get("type") != "forgot_password":
@@ -468,14 +472,16 @@ async def generate_reset_password_token(user_id: str) -> str:
     now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
     expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.reset_password_token_expiry_seconds)
 
-    payload: dict[str, Any] = {
+    header: dict[str, str] = {"alg": "HS256"}
+    claims: dict[str, Any] = {
         "sub": user_id,
         "type": "reset_password",
-        "iat": now,
-        "exp": expiry,
+        "iat": int(now.timestamp()),
+        "exp": int(expiry.timestamp()),
     }
 
-    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+    key: OctKey = OctKey.import_key(secret)
+    return jwt.encode(header, claims, key)
 
 
 async def validate_reset_password_token(token: str) -> tuple[str, dict[str, Any] | None]:
@@ -504,14 +510,12 @@ async def validate_reset_password_token(token: str) -> tuple[str, dict[str, Any]
     secret: str = _require_secret(secret=settings.reset_password_token_secret, name="RESET_PASSWORD_TOKEN_SECRET")
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=secret,
-            algorithms=["HS256"],
-        )
-    except jwt.ExpiredSignatureError:
+        key: OctKey = OctKey.import_key(secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
+    except ExpiredTokenError:
         return "expired", None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return "invalid", None
 
     if payload.get("type") != "reset_password":
@@ -645,14 +649,16 @@ async def generate_activation_token(user_id: str) -> str:
     now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
     expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.signup_token_expiry_seconds)
 
-    payload: dict[str, Any] = {
+    header: dict[str, str] = {"alg": "HS256"}
+    claims: dict[str, Any] = {
         "sub": user_id,
         "type": "activation",
-        "iat": now,
-        "exp": expiry,
+        "iat": int(now.timestamp()),
+        "exp": int(expiry.timestamp()),
     }
 
-    token: str = jwt.encode(payload=payload, key=settings.signup_token_secret, algorithm="HS256")
+    key: OctKey = OctKey.import_key(settings.signup_token_secret)
+    token: str = jwt.encode(header, claims, key)
 
     logger.info(
         msg="Activation token generated successfully",
@@ -740,18 +746,16 @@ async def verify_activation_token(token: str) -> dict[str, Any] | None:
     """
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=settings.signup_token_secret,
-            algorithms=["HS256"],
-        )
+        key: OctKey = OctKey.import_key(settings.signup_token_secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
 
         if payload.get("type") != "activation":
             return None
 
-    except jwt.ExpiredSignatureError:
+    except ExpiredTokenError:
         return None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return None
 
     else:
@@ -782,14 +786,12 @@ async def validate_activation_token(token: str) -> tuple[str, dict[str, Any] | N
         return "invalid", None
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=settings.signup_token_secret,
-            algorithms=["HS256"],
-        )
-    except jwt.ExpiredSignatureError:
+        key: OctKey = OctKey.import_key(settings.signup_token_secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
+    except ExpiredTokenError:
         return "expired", None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return "invalid", None
 
     if payload.get("type") != "activation":
@@ -925,14 +927,16 @@ async def generate_deactivate_token(user_id: str) -> str:
     now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
     expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.deactivate_token_expiry_seconds)
 
-    payload: dict[str, Any] = {
+    header: dict[str, str] = {"alg": "HS256"}
+    claims: dict[str, Any] = {
         "sub": user_id,
         "type": "deactivate",
-        "iat": now,
-        "exp": expiry,
+        "iat": int(now.timestamp()),
+        "exp": int(expiry.timestamp()),
     }
 
-    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+    key: OctKey = OctKey.import_key(secret)
+    return jwt.encode(header, claims, key)
 
 
 async def validate_deactivate_token(token: str) -> tuple[str, dict[str, Any] | None]:
@@ -961,14 +965,12 @@ async def validate_deactivate_token(token: str) -> tuple[str, dict[str, Any] | N
     secret: str = _require_secret(secret=settings.deactivate_token_secret, name="DEACTIVATE_TOKEN_SECRET")
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=secret,
-            algorithms=["HS256"],
-        )
-    except jwt.ExpiredSignatureError:
+        key: OctKey = OctKey.import_key(secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
+    except ExpiredTokenError:
         return "expired", None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return "invalid", None
 
     if payload.get("type") != "deactivate":
@@ -1068,14 +1070,16 @@ async def generate_reactivate_token(user_id: str) -> str:
     now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
     expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.reactivate_token_expiry_seconds)
 
-    payload: dict[str, Any] = {
+    header: dict[str, str] = {"alg": "HS256"}
+    claims: dict[str, Any] = {
         "sub": user_id,
         "type": "reactivate",
-        "iat": now,
-        "exp": expiry,
+        "iat": int(now.timestamp()),
+        "exp": int(expiry.timestamp()),
     }
 
-    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+    key: OctKey = OctKey.import_key(secret)
+    return jwt.encode(header, claims, key)
 
 
 async def validate_reactivate_token(token: str) -> tuple[str, dict[str, Any] | None]:
@@ -1104,14 +1108,12 @@ async def validate_reactivate_token(token: str) -> tuple[str, dict[str, Any] | N
     secret: str = _require_secret(secret=settings.reactivate_token_secret, name="REACTIVATE_TOKEN_SECRET")
 
     try:
-        payload: dict[str, Any] = jwt.decode(
-            jwt=token,
-            key=secret,
-            algorithms=["HS256"],
-        )
-    except jwt.ExpiredSignatureError:
+        key: OctKey = OctKey.import_key(secret)
+        decoded_token = jwt.decode(token, key)
+        payload: dict[str, Any] = dict(decoded_token.claims)
+    except ExpiredTokenError:
         return "expired", None
-    except jwt.InvalidTokenError:
+    except (JoseError, BadSignatureError):
         return "invalid", None
 
     if payload.get("type") != "reactivate":
