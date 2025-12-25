@@ -52,8 +52,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "PostgreSQL disabled",
                                 "description": "Example response when PostgreSQL is disabled in configuration",
                                 "value": {
-                                    "error": "Service Unavailable",
-                                    "detail": "PostgreSQL is not enabled in settings",
+                                    "error": "PostgreSQL is not enabled in settings",
+                                    "detail": "HTTP 503",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -61,8 +61,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Redis disabled",
                                 "description": "Example response when Redis is disabled in configuration",
                                 "value": {
-                                    "error": "Service Unavailable",
-                                    "detail": "Redis is not enabled in settings",
+                                    "error": "Redis is not enabled in settings",
+                                    "detail": "HTTP 503",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -76,21 +76,31 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                 "content": {
                     "application/json": {
                         "examples": {
-                            "unexpected_error": {
-                                "summary": "Unexpected error",
-                                "description": "Example response when an unexpected error occurs",
-                                "value": {
-                                    "error": "Internal Server Error",
-                                    "detail": "An Unexpected Error Occurred",
-                                    "timestamp": "2025-01-01T12:34:56Z",
-                                },
-                            },
                             "activation_failed": {
                                 "summary": "Activation failed",
                                 "description": "Example response when controller raises an internal error",
                                 "value": {
-                                    "error": "Internal Server Error",
-                                    "detail": "Failed to activate account",
+                                    "error": "Failed to activate account",
+                                    "detail": "HTTP 500",
+                                    "timestamp": "2025-01-01T12:34:56Z",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {
+                "description": "Request entity too large",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "examples": {
+                            "request_too_large": {
+                                "summary": "Request too large",
+                                "description": "Example response when request exceeds configured size limits",
+                                "value": {
+                                    "error": "Request size 99999999 bytes exceeds maximum allowed 16777216 bytes",
+                                    "detail": "HTTP 413",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -153,8 +163,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Token already used",
                                 "description": "Example response when token is valid but not found in Redis",
                                 "value": {
-                                    "error": "Conflict",
-                                    "detail": "Activation token already used",
+                                    "error": "Activation token already used",
+                                    "detail": "HTTP 409",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -162,8 +172,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Account already active",
                                 "description": "Example response when user account is already active",
                                 "value": {
-                                    "error": "Conflict",
-                                    "detail": "Account already activated",
+                                    "error": "Account already activated",
+                                    "detail": "HTTP 409",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -181,8 +191,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "User not found",
                                 "description": "Example response when the token is valid but the user does not exist",
                                 "value": {
-                                    "error": "Not Found",
-                                    "detail": "User not found",
+                                    "error": "User not found",
+                                    "detail": "HTTP 404",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -200,8 +210,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Invalid token",
                                 "description": "Example response when the activation token is invalid",
                                 "value": {
-                                    "error": "Bad Request",
-                                    "detail": "Invalid activation token",
+                                    "error": "Invalid activation token",
+                                    "detail": "HTTP 400",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -209,8 +219,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Expired token",
                                 "description": "Example response when the activation token is expired",
                                 "value": {
-                                    "error": "Bad Request",
-                                    "detail": "Activation token expired",
+                                    "error": "Activation token expired",
+                                    "detail": "HTTP 400",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -218,8 +228,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Wrong token type",
                                 "description": "Example response when token is not an activation token",
                                 "value": {
-                                    "error": "Bad Request",
-                                    "detail": "Invalid activation token",
+                                    "error": "Invalid activation token",
+                                    "detail": "HTTP 400",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -227,8 +237,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Token mismatch",
                                 "description": "Example response when token exists in Redis but does not match",
                                 "value": {
-                                    "error": "Bad Request",
-                                    "detail": "Invalid activation token",
+                                    "error": "Invalid activation token",
+                                    "detail": "HTTP 400",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -236,8 +246,8 @@ def register_activation_routes(router: APIRouter, logger: logging.Logger) -> Non
                                 "summary": "Invalid user id in token",
                                 "description": "Example response when token subject is not a valid UUID",
                                 "value": {
-                                    "error": "Bad Request",
-                                    "detail": "Invalid activation token",
+                                    "error": "Invalid activation token",
+                                    "detail": "HTTP 400",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },

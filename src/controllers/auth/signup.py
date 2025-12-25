@@ -59,8 +59,8 @@ def register_signup_routes(
                                 "summary": "PostgreSQL disabled",
                                 "description": "Example response when PostgreSQL is disabled in configuration",
                                 "value": {
-                                    "error": "Service Unavailable",
-                                    "detail": "PostgreSQL is not enabled in settings",
+                                    "error": "PostgreSQL is not enabled in settings",
+                                    "detail": "HTTP 503",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -74,21 +74,31 @@ def register_signup_routes(
                 "content": {
                     "application/json": {
                         "examples": {
-                            "unexpected_error": {
-                                "summary": "Unexpected error",
-                                "description": "Example response when an unexpected error occurs during signup",
-                                "value": {
-                                    "error": "Internal Server Error",
-                                    "detail": "An Unexpected Error Occurred",
-                                    "timestamp": "2025-01-01T12:34:56Z",
-                                },
-                            },
                             "signup_failed": {
                                 "summary": "Signup failed",
                                 "description": "Example response when controller raises an internal error",
                                 "value": {
-                                    "error": "Internal Server Error",
-                                    "detail": "Failed to sign up",
+                                    "error": "Failed to sign up",
+                                    "detail": "HTTP 500",
+                                    "timestamp": "2025-01-01T12:34:56Z",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {
+                "description": "Request entity too large",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "examples": {
+                            "request_too_large": {
+                                "summary": "Request too large",
+                                "description": "Example response when request body exceeds configured size limits",
+                                "value": {
+                                    "error": "Request size 99999999 bytes exceeds maximum allowed 16777216 bytes",
+                                    "detail": "HTTP 413",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
@@ -183,27 +193,8 @@ def register_signup_routes(
                                 "summary": "Username or email already exists",
                                 "description": "Example response when username or email is already registered",
                                 "value": {
-                                    "error": "Conflict",
-                                    "detail": "Username or email already exists",
-                                    "timestamp": "2025-01-01T12:34:56Z",
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            status.HTTP_400_BAD_REQUEST: {
-                "description": "Bad request",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "examples": {
-                            "bad_request": {
-                                "summary": "Bad request",
-                                "description": "Example response when request is malformed",
-                                "value": {
-                                    "error": "Bad Request",
-                                    "detail": "Bad request",
+                                    "error": "Username or email already exists",
+                                    "detail": "HTTP 409",
                                     "timestamp": "2025-01-01T12:34:56Z",
                                 },
                             },
