@@ -240,6 +240,8 @@ heartbeat.monitors:
       schedule: "@every 30s"
       timeout: 10s
       check.response.status: [200]
+      username: "${FLOWER_USERNAME}"
+      password: "${FLOWER_PASSWORD}"
 
     - type: icmp
       id: docker-network-ping
