@@ -649,7 +649,7 @@ class RateLimitController:
         """
 
         client_ip: str = self._get_client_ip(request)
-        user_agent: str = request.headers.get("user-agent", default="")
+        user_agent: str = request.headers.get("user-agent", default="")  # ty:ignore[no-matching-overload]
 
         identifier_string = f"{client_ip}:{user_agent}"
         return hashlib.sha256(data=identifier_string.encode()).hexdigest()[:16]

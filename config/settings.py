@@ -235,9 +235,9 @@ class Settings(BaseSettings):
     consul_verify: bool = True
     consul_service_name: str = "initstack-fastapi-service"
     consul_service_tags: list[str] = Field(default_factory=lambda: ["fastapi", "api", "web"])
-    consul_health_check_interval: str = "10s"
-    consul_health_check_timeout: str = "5s"
-    consul_health_check_deregister_critical_after: str = "30s"
+    consul_health_check_interval: str = "30s"
+    consul_health_check_timeout: str = "10s"
+    consul_health_check_deregister_critical_after: str = "90s"
 
     redis_enabled: bool = True
     redis_host: str = "initstack-redis-service"
@@ -258,8 +258,8 @@ class Settings(BaseSettings):
     redis_encoding: str = "utf-8"
 
     rate_limit_enabled: bool = True
-    rate_limit_requests_per_minute: int = 20
-    rate_limit_burst_size: int = 10
+    rate_limit_requests_per_minute: int = 120
+    rate_limit_burst_size: int = 20
     rate_limit_window_size: int = 60
     rate_limit_redis_key_prefix: str = "rate_limit"
     rate_limit_redis_key_expiry: int = 3600

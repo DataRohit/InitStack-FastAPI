@@ -74,7 +74,7 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
         content_length: str | None = request.headers.get("content-length")
         if content_length:
             content_length: int = int(content_length)
-            content_type: str = request.headers.get("content-type", default="")
+            content_type: str = request.headers.get("content-type", default="")  # ty:ignore[no-matching-overload]
 
             if "multipart/form-data" in content_type:
                 if content_length > self.max_upload_size:
@@ -142,7 +142,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         client_ip: str = request.client.host if request.client else "unknown"
         method: str = request.method
         url = str(object=request.url)
-        user_agent: str = request.headers.get("user-agent", default="unknown")
+        user_agent: str = request.headers.get("user-agent", default="unknown")  # ty:ignore[no-matching-overload]
 
         self.logger.info(
             msg=f"Request started: {method} {url}",
@@ -416,7 +416,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """
 
         client_ip: str = self._get_client_ip(request)
-        user_agent: str = request.headers.get("user-agent", default="")
+        user_agent: str = request.headers.get("user-agent", default="")  # ty:ignore[no-matching-overload]
 
         identifier_string = f"{client_ip}:{user_agent}"
         client_hash: str = hashlib.sha256(data=identifier_string.encode()).hexdigest()[:16]
