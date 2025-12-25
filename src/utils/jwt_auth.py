@@ -1,4 +1,4 @@
-# ruff: noqa: TC002
+# ruff: noqa: C901, TC002
 
 import uuid
 from typing import Annotated
@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.adapters.postgresql import PostgreSQLAdapter
 from config.adapters.postgresql import get_postgresql_adapter
+from config.adapters.redis import TokenCacheRedisAdapter
+from config.adapters.redis import get_token_cache_redis_adapter
 from src.models.users import User
 from src.utils.auth_tokens import validate_access_token
 
@@ -67,6 +69,31 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid access token",
         ) from exc
+
+    user_id: str = str(object=user_uuid)
+
+    try:
+        token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+        if not token_cache_adapter.is_connected:
+            await token_cache_adapter.connect()
+
+        access_key: str = f"access_token:{user_id}"
+        cached_token: str | None = await token_cache_adapter.get(access_key)
+
+        if cached_token is None or cached_token != token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid access token",
+            )
+    except HTTPException:
+        raise
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(object=exc),
+        ) from exc
+    except Exception:  # noqa: S110
+        pass
 
     try:
         postgresql_adapter: PostgreSQLAdapter = await get_postgresql_adapter()

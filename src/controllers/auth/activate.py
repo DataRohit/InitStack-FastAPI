@@ -15,7 +15,7 @@ from config.adapters.postgresql import get_postgresql_adapter
 from src.models.users import User
 from src.schemas import ErrorResponse
 from src.schemas import ValidationErrorResponse
-from src.schemas.auth.activate import ActivateAccountResponse
+from src.schemas.auth import ActivateAccountResponse
 from src.tasks.auth.activate import send_activation_success_email
 from src.utils.auth_tokens import consume_activation_token
 from src.utils.auth_tokens import validate_activation_token

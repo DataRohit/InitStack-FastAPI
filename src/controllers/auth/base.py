@@ -7,9 +7,12 @@ from fastapi import APIRouter
 
 from config.logger import get_logger
 from src.controllers.auth.activate import register_activation_routes
+from src.controllers.auth.deactivate import register_deactivate_routes
 from src.controllers.auth.forgot_password import register_forgot_password_routes
 from src.controllers.auth.login import register_login_routes
+from src.controllers.auth.logout import register_logout_routes
 from src.controllers.auth.me import register_me_routes
+from src.controllers.auth.reactivate import register_reactivate_routes
 from src.controllers.auth.relogin import register_relogin_routes
 from src.controllers.auth.reset_password import register_reset_password_routes
 from src.controllers.auth.signup import register_signup_routes
@@ -102,6 +105,21 @@ class AuthController:
             router=self.router,
             logger=self._logger,
             password_hasher=self._password_hasher,
+        )
+
+        register_deactivate_routes(
+            router=self.router,
+            logger=self._logger,
+        )
+
+        register_reactivate_routes(
+            router=self.router,
+            logger=self._logger,
+        )
+
+        register_logout_routes(
+            router=self.router,
+            logger=self._logger,
         )
 
 

@@ -235,6 +235,14 @@ class Settings(BaseSettings):
         forgot_password_token_expiry_seconds (int): Forgot password token expiry time in seconds.
         reset_password_token_secret (str): Secret key used to sign reset password tokens.
         reset_password_token_expiry_seconds (int): Reset password token expiry time in seconds.
+        access_token_secret (str): Secret key used to sign access tokens.
+        access_token_expiry_seconds (int): Access token expiry time in seconds.
+        refresh_token_secret (str): Secret key used to sign refresh tokens.
+        refresh_token_expiry_seconds (int): Refresh token expiry time in seconds.
+        deactivate_token_secret (str): Secret key used to sign deactivate tokens.
+        deactivate_token_expiry_seconds (int): Deactivate token expiry time in seconds.
+        reactivate_token_secret (str): Secret key used to sign reactivate tokens.
+        reactivate_token_expiry_seconds (int): Reactivate token expiry time in seconds.
 
     Properties:
         None
@@ -251,6 +259,10 @@ class Settings(BaseSettings):
         parse_signup_token_expiry_seconds: Parse signup token expiry from env input.
         parse_forgot_password_token_expiry_seconds: Parse forgot password token expiry from env input.
         parse_reset_password_token_expiry_seconds: Parse reset password token expiry from env input.
+        parse_access_token_expiry_seconds: Parse access token expiry from env input.
+        parse_refresh_token_expiry_seconds: Parse refresh token expiry from env input.
+        parse_deactivate_token_expiry_seconds: Parse deactivate token expiry from env input.
+        parse_reactivate_token_expiry_seconds: Parse reactivate token expiry from env input.
     """
 
     app_name: str = "InitStack FastAPI Development Server"
@@ -441,20 +453,26 @@ class Settings(BaseSettings):
     postgresql_echo_pool: bool = False
     postgresql_ssl_mode: str = "disable"
 
-    signup_token_secret: str = ""
+    signup_token_secret: str = "7560c27c873f5fd102a79b56b25a6207"  # noqa: S105
     signup_token_expiry_seconds: int = Field(default=900, validation_alias="SIGNUP_TOKEN_EXPIRY")
 
-    forgot_password_token_secret: str = ""
+    forgot_password_token_secret: str = "740921661bb9838170c8fd109e69151f"  # noqa: S105
     forgot_password_token_expiry_seconds: int = Field(default=900, validation_alias="FORGOT_PASSWORD_TOKEN_EXPIRY")
 
-    reset_password_token_secret: str = ""
+    reset_password_token_secret: str = "365bcd17a4563a363e0f4af7517b4f73"  # noqa: S105
     reset_password_token_expiry_seconds: int = Field(default=900, validation_alias="RESET_PASSWORD_TOKEN_EXPIRY")
 
-    access_token_secret: str = ""
+    access_token_secret: str = "a92218dbd59bef1e2501877958d22103"  # noqa: S105
     access_token_expiry_seconds: int = Field(default=1800, validation_alias="ACCESS_TOKEN_EXPIRY")
 
-    refresh_token_secret: str = ""
+    refresh_token_secret: str = "794dbdfbec0f3421d796f7fd2e620e5f"  # noqa: S105
     refresh_token_expiry_seconds: int = Field(default=86400, validation_alias="REFRESH_TOKEN_EXPIRY")
+
+    deactivate_token_secret: str = "c4f8e2a1b9d6f3e7a5c2b8d4f1e9a6c3"  # noqa: S105
+    deactivate_token_expiry_seconds: int = Field(default=900, validation_alias="DEACTIVATE_TOKEN_EXPIRY")
+
+    reactivate_token_secret: str = "b7e3d9f2c5a8e1d4b6f9c2a7e4d1b8f5"  # noqa: S105
+    reactivate_token_expiry_seconds: int = Field(default=900, validation_alias="REACTIVATE_TOKEN_EXPIRY")
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -734,6 +752,40 @@ class Settings(BaseSettings):
         """
 
         return _parse_expiry_to_seconds(v=v, env_name="REFRESH_TOKEN_EXPIRY")
+
+    @field_validator("deactivate_token_expiry_seconds", mode="before")
+    @classmethod
+    def parse_deactivate_token_expiry_seconds(cls, v: Any) -> Any:
+        """Parse Deactivate Token Expiry From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed integer seconds.
+
+        Raises:
+            ValueError: If format is invalid.
+        """
+
+        return _parse_expiry_to_seconds(v=v, env_name="DEACTIVATE_TOKEN_EXPIRY")
+
+    @field_validator("reactivate_token_expiry_seconds", mode="before")
+    @classmethod
+    def parse_reactivate_token_expiry_seconds(cls, v: Any) -> Any:
+        """Parse Reactivate Token Expiry From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed integer seconds.
+
+        Raises:
+            ValueError: If format is invalid.
+        """
+
+        return _parse_expiry_to_seconds(v=v, env_name="REACTIVATE_TOKEN_EXPIRY")
 
     @model_validator(mode="after")
     def construct_celery_urls(self) -> Settings:

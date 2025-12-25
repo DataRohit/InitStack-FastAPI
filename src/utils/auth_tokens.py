@@ -906,17 +906,309 @@ async def mark_token_as_used(user_id: str) -> bool:
     return success
 
 
+async def generate_deactivate_token(user_id: str) -> str:
+    """Generate JWT Deactivate Token.
+
+    Arguments:
+        user_id (str): User ID to encode in token.
+
+    Returns:
+        str: JWT deactivate token string.
+
+    Raises:
+        RuntimeError: If deactivate token secret is not configured.
+        Exception: If token generation fails.
+    """
+
+    secret: str = _require_secret(secret=settings.deactivate_token_secret, name="DEACTIVATE_TOKEN_SECRET")
+
+    now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+    expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.deactivate_token_expiry_seconds)
+
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "type": "deactivate",
+        "iat": now,
+        "exp": expiry,
+    }
+
+    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+
+
+async def validate_deactivate_token(token: str) -> tuple[str, dict[str, Any] | None]:
+    """Validate Deactivate Token And Return A Status.
+
+    Arguments:
+        token (str): JWT token to validate.
+
+    Returns:
+        tuple[str, dict[str, Any] | None]: A tuple of (status, payload).
+
+        Status values:
+            - valid: Token is valid and payload is returned.
+            - expired: Token signature is expired.
+            - invalid: Token cannot be decoded or signature is invalid.
+            - wrong_type: Token decodes but is not a deactivate token.
+            - missing_subject: Token decodes but is missing the subject (sub).
+
+    Raises:
+        RuntimeError: If deactivate token secret is not configured.
+    """
+
+    if not token:
+        return "invalid", None
+
+    secret: str = _require_secret(secret=settings.deactivate_token_secret, name="DEACTIVATE_TOKEN_SECRET")
+
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            jwt=token,
+            key=secret,
+            algorithms=["HS256"],
+        )
+    except jwt.ExpiredSignatureError:
+        return "expired", None
+    except jwt.InvalidTokenError:
+        return "invalid", None
+
+    if payload.get("type") != "deactivate":
+        return "wrong_type", None
+
+    subject: Any = payload.get("sub")
+    if not isinstance(subject, str) or not subject:
+        return "missing_subject", None
+
+    return "valid", payload
+
+
+async def cache_deactivate_token(*, user_id: str, token: str) -> bool:
+    """Cache Deactivate Token In Redis With Matching Expiry.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token to cache.
+
+    Returns:
+        bool: True if cached successfully.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        Exception: If Redis operation fails.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"deactivate_token:{user_id}"
+    await token_cache_adapter.set(
+        key=key,
+        value=token,
+        ex=settings.deactivate_token_expiry_seconds,
+    )
+
+    return True
+
+
+async def consume_deactivate_token(*, user_id: str, token: str) -> tuple[str, bool]:
+    """Consume A Deactivate Token.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token.
+
+    Returns:
+        tuple[str, bool]: (status, consumed)
+
+        Status values:
+            - consumed: Token existed and was deleted.
+            - already_used: Token does not exist in Redis.
+            - mismatch: Token exists but does not match.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        Exception: For Redis errors.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"deactivate_token:{user_id}"
+    cached: str | None = await token_cache_adapter.get(key)
+    if cached is None:
+        return "already_used", False
+
+    if cached != token:
+        return "mismatch", False
+
+    deleted_count: int = await token_cache_adapter.delete(key)
+    if deleted_count <= 0:
+        return "already_used", False
+
+    return "consumed", True
+
+
+async def generate_reactivate_token(user_id: str) -> str:
+    """Generate JWT Reactivate Token.
+
+    Arguments:
+        user_id (str): User ID to encode in token.
+
+    Returns:
+        str: JWT reactivate token string.
+
+    Raises:
+        RuntimeError: If reactivate token secret is not configured.
+        Exception: If token generation fails.
+    """
+
+    secret: str = _require_secret(secret=settings.reactivate_token_secret, name="REACTIVATE_TOKEN_SECRET")
+
+    now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+    expiry: datetime.datetime = now + datetime.timedelta(seconds=settings.reactivate_token_expiry_seconds)
+
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "type": "reactivate",
+        "iat": now,
+        "exp": expiry,
+    }
+
+    return jwt.encode(payload=payload, key=secret, algorithm="HS256")
+
+
+async def validate_reactivate_token(token: str) -> tuple[str, dict[str, Any] | None]:
+    """Validate Reactivate Token And Return A Status.
+
+    Arguments:
+        token (str): JWT token to validate.
+
+    Returns:
+        tuple[str, dict[str, Any] | None]: A tuple of (status, payload).
+
+        Status values:
+            - valid: Token is valid and payload is returned.
+            - expired: Token signature is expired.
+            - invalid: Token cannot be decoded or signature is invalid.
+            - wrong_type: Token decodes but is not a reactivate token.
+            - missing_subject: Token decodes but is missing the subject (sub).
+
+    Raises:
+        RuntimeError: If reactivate token secret is not configured.
+    """
+
+    if not token:
+        return "invalid", None
+
+    secret: str = _require_secret(secret=settings.reactivate_token_secret, name="REACTIVATE_TOKEN_SECRET")
+
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            jwt=token,
+            key=secret,
+            algorithms=["HS256"],
+        )
+    except jwt.ExpiredSignatureError:
+        return "expired", None
+    except jwt.InvalidTokenError:
+        return "invalid", None
+
+    if payload.get("type") != "reactivate":
+        return "wrong_type", None
+
+    subject: Any = payload.get("sub")
+    if not isinstance(subject, str) or not subject:
+        return "missing_subject", None
+
+    return "valid", payload
+
+
+async def cache_reactivate_token(*, user_id: str, token: str) -> bool:
+    """Cache Reactivate Token In Redis With Matching Expiry.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token to cache.
+
+    Returns:
+        bool: True if cached successfully.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        Exception: If Redis operation fails.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"reactivate_token:{user_id}"
+    await token_cache_adapter.set(
+        key=key,
+        value=token,
+        ex=settings.reactivate_token_expiry_seconds,
+    )
+
+    return True
+
+
+async def consume_reactivate_token(*, user_id: str, token: str) -> tuple[str, bool]:
+    """Consume A Reactivate Token.
+
+    Arguments:
+        user_id (str): User ID.
+        token (str): JWT token.
+
+    Returns:
+        tuple[str, bool]: (status, consumed)
+
+        Status values:
+            - consumed: Token existed and was deleted.
+            - already_used: Token does not exist in Redis.
+            - mismatch: Token exists but does not match.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        Exception: For Redis errors.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"reactivate_token:{user_id}"
+    cached: str | None = await token_cache_adapter.get(key)
+    if cached is None:
+        return "already_used", False
+
+    if cached != token:
+        return "mismatch", False
+
+    deleted_count: int = await token_cache_adapter.delete(key)
+    if deleted_count <= 0:
+        return "already_used", False
+
+    return "consumed", True
+
+
 __all__: list[str] = [
     "cache_activation_token",
+    "cache_deactivate_token",
     "cache_forgot_password_token",
+    "cache_reactivate_token",
     "cache_reset_password_token",
     "check_token_used",
     "consume_activation_token",
+    "consume_deactivate_token",
     "consume_forgot_password_token",
+    "consume_reactivate_token",
     "consume_reset_password_token",
     "generate_access_token",
     "generate_activation_token",
+    "generate_deactivate_token",
     "generate_forgot_password_token",
+    "generate_reactivate_token",
     "generate_refresh_token",
     "generate_reset_password_token",
     "get_or_create_login_tokens",
@@ -925,7 +1217,9 @@ __all__: list[str] = [
     "revoke_login_tokens",
     "validate_access_token",
     "validate_activation_token",
+    "validate_deactivate_token",
     "validate_forgot_password_token",
+    "validate_reactivate_token",
     "validate_refresh_token",
     "validate_reset_password_token",
     "verify_activation_token",
