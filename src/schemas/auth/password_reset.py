@@ -40,6 +40,18 @@ class ForgotPasswordRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_identifier(self) -> ForgotPasswordRequest:
+        """Validate Forgot Password Identifier.
+
+        Arguments:
+            self (ForgotPasswordRequest): Validated request instance.
+
+        Returns:
+            ForgotPasswordRequest: The same instance if identifier is valid.
+
+        Raises:
+            ValueError: If username/email are missing, both provided, or invalid.
+        """
+
         username: str | None = self.username.strip().lower() if isinstance(self.username, str) else None
         email: str | None = self.email.strip().lower() if isinstance(self.email, str) else None
 
@@ -108,6 +120,18 @@ class ResetPasswordRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_passwords_match(self) -> ResetPasswordRequest:
+        """Validate Password And Confirmation Match.
+
+        Arguments:
+            self (ResetPasswordRequest): Validated request instance.
+
+        Returns:
+            ResetPasswordRequest: The same instance if passwords match.
+
+        Raises:
+            ValueError: If password and re_password do not match.
+        """
+
         if self.password != self.re_password:
             msg = "Passwords do not match"
             raise ValueError(msg)
