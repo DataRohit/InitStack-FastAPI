@@ -144,15 +144,15 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         client_ip: str = request.client.host if request.client else "unknown"
         method: str = request.method
-        url = str(object=request.url)
+        path: str = request.url.path
         user_agent: str = request.headers.get("user-agent", default="unknown")  # ty:ignore[no-matching-overload]
 
         self.logger.info(
-            msg=f"Request started: {method} {url}",
+            msg=f"Request started: {method} {path}",
             extra={
                 "client_ip": client_ip,
                 "method": method,
-                "url": url,
+                "path": path,
                 "user_agent": user_agent,
                 "request_id": id(request),
             },
@@ -163,11 +163,11 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             process_time: int | float = time.time() - start_time
 
             self.logger.info(
-                msg=f"Request completed: {method} {url} - {response.status_code}",
+                msg=f"Request completed: {method} {path} - {response.status_code}",
                 extra={
                     "client_ip": client_ip,
                     "method": method,
-                    "url": url,
+                    "path": path,
                     "status_code": response.status_code,
                     "process_time": round(number=process_time, ndigits=4),
                     "request_id": id(request),
@@ -180,11 +180,11 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             process_time: int | float = time.time() - start_time
 
             self.logger.exception(
-                msg=f"Request failed: {method} {url} - {type(exc).__name__}",
+                msg=f"Request failed: {method} {path} - {type(exc).__name__}",
                 extra={
                     "client_ip": client_ip,
                     "method": method,
-                    "url": url,
+                    "path": path,
                     "exception": str(object=exc),
                     "process_time": round(number=process_time, ndigits=4),
                     "request_id": id(request),

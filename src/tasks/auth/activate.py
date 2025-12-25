@@ -33,18 +33,17 @@ def _render_template(template: str, context: dict[str, Any]) -> str:
     return rendered
 
 
-async def _send_signup_activation_email_async(  # noqa: PLR0913
+async def _send_activation_success_email_async(  # noqa: PLR0913
     *,
     to_email: str,
     subject: str,
     first_name: str,
     last_name: str,
     username: str,
-    activation_url: str,
     app_name: str,
     timestamp: str,
 ) -> bool:
-    """Send Signup Activation Email Using The Email Adapter.
+    """Send Activation Success Email Using The Email Adapter.
 
     Arguments:
         to_email (str): Recipient email.
@@ -52,7 +51,6 @@ async def _send_signup_activation_email_async(  # noqa: PLR0913
         first_name (str): User first name.
         last_name (str): User last name.
         username (str): Username.
-        activation_url (str): Activation URL to activate the account.
         app_name (str): Application name to show in the email.
         timestamp (str): Timestamp to render in the email.
 
@@ -68,7 +66,7 @@ async def _send_signup_activation_email_async(  # noqa: PLR0913
 
     try:
         template_path: Path = (
-            Path(__file__).resolve().parents[2] / "templates" / "auth" / "activation_initiated_email_template.html"
+            Path(__file__).resolve().parents[2] / "templates" / "auth" / "activation_success_email_template.html"
         )
         template: str = template_path.read_text(encoding="utf-8")
 
@@ -79,7 +77,6 @@ async def _send_signup_activation_email_async(  # noqa: PLR0913
                 "last_name": last_name,
                 "username": username,
                 "email": to_email,
-                "activation_url": activation_url,
                 "app_name": app_name,
                 "timestamp": timestamp,
             },
@@ -96,24 +93,22 @@ async def _send_signup_activation_email_async(  # noqa: PLR0913
         await adapter.disconnect()
 
 
-@celery_app.task(name="src.tasks.auth.send_signup_activation_email")
-def send_signup_activation_email(  # noqa: PLR0913
+@celery_app.task(name="src.tasks.auth.send_activation_success_email")
+def send_activation_success_email(
     *,
     to_email: str,
     first_name: str,
     last_name: str,
     username: str,
-    activation_url: str,
     subject: str | None = None,
 ) -> dict[str, Any]:
-    """On-Demand Celery Task To Send Signup Activation Email.
+    """On-Demand Celery Task To Send Activation Success Email.
 
     Args:
         to_email (str): Recipient email.
         first_name (str): User first name.
         last_name (str): User last name.
         username (str): Username.
-        activation_url (str): Activation URL to activate the account.
         subject (str | None): Optional subject override.
 
     Returns:
@@ -129,13 +124,12 @@ def send_signup_activation_email(  # noqa: PLR0913
     send_time: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
 
     result: bool = asyncio.run(
-        main=_send_signup_activation_email_async(
+        main=_send_activation_success_email_async(
             to_email=to_email,
-            subject=subject or "Activate your account",
+            subject=subject or "Your account is now active",
             first_name=first_name,
             last_name=last_name,
             username=username,
-            activation_url=activation_url,
             app_name=settings.app_name,
             timestamp=send_time.isoformat(),
         ),
@@ -148,4 +142,4 @@ def send_signup_activation_email(  # noqa: PLR0913
     }
 
 
-__all__: list[str] = ["send_signup_activation_email"]
+__all__: list[str] = ["send_activation_success_email"]

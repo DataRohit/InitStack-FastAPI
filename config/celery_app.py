@@ -81,6 +81,7 @@ celery_app.conf.beat_schedule: dict[str, dict[str, str]] = {
 }
 
 try:
+    import src.tasks.auth.activate
     import src.tasks.auth.signup
     import src.tasks.health
     import src.tasks.maintenance

@@ -1,3 +1,4 @@
+from src.schemas.auth import ActivateAccountResponse
 from src.schemas.auth import SignUpRequest
 from src.schemas.auth import SignUpResponse
 from src.schemas.base import ErrorResponse
@@ -29,6 +30,7 @@ from src.schemas.rabbitmq import RabbitMQTestOperation
 from src.schemas.rabbitmq import RabbitMQTestResponse
 
 __all__: list[str] = [
+    "ActivateAccountResponse",
     "CPUInfo",
     "ConsulHealthCheck",
     "ConsulServiceDiscoveryResponse",

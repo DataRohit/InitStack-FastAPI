@@ -150,6 +150,90 @@ async def verify_activation_token(token: str) -> dict[str, Any] | None:
         return payload
 
 
+async def validate_activation_token(token: str) -> tuple[str, dict[str, Any] | None]:
+    """Validate Activation Token And Return A Status.
+
+    Arguments:
+        token (str): JWT token to validate.
+
+    Returns:
+        tuple[str, dict[str, Any] | None]: A tuple of (status, payload).
+
+        Status values:
+            - valid: Token is valid and payload is returned.
+            - expired: Token signature is expired.
+            - invalid: Token cannot be decoded or signature is invalid.
+            - wrong_type: Token decodes but is not an activation token.
+            - missing_subject: Token decodes but is missing the subject (sub).
+
+    Raises:
+        None
+    """
+
+    if not token:
+        return "invalid", None
+
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            jwt=token,
+            key=settings.signup_token_secret,
+            algorithms=["HS256"],
+        )
+    except jwt.ExpiredSignatureError:
+        return "expired", None
+    except jwt.InvalidTokenError:
+        return "invalid", None
+
+    if payload.get("type") != "activation":
+        return "wrong_type", None
+
+    subject: Any = payload.get("sub")
+    if not isinstance(subject, str) or not subject:
+        return "missing_subject", None
+
+    return "valid", payload
+
+
+async def consume_activation_token(*, user_id: str, token: str) -> tuple[str, bool]:
+    """Consume Activation Token From Redis If It Matches.
+
+    Arguments:
+        user_id (str): User ID whose token is expected.
+        token (str): Presented activation token.
+
+    Returns:
+        tuple[str, bool]: A tuple of (status, consumed).
+
+        Status values:
+            - consumed: Token existed in Redis, matched, and was removed.
+            - already_used: Token does not exist in Redis.
+            - mismatch: Token exists in Redis but does not match the presented token.
+
+    Raises:
+        RuntimeError: If Redis is not enabled.
+        Exception: If Redis operations fail.
+    """
+
+    token_cache_adapter: TokenCacheRedisAdapter = await get_token_cache_redis_adapter()
+
+    if not token_cache_adapter.is_connected:
+        await token_cache_adapter.connect()
+
+    key: str = f"activation_token:{user_id}"
+    cached: str | None = await token_cache_adapter.get(key)
+    if cached is None:
+        return "already_used", False
+
+    if cached != token:
+        return "mismatch", False
+
+    deleted_count: int = await token_cache_adapter.delete(key)
+    if deleted_count <= 0:
+        return "already_used", False
+
+    return "consumed", True
+
+
 async def check_token_used(user_id: str) -> bool:
     """Check If Activation Token Has Been Used.
 
@@ -220,7 +304,9 @@ async def mark_token_as_used(user_id: str) -> bool:
 __all__: list[str] = [
     "cache_activation_token",
     "check_token_used",
+    "consume_activation_token",
     "generate_activation_token",
     "mark_token_as_used",
+    "validate_activation_token",
     "verify_activation_token",
 ]
