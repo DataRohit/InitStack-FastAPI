@@ -4,6 +4,8 @@ from src.controllers import auth_controller
 from src.controllers import consul_controller
 from src.controllers import elasticsearch_controller
 from src.controllers import health_controller
+from src.controllers import ping_websocket_controller
+from src.controllers import protected_ping_websocket_controller
 from src.controllers import rabbitmq_controller
 from src.controllers import rate_limit_controller
 from src.controllers import redis_controller
@@ -31,6 +33,8 @@ def create_api_router() -> APIRouter:
     main_router.include_router(router=redis_controller.router)
     main_router.include_router(router=rabbitmq_controller.router)
     main_router.include_router(router=rate_limit_controller.router)
+    main_router.include_router(router=ping_websocket_controller.router)
+    main_router.include_router(router=protected_ping_websocket_controller.router)
 
     return main_router
 

@@ -12,6 +12,8 @@ from src.controllers.rate_limit import RateLimitController
 from src.controllers.rate_limit import rate_limit_controller
 from src.controllers.redis import RedisController
 from src.controllers.redis import redis_controller
+from src.controllers.websocket import ping_websocket_controller
+from src.controllers.websocket import protected_ping_websocket_controller
 
 __all__: list[str] = [
     "AuthController",
@@ -25,6 +27,8 @@ __all__: list[str] = [
     "consul_controller",
     "elasticsearch_controller",
     "health_controller",
+    "ping_websocket_controller",
+    "protected_ping_websocket_controller",
     "rabbitmq_controller",
     "rate_limit_controller",
     "redis_controller",
