@@ -39,9 +39,13 @@ from config.adapters import shutdown_minio
 from config.adapters import shutdown_postgresql
 from config.adapters import shutdown_rabbitmq
 from config.adapters import shutdown_redis
+from config.adapters.otel_metrics import setup_auto_instrumentation
+from config.adapters.otel_metrics import setup_otel_metrics
 from config.logger import LoggerManager
 from config.logger import get_logger
+from config.metrics import initialize_metrics
 from config.middlewares import LoggingMiddleware
+from config.middlewares import OpenTelemetryMetricsMiddleware
 from config.middlewares import RateLimitMiddleware
 from config.middlewares import RequestSizeLimitMiddleware
 from config.routes import create_api_router
@@ -340,6 +344,17 @@ def create_app() -> FastAPI:  # noqa: C901, PLR0915
     if settings.telemetry_enabled:
         logger.info(msg="Initializing telemetry instrumentation")
         setup_telemetry(app=app)
+
+    if settings.otel_metrics_enabled:
+        logger.info(msg="Initializing OpenTelemetry metrics")
+        setup_otel_metrics()
+        initialize_metrics()
+
+        logger.info(msg="Setting up auto-instrumentation")
+        setup_auto_instrumentation()
+
+        logger.info(msg="Adding OpenTelemetry metrics middleware")
+        app.add_middleware(middleware_class=OpenTelemetryMetricsMiddleware)  # ty:ignore[invalid-argument-type]
 
     @app.exception_handler(exc_class_or_status_code=StarletteHTTPException)
     async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:

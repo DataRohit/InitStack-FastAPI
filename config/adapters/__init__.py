@@ -14,6 +14,11 @@ from config.adapters.minio import MinIOAdapter
 from config.adapters.minio import get_minio_adapter
 from config.adapters.minio import initialize_minio
 from config.adapters.minio import shutdown_minio
+from config.adapters.otel_metrics import get_meter
+from config.adapters.otel_metrics import get_prometheus_metrics
+from config.adapters.otel_metrics import setup_auto_instrumentation
+from config.adapters.otel_metrics import setup_otel_metrics
+from config.adapters.otel_metrics import setup_resource
 from config.adapters.postgresql import PostgreSQLAdapter
 from config.adapters.postgresql import get_postgresql_adapter
 from config.adapters.postgresql import initialize_postgresql
@@ -44,8 +49,10 @@ __all__: list[str] = [
     "get_consul_adapter",
     "get_elasticsearch_adapter",
     "get_email_adapter",
+    "get_meter",
     "get_minio_adapter",
     "get_postgresql_adapter",
+    "get_prometheus_metrics",
     "get_rabbitmq_adapter",
     "get_redis_adapter",
     "get_token_cache_redis_adapter",
@@ -56,6 +63,9 @@ __all__: list[str] = [
     "initialize_postgresql",
     "initialize_rabbitmq",
     "initialize_redis",
+    "setup_auto_instrumentation",
+    "setup_otel_metrics",
+    "setup_resource",
     "setup_telemetry",
     "shutdown_consul",
     "shutdown_elasticsearch",

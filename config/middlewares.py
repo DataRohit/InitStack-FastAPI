@@ -13,6 +13,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from config.adapters import RedisAdapter
 from config.adapters import get_redis_adapter
 from config.logger import get_logger
+from config.metrics import decrement_active_requests
+from config.metrics import increment_active_requests
+from config.metrics import record_http_request
 from config.settings import settings
 
 if TYPE_CHECKING:
@@ -528,4 +531,102 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return client_ip in self.exempt_ips
 
 
-__all__: list[str] = ["LoggingMiddleware", "RateLimitMiddleware", "RequestSizeLimitMiddleware"]
+class OpenTelemetryMetricsMiddleware(BaseHTTPMiddleware):
+    """Middleware For Opentelemetry Metrics Collection.
+
+    Inherits:
+        BaseHTTPMiddleware
+
+    Attributes:
+        logger (logging.Logger): Logger instance for metrics middleware.
+
+    Properties:
+        None
+
+    Methods:
+        dispatch: Process request and collect metrics.
+    """
+
+    def __init__(self, app):
+        """Initialize Opentelemetry Metrics Middleware.
+
+        Arguments:
+            app: ASGI application.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+
+        super().__init__(app)
+        self.logger: logging.Logger = get_logger(name="middleware.otel_metrics")
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        """Process Request And Collect Opentelemetry Metrics.
+
+        Arguments:
+            request (Request): Incoming request.
+            call_next: Next middleware or endpoint.
+
+        Returns:
+            Response: HTTP response.
+
+        Raises:
+            None
+        """
+
+        if request.url.path in ("/docs", "/redoc", "/openapi.json"):
+            return await call_next(request)
+
+        increment_active_requests()
+
+        start_time: float = time.time()
+
+        request_size: int = int(request.headers.get("content-length", "0"))
+
+        try:
+            response: Response = await call_next(request)
+
+            duration: float = time.time() - start_time
+
+            response_size: int = 0
+            if hasattr(response, "headers") and "content-length" in response.headers:
+                response_size = int(response.headers["content-length"])
+
+            record_http_request(
+                method=request.method,
+                endpoint=request.url.path,
+                status=response.status_code,
+                duration=duration,
+                request_size=request_size,
+                response_size=response_size,
+            )
+
+        except Exception:
+            duration: float = time.time() - start_time
+
+            record_http_request(
+                method=request.method,
+                endpoint=request.url.path,
+                status=500,
+                duration=duration,
+                request_size=request_size,
+                response_size=0,
+            )
+
+            raise
+
+        finally:
+            decrement_active_requests()
+
+        return response
+
+
+__all__: list[str] = [
+    "LoggingMiddleware",
+    "OpenTelemetryMetricsMiddleware",
+    "RateLimitMiddleware",
+    "RequestSizeLimitMiddleware",
+]

@@ -1,3 +1,4 @@
+from src.controllers import telemetry_controller
 from src.controllers.auth import AuthController
 from src.controllers.auth import auth_controller
 from src.controllers.consul import ConsulController
@@ -32,4 +33,5 @@ __all__: list[str] = [
     "rabbitmq_controller",
     "rate_limit_controller",
     "redis_controller",
+    "telemetry_controller",
 ]

@@ -135,6 +135,11 @@ class Settings(BaseSettings):
         telemetry_timeout (int): Telemetry exporter timeout in seconds.
         telemetry_headers (dict[str, Any]): Additional OTLP request headers.
         telemetry_metrics_interval (int): Metrics export interval in seconds.
+        otel_metrics_enabled (bool): Enable OpenTelemetry metrics collection.
+        otel_service_name (str): Service name for OpenTelemetry metrics.
+        otel_metrics_export_interval (int): Metrics collection interval in milliseconds.
+        otel_resource_attributes (dict[str, Any]): Custom resource attributes for metrics.
+        otel_prometheus_endpoint (str): Prometheus endpoint path for metrics scraping.
         rabbitmq_enabled (bool): Enable RabbitMQ connection.
         rabbitmq_host (str): RabbitMQ server host.
         rabbitmq_port (int): RabbitMQ server port.
@@ -358,6 +363,12 @@ class Settings(BaseSettings):
     telemetry_timeout: int = 10
     telemetry_headers: dict[str, Any] = Field(default_factory=dict)
     telemetry_metrics_interval: int = 30
+
+    otel_metrics_enabled: bool = True
+    otel_service_name: str = "initstack-fastapi-service"
+    otel_metrics_export_interval: int = 5000
+    otel_resource_attributes: dict[str, Any] = Field(default_factory=dict)
+    otel_prometheus_endpoint: str = "/api/v1/telemetry/health"
 
     rabbitmq_enabled: bool = True
     rabbitmq_host: str = "initstack-rabbitmq-service"
@@ -661,6 +672,35 @@ class Settings(BaseSettings):
                 return json.loads(s=v)
             except json.JSONDecodeError:
                 return {}
+        return v
+
+    # Parse Otel Resource Attributes Function
+    @field_validator("otel_resource_attributes", mode="before")
+    @classmethod
+    def parse_otel_resource_attributes(cls, v: Any) -> Any:
+        """Parse Otel Resource Attributes From Env Input.
+
+        Arguments:
+            v (Any): Raw environment value.
+
+        Returns:
+            Any: Parsed value, typically a dictionary.
+
+        Raises:
+            None
+        """
+
+        # Check If String
+        if isinstance(v, str):
+            try:
+                # Parse JSON
+                return json.loads(s=v)
+
+            except json.JSONDecodeError:
+                # Return Empty Dict
+                return {}
+
+        # Return Value
         return v
 
     class Config:

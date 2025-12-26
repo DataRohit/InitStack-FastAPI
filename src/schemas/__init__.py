@@ -25,6 +25,7 @@ from src.schemas.rabbitmq import RabbitMQQueueInfo
 from src.schemas.rabbitmq import RabbitMQStatusResponse
 from src.schemas.rabbitmq import RabbitMQTestOperation
 from src.schemas.rabbitmq import RabbitMQTestResponse
+from src.schemas.telemetry import TelemetryHealthResponse
 from src.schemas.websocket import WebSocketErrorResponse
 from src.schemas.websocket import WebSocketPingRequest
 from src.schemas.websocket import WebSocketPongResponse
@@ -55,6 +56,7 @@ __all__: list[str] = [
     "RabbitMQTestOperation",
     "RabbitMQTestResponse",
     "SystemInfo",
+    "TelemetryHealthResponse",
     "ValidationErrorItem",
     "ValidationErrorResponse",
     "WebSocketErrorResponse",
