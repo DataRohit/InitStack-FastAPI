@@ -1,0 +1,94 @@
+global:
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    evaluation_interval: 15s
+    external_labels:
+        environment: "development"
+        cluster: "initstack"
+        region: "local"
+
+alerting:
+    alertmanagers:
+        - static_configs:
+              - targets: []
+
+rule_files:
+    - "/etc/prometheus/rules/*.yml"
+
+scrape_configs:
+    - job_name: "prometheus"
+      static_configs:
+          - targets: ["localhost:9090"]
+            labels:
+                service: "prometheus"
+                component: "monitoring"
+
+    - job_name: "consul-exporter"
+      static_configs:
+          - targets: ["initstack-consul-exporter-service:9107"]
+            labels:
+                service: "consul"
+                component: "exporter"
+
+    - job_name: "redis-exporter"
+      static_configs:
+          - targets: ["initstack-redis-exporter-service:9121"]
+            labels:
+                service: "redis"
+                component: "exporter"
+
+    - job_name: "postgresql-exporter"
+      static_configs:
+          - targets: ["initstack-postgresql-exporter-service:9187"]
+            labels:
+                service: "postgresql"
+                component: "exporter"
+
+    - job_name: "elasticsearch-exporter"
+      static_configs:
+          - targets: ["initstack-elasticsearch-exporter-service:9114"]
+            labels:
+                service: "elasticsearch"
+                component: "exporter"
+
+    - job_name: "rabbitmq"
+      static_configs:
+          - targets: ["initstack-rabbitmq-service:15692"]
+            labels:
+                service: "rabbitmq"
+                component: "message-broker"
+
+    - job_name: "fastapi-service-1"
+      static_configs:
+          - targets: ["initstack-fastapi-service-1:8080"]
+            labels:
+                service: "fastapi"
+                component: "api"
+                instance: "service-1"
+      metrics_path: "/api/v1/telemetry/metrics"
+
+    - job_name: "fastapi-service-2"
+      static_configs:
+          - targets: ["initstack-fastapi-service-2:8080"]
+            labels:
+                service: "fastapi"
+                component: "api"
+                instance: "service-2"
+      metrics_path: "/api/v1/telemetry/metrics"
+
+    - job_name: "fastapi-service-3"
+      static_configs:
+          - targets: ["initstack-fastapi-service-3:8080"]
+            labels:
+                service: "fastapi"
+                component: "api"
+                instance: "service-3"
+      metrics_path: "/api/v1/telemetry/metrics"
+
+    - job_name: "celery-flower"
+      static_configs:
+          - targets: ["initstack-celery-flower-service:5555"]
+            labels:
+                service: "celery"
+                component: "flower-monitoring"
+      metrics_path: "/metrics"

@@ -15,7 +15,7 @@ from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.resources import Resource
 from prometheus_client import REGISTRY
-from prometheus_client.openmetrics.exposition import generate_latest
+from prometheus_client import generate_latest
 
 from config.logger import get_logger
 from config.settings import settings

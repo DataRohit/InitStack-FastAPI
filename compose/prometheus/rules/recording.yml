@@ -1,0 +1,129 @@
+groups:
+    - name: http_metrics
+      interval: 30s
+      rules:
+          - record: job:http_server_request_duration:p50
+            expr: histogram_quantile(0.50, sum by (job, le) (rate(http_server_request_duration_bucket[5m])))
+
+          - record: job:http_server_request_duration:p95
+            expr: histogram_quantile(0.95, sum by (job, le) (rate(http_server_request_duration_bucket[5m])))
+
+          - record: job:http_server_request_duration:p99
+            expr: histogram_quantile(0.99, sum by (job, le) (rate(http_server_request_duration_bucket[5m])))
+
+          - record: job:http_server_request_count:rate5m
+            expr: sum by (job) (rate(http_server_request_count[5m]))
+
+          - record: job:http_server_request_count:rate1m
+            expr: sum by (job) (rate(http_server_request_count[1m]))
+
+          - record: job:http_server_error_rate:rate5m
+            expr: sum by (job) (rate(http_server_request_count{http_response_status_code=~"5.."}[5m])) / sum by (job) (rate(http_server_request_count[5m]))
+
+    - name: redis_metrics
+      interval: 30s
+      rules:
+          - record: instance:redis_memory_utilization:ratio
+            expr: redis_memory_used_bytes / redis_memory_max_bytes
+
+          - record: instance:redis_connected_clients:count
+            expr: redis_connected_clients
+
+          - record: instance:redis_commands:rate5m
+            expr: rate(redis_commands_processed_total[5m])
+
+          - record: instance:redis_keyspace_hits:rate5m
+            expr: rate(redis_keyspace_hits_total[5m])
+
+          - record: instance:redis_keyspace_misses:rate5m
+            expr: rate(redis_keyspace_misses_total[5m])
+
+          - record: instance:redis_hit_rate:ratio
+            expr: rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))
+
+    - name: postgresql_metrics
+      interval: 30s
+      rules:
+          - record: instance:postgresql_connections:count
+            expr: sum(pg_stat_activity_count)
+
+          - record: instance:postgresql_connections_utilization:ratio
+            expr: sum(pg_stat_activity_count) / pg_settings_max_connections
+
+          - record: instance:postgresql_transactions:rate5m
+            expr: rate(pg_stat_database_xact_commit[5m]) + rate(pg_stat_database_xact_rollback[5m])
+
+          - record: instance:postgresql_deadlocks:rate5m
+            expr: rate(pg_stat_database_deadlocks[5m])
+
+          - record: instance:postgresql_cache_hit_ratio:ratio
+            expr: sum(pg_stat_database_blks_hit) / (sum(pg_stat_database_blks_hit) + sum(pg_stat_database_blks_read))
+
+    - name: rabbitmq_metrics
+      interval: 30s
+      rules:
+          - record: instance:rabbitmq_queue_messages:count
+            expr: sum by (queue) (rabbitmq_queue_messages)
+
+          - record: instance:rabbitmq_queue_messages_ready:count
+            expr: sum by (queue) (rabbitmq_queue_messages_ready)
+
+          - record: instance:rabbitmq_queue_messages_unacked:count
+            expr: sum by (queue) (rabbitmq_queue_messages_unacked)
+
+          - record: instance:rabbitmq_connections:count
+            expr: rabbitmq_connections
+
+          - record: instance:rabbitmq_channels:count
+            expr: rabbitmq_channels
+
+          - record: instance:rabbitmq_consumers:count
+            expr: sum(rabbitmq_queue_consumers)
+
+    - name: elasticsearch_metrics
+      interval: 30s
+      rules:
+          - record: instance:elasticsearch_jvm_memory_utilization:ratio
+            expr: elasticsearch_jvm_memory_used_bytes / elasticsearch_jvm_memory_max_bytes
+
+          - record: cluster:elasticsearch_nodes:count
+            expr: elasticsearch_cluster_health_number_of_nodes
+
+          - record: cluster:elasticsearch_shards_active:count
+            expr: elasticsearch_cluster_health_active_shards
+
+          - record: cluster:elasticsearch_shards_unassigned:count
+            expr: elasticsearch_cluster_health_unassigned_shards
+
+          - record: cluster:elasticsearch_docs:count
+            expr: sum(elasticsearch_indices_docs)
+
+          - record: cluster:elasticsearch_store_size:bytes
+            expr: sum(elasticsearch_indices_store_size_bytes)
+
+    - name: consul_metrics
+      interval: 30s
+      rules:
+          - record: instance:consul_services:count
+            expr: count(consul_catalog_service_node_healthy)
+
+          - record: instance:consul_services_healthy:count
+            expr: sum(consul_catalog_service_node_healthy)
+
+          - record: instance:consul_services_unhealthy:count
+            expr: count(consul_catalog_service_node_healthy) - sum(consul_catalog_service_node_healthy)
+
+          - record: instance:consul_health_checks:count
+            expr: count(consul_health_node_status)
+
+    - name: service_availability
+      interval: 30s
+      rules:
+          - record: job:up:avg
+            expr: avg by (job) (up)
+
+          - record: job:up:count
+            expr: count by (job) (up)
+
+          - record: job:down:count
+            expr: count by (job) (up == 0)
