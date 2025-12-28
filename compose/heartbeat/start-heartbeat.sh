@@ -40,29 +40,19 @@ curl -s -X POST -u ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD} "${ELASTI
         ]
     }" || echo "Role already exists or creation failed"
 
+echo "Copying config file to writable location..."
+cp /usr/share/heartbeat/heartbeat.yml /tmp/heartbeat.yml
+chmod 644 /tmp/heartbeat.yml
+
 if [ "${HEARTBEAT_SETUP_TEMPLATE}" = "true" ] || [ "${HEARTBEAT_SETUP_ILM}" = "true" ]; then
     echo "Setting up Heartbeat index management (templates and ILM)..."
-    heartbeat setup --index-management -E output.elasticsearch.hosts=["${ELASTICSEARCH_HOSTS}"] \
+    heartbeat setup --strict.perms=false -c /tmp/heartbeat.yml --index-management -E output.elasticsearch.hosts=["${ELASTICSEARCH_HOSTS}"] \
         -E output.elasticsearch.username="${ELASTICSEARCH_USERNAME}" \
         -E output.elasticsearch.password="${ELASTICSEARCH_PASSWORD}" \
         -E setup.kibana.host="${KIBANA_HOST}" \
         -E setup.kibana.username="${KIBANA_USERNAME}" \
         -E setup.kibana.password="${KIBANA_PASSWORD}" || echo "Index management setup completed"
 fi
-
-if [ "${HEARTBEAT_SETUP_DASHBOARDS}" = "true" ]; then
-    echo "Setting up Heartbeat dashboards..."
-    heartbeat setup --dashboards -E output.elasticsearch.hosts=["${ELASTICSEARCH_HOSTS}"] \
-        -E output.elasticsearch.username="${ELASTICSEARCH_USERNAME}" \
-        -E output.elasticsearch.password="${ELASTICSEARCH_PASSWORD}" \
-        -E setup.kibana.host="${KIBANA_HOST}" \
-        -E setup.kibana.username="${KIBANA_USERNAME}" \
-        -E setup.kibana.password="${KIBANA_PASSWORD}" || echo "Dashboard setup completed"
-fi
-
-echo "Copying config file to writable location..."
-cp /usr/share/heartbeat/heartbeat.yml /tmp/heartbeat.yml
-chmod 644 /tmp/heartbeat.yml
 
 echo "Starting Heartbeat..."
 exec heartbeat -e --strict.perms=false -c /tmp/heartbeat.yml
